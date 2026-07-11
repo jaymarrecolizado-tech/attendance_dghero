@@ -395,18 +395,18 @@
     "semantic_hash": ""
   },
   "views/register.php": {
-    "mtime": 1783667179.3047311,
-    "ast_hash": "9dab8d7e4c741f7108396af13f76da25",
+    "mtime": 1783776777.0315783,
+    "ast_hash": "7e957557b6be7b63396c2f342ab9cec3",
     "semantic_hash": ""
   },
   "views/register_error.php": {
-    "mtime": 1783667192.649779,
-    "ast_hash": "781df4bbc960ca24b49debe7769f53cc",
+    "mtime": 1783776780.7274475,
+    "ast_hash": "92758781f5c6d5dab28f9e9a737352cf",
     "semantic_hash": ""
   },
   "views/register_success.php": {
-    "mtime": 1783667169.8103945,
-    "ast_hash": "320d101c0a3598092c82d19f8a3e7c71",
+    "mtime": 1783776779.2834153,
+    "ast_hash": "43c56d20d8f7f2255d5b1935b19a30db",
     "semantic_hash": ""
   },
   "views/scan.php": {
@@ -455,8 +455,8 @@
     "semantic_hash": ""
   },
   "scripts/test_rate_limiter.php": {
-    "mtime": 1783769330.3669567,
-    "ast_hash": "fd1a81debed6370ec40b46f4840ae7aa",
+    "mtime": 1783769660.553912,
+    "ast_hash": "ed75e9ac2cccecd2f1e4bdeb7565ad75",
     "semantic_hash": ""
   },
   "storage/imports/index.php": {
@@ -5592,6 +5592,46 @@
   "storage/signatures/2026/5fbaf3c8-8f3f-4c5f-8e3e-d44869ae2c12_1783666098.png": {
     "mtime": 1783666098.1320965,
     "ast_hash": "47c5c37774a2c06e52f11a2d5b2224e5",
+    "semantic_hash": ""
+  },
+  "assets/guest-registration.js": {
+    "mtime": 1783776797.2569404,
+    "ast_hash": "a9e6979c41db09c78bb250573a945a76",
+    "semantic_hash": ""
+  },
+  "views/partials/guest_footer.php": {
+    "mtime": 1783776697.7826352,
+    "ast_hash": "ec8c23255c31da5fdd8761802b10f8b4",
+    "semantic_hash": ""
+  },
+  "views/partials/guest_head.php": {
+    "mtime": 1783776697.3040736,
+    "ast_hash": "1e1aeca90415b42d374b4b471b64b509",
+    "semantic_hash": ""
+  },
+  "views/partials/guest_hero.php": {
+    "mtime": 1783776699.9956973,
+    "ast_hash": "2c89a0d9c0f5a10b750c0a3f8d944c86",
+    "semantic_hash": ""
+  },
+  "views/partials/guest_nav.php": {
+    "mtime": 1783776696.3942175,
+    "ast_hash": "5b1bcba3b97bc198e6c95fa764f3db7a",
+    "semantic_hash": ""
+  },
+  "TODOUI/guest_registration_ui_spec.md": {
+    "mtime": 1783776797.267942,
+    "ast_hash": "362fad7dcd4e9becd63791dfbd58e7d3",
+    "semantic_hash": ""
+  },
+  "storage/signatures/2026/c642895c-eba0-4bd2-97cd-4d91f6904972_1783769347.png": {
+    "mtime": 1783769347.383648,
+    "ast_hash": "43d6661f90bfd4461a229f81de44f33b",
+    "semantic_hash": ""
+  },
+  "storage/signatures/2026/d5b6a1f0-79e1-44ff-9da2-2744a3d605cd_1783769724.png": {
+    "mtime": 1783769724.197655,
+    "ast_hash": "108221e280d6e652cd2054b132d9e422",
     "semantic_hash": ""
   }
 }

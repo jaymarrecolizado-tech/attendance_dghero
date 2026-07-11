@@ -13,6 +13,10 @@ class AuthController
 
     public function loginForm(): void
     {
+        if (!empty($_SESSION['admin_id'])) {
+            header('Location: ?r=admin_registrants');
+            return;
+        }
         require dirname(__DIR__, 2) . DIRECTORY_SEPARATOR . 'views' . DIRECTORY_SEPARATOR . 'admin_login.php';
     }
 

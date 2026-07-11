@@ -2,6 +2,7 @@
 declare(strict_types=1);
 
 $adminNavLinks = [
+    ['label' => 'Register', 'route' => 'register'],
     ['label' => 'Registrants', 'route' => 'admin_registrants'],
     ['label' => 'Attendance', 'route' => 'admin_attendance'],
     ['label' => 'Gallery', 'route' => 'admin_attendance_gallery'],

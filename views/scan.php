@@ -22,7 +22,15 @@ $token = function_exists('csrf_token') ? csrf_token() : '';
 <body>
 <nav class="navbar navbar-expand-lg navbar-dark py-3">
   <div class="container"><a class="navbar-brand" href="?r=register">GovNet-Launching</a>
-    <div class="ms-auto d-flex gap-2"><a class="btn btn-outline-light btn-sm px-3" href="?r=scan">Scan</a> <a class="btn btn-outline-light btn-sm px-3" href="?r=admin_login">Admin</a></div>
+    <div class="ms-auto d-flex gap-2">
+      <a class="btn btn-outline-light btn-sm px-3" href="?r=scan">Scan</a>
+      <?php if (!empty($_SESSION['admin_id'])): ?>
+      <a class="btn btn-outline-light btn-sm px-3" href="?r=admin_registrants">Dashboard</a>
+      <a class="btn btn-outline-light btn-sm px-3" href="?r=admin_logout">Logout</a>
+      <?php else: ?>
+      <a class="btn btn-outline-light btn-sm px-3" href="?r=admin_login">Admin</a>
+      <?php endif; ?>
+    </div>
   </div>
 </nav>
 <div class="container py-4">

@@ -4,6 +4,136 @@
   "graph": {},
   "nodes": [
     {
+      "label": "guest-registration.js",
+      "file_type": "code",
+      "source_file": "assets/guest-registration.js",
+      "source_location": "L1",
+      "_origin": "ast",
+      "id": "assets_guest_registration",
+      "community": 10,
+      "norm_label": "guest-registration.js"
+    },
+    {
+      "label": "showStepError()",
+      "file_type": "code",
+      "source_file": "assets/guest-registration.js",
+      "source_location": "L33",
+      "_origin": "ast",
+      "id": "assets_guest_registration_showsteperror",
+      "community": 10,
+      "norm_label": "showsteperror()"
+    },
+    {
+      "label": "hideStepError()",
+      "file_type": "code",
+      "source_file": "assets/guest-registration.js",
+      "source_location": "L40",
+      "_origin": "ast",
+      "id": "assets_guest_registration_hidesteperror",
+      "community": 10,
+      "norm_label": "hidesteperror()"
+    },
+    {
+      "label": "updateStepper()",
+      "file_type": "code",
+      "source_file": "assets/guest-registration.js",
+      "source_location": "L46",
+      "_origin": "ast",
+      "id": "assets_guest_registration_updatestepper",
+      "community": 10,
+      "norm_label": "updatestepper()"
+    },
+    {
+      "label": "getFieldsInStep()",
+      "file_type": "code",
+      "source_file": "assets/guest-registration.js",
+      "source_location": "L80",
+      "_origin": "ast",
+      "id": "assets_guest_registration_getfieldsinstep",
+      "community": 10,
+      "norm_label": "getfieldsinstep()"
+    },
+    {
+      "label": "validatePickerField()",
+      "file_type": "code",
+      "source_file": "assets/guest-registration.js",
+      "source_location": "L88",
+      "_origin": "ast",
+      "id": "assets_guest_registration_validatepickerfield",
+      "community": 10,
+      "norm_label": "validatepickerfield()"
+    },
+    {
+      "label": "validateStep()",
+      "file_type": "code",
+      "source_file": "assets/guest-registration.js",
+      "source_location": "L95",
+      "_origin": "ast",
+      "id": "assets_guest_registration_validatestep",
+      "community": 10,
+      "norm_label": "validatestep()"
+    },
+    {
+      "label": "goToStep()",
+      "file_type": "code",
+      "source_file": "assets/guest-registration.js",
+      "source_location": "L133",
+      "_origin": "ast",
+      "id": "assets_guest_registration_gotostep",
+      "community": 10,
+      "norm_label": "gotostep()"
+    },
+    {
+      "label": "updateReview()",
+      "file_type": "code",
+      "source_file": "assets/guest-registration.js",
+      "source_location": "L140",
+      "_origin": "ast",
+      "id": "assets_guest_registration_updatereview",
+      "community": 10,
+      "norm_label": "updatereview()"
+    },
+    {
+      "label": "handleContinue()",
+      "file_type": "code",
+      "source_file": "assets/guest-registration.js",
+      "source_location": "L154",
+      "_origin": "ast",
+      "id": "assets_guest_registration_handlecontinue",
+      "community": 10,
+      "norm_label": "handlecontinue()"
+    },
+    {
+      "label": "handleBack()",
+      "file_type": "code",
+      "source_file": "assets/guest-registration.js",
+      "source_location": "L158",
+      "_origin": "ast",
+      "id": "assets_guest_registration_handleback",
+      "community": 10,
+      "norm_label": "handleback()"
+    },
+    {
+      "label": "setSubmitLoading()",
+      "file_type": "code",
+      "source_file": "assets/guest-registration.js",
+      "source_location": "L185",
+      "_origin": "ast",
+      "id": "assets_guest_registration_setsubmitloading",
+      "community": 10,
+      "norm_label": "setsubmitloading()"
+    },
+    {
+      "label": "buildPicker()",
+      "file_type": "code",
+      "source_file": "assets/guest-registration.js",
+      "source_location": "L228",
+      "_origin": "ast",
+      "id": "assets_guest_registration_buildpicker",
+      "community": 10,
+      "norm_label": "buildpicker()"
+    },
+    {
       "label": "composer.json",
       "file_type": "code",
       "source_file": "composer.json",
@@ -360,7 +490,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "scripts_test_api_attendance",
-      "community": 81,
+      "community": 4,
       "norm_label": "test_api_attendance.php"
     },
     {
@@ -370,7 +500,7 @@
       "source_location": "L17",
       "_origin": "ast",
       "id": "scripts_test_api_attendance_file_get_contents",
-      "community": 81,
+      "community": 4,
       "norm_label": "file_get_contents()"
     },
     {
@@ -590,7 +720,7 @@
       "source_location": "L166",
       "_origin": "ast",
       "id": "src_controllers_adminattendancecontroller_adminattendancecontroller_manualattendance",
-      "community": 4,
+      "community": 12,
       "norm_label": ".manualattendance()"
     },
     {
@@ -610,7 +740,7 @@
       "source_location": "L8",
       "_origin": "ast",
       "id": "src_controllers_adminattendancegallerycontroller_adminattendancegallerycontroller",
-      "community": 3,
+      "community": 0,
       "norm_label": "adminattendancegallerycontroller"
     },
     {
@@ -620,7 +750,7 @@
       "source_location": "L10",
       "_origin": "ast",
       "id": "src_controllers_adminattendancegallerycontroller_adminattendancegallerycontroller_list",
-      "community": 3,
+      "community": 0,
       "norm_label": ".list()"
     },
     {
@@ -630,7 +760,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "src_controllers_admineventscontroller",
-      "community": 0,
+      "community": 3,
       "norm_label": "admineventscontroller.php"
     },
     {
@@ -640,7 +770,7 @@
       "source_location": "L8",
       "_origin": "ast",
       "id": "src_controllers_admineventscontroller_admineventscontroller",
-      "community": 10,
+      "community": 3,
       "norm_label": "admineventscontroller"
     },
     {
@@ -650,7 +780,7 @@
       "source_location": "L10",
       "_origin": "ast",
       "id": "src_controllers_admineventscontroller_admineventscontroller_requireadmin",
-      "community": 10,
+      "community": 3,
       "norm_label": ".requireadmin()"
     },
     {
@@ -660,7 +790,7 @@
       "source_location": "L16",
       "_origin": "ast",
       "id": "src_controllers_admineventscontroller_admineventscontroller_list",
-      "community": 10,
+      "community": 3,
       "norm_label": ".list()"
     },
     {
@@ -670,7 +800,7 @@
       "source_location": "L24",
       "_origin": "ast",
       "id": "src_controllers_admineventscontroller_admineventscontroller_create",
-      "community": 10,
+      "community": 3,
       "norm_label": ".create()"
     },
     {
@@ -680,7 +810,7 @@
       "source_location": "L37",
       "_origin": "ast",
       "id": "src_controllers_admineventscontroller_admineventscontroller_setactive",
-      "community": 10,
+      "community": 3,
       "norm_label": ".setactive()"
     },
     {
@@ -910,7 +1040,7 @@
       "source_location": "L8",
       "_origin": "ast",
       "id": "src_controllers_adminlogscontroller_adminlogscontroller",
-      "community": 3,
+      "community": 0,
       "norm_label": "adminlogscontroller"
     },
     {
@@ -920,7 +1050,7 @@
       "source_location": "L10",
       "_origin": "ast",
       "id": "src_controllers_adminlogscontroller_adminlogscontroller_list",
-      "community": 3,
+      "community": 0,
       "norm_label": ".list()"
     },
     {
@@ -930,7 +1060,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "src_controllers_adminregistrantscontroller",
-      "community": 0,
+      "community": 2,
       "norm_label": "adminregistrantscontroller.php"
     },
     {
@@ -1090,7 +1220,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "src_controllers_advancedexportcontroller",
-      "community": 0,
+      "community": 3,
       "norm_label": "advancedexportcontroller.php"
     },
     {
@@ -1100,7 +1230,7 @@
       "source_location": "L8",
       "_origin": "ast",
       "id": "src_controllers_advancedexportcontroller_advancedexportcontroller",
-      "community": 92,
+      "community": 3,
       "norm_label": "advancedexportcontroller"
     },
     {
@@ -1110,7 +1240,7 @@
       "source_location": "L10",
       "_origin": "ast",
       "id": "src_controllers_advancedexportcontroller_advancedexportcontroller_requireadmin",
-      "community": 92,
+      "community": 3,
       "norm_label": ".requireadmin()"
     },
     {
@@ -1120,7 +1250,7 @@
       "source_location": "L16",
       "_origin": "ast",
       "id": "src_controllers_advancedexportcontroller_advancedexportcontroller_registrantsxlsx",
-      "community": 92,
+      "community": 3,
       "norm_label": ".registrantsxlsx()"
     },
     {
@@ -1130,7 +1260,7 @@
       "source_location": "L48",
       "_origin": "ast",
       "id": "src_controllers_advancedexportcontroller_advancedexportcontroller_attendancexlsx",
-      "community": 92,
+      "community": 3,
       "norm_label": ".attendancexlsx()"
     },
     {
@@ -1140,7 +1270,7 @@
       "source_location": "L78",
       "_origin": "ast",
       "id": "src_controllers_advancedexportcontroller_advancedexportcontroller_attendancepdf",
-      "community": 92,
+      "community": 3,
       "norm_label": ".attendancepdf()"
     },
     {
@@ -1240,7 +1370,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "src_controllers_exportcontroller",
-      "community": 0,
+      "community": 223,
       "norm_label": "exportcontroller.php"
     },
     {
@@ -1250,7 +1380,7 @@
       "source_location": "L8",
       "_origin": "ast",
       "id": "src_controllers_exportcontroller_exportcontroller",
-      "community": 3,
+      "community": 223,
       "norm_label": "exportcontroller"
     },
     {
@@ -1260,7 +1390,7 @@
       "source_location": "L10",
       "_origin": "ast",
       "id": "src_controllers_exportcontroller_exportcontroller_requireadmin",
-      "community": 3,
+      "community": 223,
       "norm_label": ".requireadmin()"
     },
     {
@@ -1270,7 +1400,7 @@
       "source_location": "L16",
       "_origin": "ast",
       "id": "src_controllers_exportcontroller_exportcontroller_registrantscsv",
-      "community": 3,
+      "community": 223,
       "norm_label": ".registrantscsv()"
     },
     {
@@ -1280,7 +1410,7 @@
       "source_location": "L46",
       "_origin": "ast",
       "id": "src_controllers_exportcontroller_exportcontroller_attendancecsv",
-      "community": 3,
+      "community": 223,
       "norm_label": ".attendancecsv()"
     },
     {
@@ -1300,7 +1430,7 @@
       "source_location": "L8",
       "_origin": "ast",
       "id": "src_controllers_participantcontroller_participantcontroller",
-      "community": 3,
+      "community": 0,
       "norm_label": "participantcontroller"
     },
     {
@@ -1310,7 +1440,7 @@
       "source_location": "L10",
       "_origin": "ast",
       "id": "src_controllers_participantcontroller_participantcontroller_getbyuuidjson",
-      "community": 3,
+      "community": 0,
       "norm_label": ".getbyuuidjson()"
     },
     {
@@ -1320,7 +1450,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "src_controllers_registercontroller",
-      "community": 0,
+      "community": 2,
       "norm_label": "registercontroller.php"
     },
     {
@@ -1390,7 +1520,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "src_controllers_reportcontroller",
-      "community": 0,
+      "community": 8,
       "norm_label": "reportcontroller.php"
     },
     {
@@ -1490,7 +1620,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "src_controllers_samplecsvcontroller",
-      "community": 12,
+      "community": 0,
       "norm_label": "samplecsvcontroller.php"
     },
     {
@@ -1500,7 +1630,7 @@
       "source_location": "L6",
       "_origin": "ast",
       "id": "src_controllers_samplecsvcontroller_samplecsvcontroller",
-      "community": 12,
+      "community": 0,
       "norm_label": "samplecsvcontroller"
     },
     {
@@ -1510,7 +1640,7 @@
       "source_location": "L8",
       "_origin": "ast",
       "id": "src_controllers_samplecsvcontroller_samplecsvcontroller_download",
-      "community": 12,
+      "community": 0,
       "norm_label": ".download()"
     },
     {
@@ -1760,7 +1890,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "src_services_logger",
-      "community": 4,
+      "community": 0,
       "norm_label": "logger.php"
     },
     {
@@ -1790,7 +1920,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "src_services_mailer",
-      "community": 0,
+      "community": 2,
       "norm_label": "mailer.php"
     },
     {
@@ -1890,7 +2020,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "src_services_qrservice",
-      "community": 0,
+      "community": 2,
       "norm_label": "qrservice.php"
     },
     {
@@ -2090,7 +2220,7 @@
       "source_location": "L198",
       "_origin": "ast",
       "id": "src_services_ratelimiter_ratelimiter_loadfiledata",
-      "community": 81,
+      "community": 4,
       "norm_label": ".loadfiledata()"
     },
     {
@@ -5270,7 +5400,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "vendor_tecnickcom_tcpdf_include_tcpdf_fonts",
-      "community": 65,
+      "community": 62,
       "norm_label": "tcpdf_fonts.php"
     },
     {
@@ -5280,7 +5410,7 @@
       "source_location": "L48",
       "_origin": "ast",
       "id": "vendor_tecnickcom_tcpdf_include_tcpdf_fonts_tcpdf_fonts",
-      "community": 65,
+      "community": 62,
       "norm_label": "tcpdf_fonts"
     },
     {
@@ -5290,7 +5420,7 @@
       "source_location": "L72",
       "_origin": "ast",
       "id": "vendor_tecnickcom_tcpdf_include_tcpdf_fonts_tcpdf_fonts_addttffont",
-      "community": 81,
+      "community": 4,
       "norm_label": ".addttffont()"
     },
     {
@@ -5300,7 +5430,7 @@
       "source_location": "L932",
       "_origin": "ast",
       "id": "vendor_tecnickcom_tcpdf_include_tcpdf_fonts_tcpdf_fonts_getttftablechecksum",
-      "community": 65,
+      "community": 62,
       "norm_label": "._getttftablechecksum()"
     },
     {
@@ -5320,7 +5450,7 @@
       "source_location": "L1400",
       "_origin": "ast",
       "id": "vendor_tecnickcom_tcpdf_include_tcpdf_fonts_tcpdf_fonts_putfontwidths",
-      "community": 65,
+      "community": 62,
       "norm_label": "._putfontwidths()"
     },
     {
@@ -5330,7 +5460,7 @@
       "source_location": "L1509",
       "_origin": "ast",
       "id": "vendor_tecnickcom_tcpdf_include_tcpdf_fonts_tcpdf_fonts_updatecidtogidmap",
-      "community": 65,
+      "community": 62,
       "norm_label": ".updatecidtogidmap()"
     },
     {
@@ -5340,7 +5470,7 @@
       "source_location": "L1525",
       "_origin": "ast",
       "id": "vendor_tecnickcom_tcpdf_include_tcpdf_fonts_tcpdf_fonts_getfontpath",
-      "community": 65,
+      "community": 62,
       "norm_label": "._getfontpath()"
     },
     {
@@ -5350,7 +5480,7 @@
       "source_location": "L1546",
       "_origin": "ast",
       "id": "vendor_tecnickcom_tcpdf_include_tcpdf_fonts_tcpdf_fonts_getfontfullpath",
-      "community": 65,
+      "community": 62,
       "norm_label": ".getfontfullpath()"
     },
     {
@@ -5360,7 +5490,7 @@
       "source_location": "L1569",
       "_origin": "ast",
       "id": "vendor_tecnickcom_tcpdf_include_tcpdf_fonts_tcpdf_fonts_getfontrefsize",
-      "community": 65,
+      "community": 62,
       "norm_label": ".getfontrefsize()"
     },
     {
@@ -5370,7 +5500,7 @@
       "source_location": "L1669",
       "_origin": "ast",
       "id": "vendor_tecnickcom_tcpdf_include_tcpdf_fonts_tcpdf_fonts_unichr",
-      "community": 65,
+      "community": 62,
       "norm_label": ".unichr()"
     },
     {
@@ -5380,7 +5510,7 @@
       "source_location": "L1696",
       "_origin": "ast",
       "id": "vendor_tecnickcom_tcpdf_include_tcpdf_fonts_tcpdf_fonts_unichrunicode",
-      "community": 65,
+      "community": 62,
       "norm_label": ".unichrunicode()"
     },
     {
@@ -5390,7 +5520,7 @@
       "source_location": "L1706",
       "_origin": "ast",
       "id": "vendor_tecnickcom_tcpdf_include_tcpdf_fonts_tcpdf_fonts_unichrascii",
-      "community": 65,
+      "community": 62,
       "norm_label": ".unichrascii()"
     },
     {
@@ -5400,7 +5530,7 @@
       "source_location": "L1748",
       "_origin": "ast",
       "id": "vendor_tecnickcom_tcpdf_include_tcpdf_fonts_tcpdf_fonts_arrutf8toutf16be",
-      "community": 65,
+      "community": 62,
       "norm_label": ".arrutf8toutf16be()"
     },
     {
@@ -5410,7 +5540,7 @@
       "source_location": "L1782",
       "_origin": "ast",
       "id": "vendor_tecnickcom_tcpdf_include_tcpdf_fonts_tcpdf_fonts_utf8arraytouniarray",
-      "community": 65,
+      "community": 62,
       "norm_label": ".utf8arraytouniarray()"
     },
     {
@@ -5420,7 +5550,7 @@
       "source_location": "L1798",
       "_origin": "ast",
       "id": "vendor_tecnickcom_tcpdf_include_tcpdf_fonts_tcpdf_fonts_utf8arrsubstring",
-      "community": 65,
+      "community": 62,
       "norm_label": ".utf8arrsubstring()"
     },
     {
@@ -5430,7 +5560,7 @@
       "source_location": "L1821",
       "_origin": "ast",
       "id": "vendor_tecnickcom_tcpdf_include_tcpdf_fonts_tcpdf_fonts_uniarrsubstring",
-      "community": 65,
+      "community": 62,
       "norm_label": ".uniarrsubstring()"
     },
     {
@@ -5440,7 +5570,7 @@
       "source_location": "L1843",
       "_origin": "ast",
       "id": "vendor_tecnickcom_tcpdf_include_tcpdf_fonts_tcpdf_fonts_utf8arrtolatin1arr",
-      "community": 65,
+      "community": 62,
       "norm_label": ".utf8arrtolatin1arr()"
     },
     {
@@ -5450,7 +5580,7 @@
       "source_location": "L1868",
       "_origin": "ast",
       "id": "vendor_tecnickcom_tcpdf_include_tcpdf_fonts_tcpdf_fonts_utf8arrtolatin1",
-      "community": 65,
+      "community": 62,
       "norm_label": ".utf8arrtolatin1()"
     },
     {
@@ -5460,7 +5590,7 @@
       "source_location": "L1892",
       "_origin": "ast",
       "id": "vendor_tecnickcom_tcpdf_include_tcpdf_fonts_tcpdf_fonts_uniord",
-      "community": 65,
+      "community": 62,
       "norm_label": ".uniord()"
     },
     {
@@ -5470,7 +5600,7 @@
       "source_location": "L1932",
       "_origin": "ast",
       "id": "vendor_tecnickcom_tcpdf_include_tcpdf_fonts_tcpdf_fonts_getuniord",
-      "community": 65,
+      "community": 62,
       "norm_label": ".getuniord()"
     },
     {
@@ -5480,7 +5610,7 @@
       "source_location": "L2001",
       "_origin": "ast",
       "id": "vendor_tecnickcom_tcpdf_include_tcpdf_fonts_tcpdf_fonts_utf8stringtoarray",
-      "community": 65,
+      "community": 62,
       "norm_label": ".utf8stringtoarray()"
     },
     {
@@ -5490,7 +5620,7 @@
       "source_location": "L2028",
       "_origin": "ast",
       "id": "vendor_tecnickcom_tcpdf_include_tcpdf_fonts_tcpdf_fonts_utf8tolatin1",
-      "community": 65,
+      "community": 62,
       "norm_label": ".utf8tolatin1()"
     },
     {
@@ -5500,7 +5630,7 @@
       "source_location": "L2044",
       "_origin": "ast",
       "id": "vendor_tecnickcom_tcpdf_include_tcpdf_fonts_tcpdf_fonts_utf8toutf16be",
-      "community": 65,
+      "community": 62,
       "norm_label": ".utf8toutf16be()"
     },
     {
@@ -5510,7 +5640,7 @@
       "source_location": "L2064",
       "_origin": "ast",
       "id": "vendor_tecnickcom_tcpdf_include_tcpdf_fonts_tcpdf_fonts_utf8strrev",
-      "community": 65,
+      "community": 62,
       "norm_label": ".utf8strrev()"
     },
     {
@@ -5520,7 +5650,7 @@
       "source_location": "L2081",
       "_origin": "ast",
       "id": "vendor_tecnickcom_tcpdf_include_tcpdf_fonts_tcpdf_fonts_utf8strarrrev",
-      "community": 65,
+      "community": 62,
       "norm_label": ".utf8strarrrev()"
     },
     {
@@ -5530,7 +5660,7 @@
       "source_location": "L2097",
       "_origin": "ast",
       "id": "vendor_tecnickcom_tcpdf_include_tcpdf_fonts_tcpdf_fonts_utf8bidi",
-      "community": 65,
+      "community": 62,
       "norm_label": ".utf8bidi()"
     },
     {
@@ -5980,7 +6110,7 @@
       "source_location": "L1532",
       "_origin": "ast",
       "id": "vendor_tecnickcom_tcpdf_include_tcpdf_static_tcpdf_static_gethyphenpatternsfromtex",
-      "community": 81,
+      "community": 4,
       "norm_label": ".gethyphenpatternsfromtex()"
     },
     {
@@ -6080,7 +6210,7 @@
       "source_location": "L1918",
       "_origin": "ast",
       "id": "vendor_tecnickcom_tcpdf_include_tcpdf_static_tcpdf_static_filegetcontents",
-      "community": 81,
+      "community": 4,
       "norm_label": ".filegetcontents()"
     },
     {
@@ -6310,7 +6440,7 @@
       "source_location": "L2398",
       "_origin": "ast",
       "id": "vendor_tecnickcom_tcpdf_tcpdf_tcpdf_setrtl",
-      "community": 58,
+      "community": 11,
       "norm_label": ".setrtl()"
     },
     {
@@ -6330,7 +6460,7 @@
       "source_location": "L2424",
       "_origin": "ast",
       "id": "vendor_tecnickcom_tcpdf_tcpdf_tcpdf_settemprtl",
-      "community": 58,
+      "community": 11,
       "norm_label": ".settemprtl()"
     },
     {
@@ -6440,7 +6570,7 @@
       "source_location": "L2584",
       "_origin": "ast",
       "id": "vendor_tecnickcom_tcpdf_tcpdf_tcpdf_getbreakmargin",
-      "community": 58,
+      "community": 11,
       "norm_label": ".getbreakmargin()"
     },
     {
@@ -6690,7 +6820,7 @@
       "source_location": "L3033",
       "_origin": "ast",
       "id": "vendor_tecnickcom_tcpdf_tcpdf_tcpdf_open",
-      "community": 58,
+      "community": 11,
       "norm_label": ".open()"
     },
     {
@@ -6740,7 +6870,7 @@
       "source_location": "L3158",
       "_origin": "ast",
       "id": "vendor_tecnickcom_tcpdf_tcpdf_tcpdf_getnumpages",
-      "community": 58,
+      "community": 11,
       "norm_label": ".getnumpages()"
     },
     {
@@ -6750,7 +6880,7 @@
       "source_location": "L3171",
       "_origin": "ast",
       "id": "vendor_tecnickcom_tcpdf_tcpdf_tcpdf_addtocpage",
-      "community": 58,
+      "community": 11,
       "norm_label": ".addtocpage()"
     },
     {
@@ -6760,7 +6890,7 @@
       "source_location": "L3181",
       "_origin": "ast",
       "id": "vendor_tecnickcom_tcpdf_tcpdf_tcpdf_endtocpage",
-      "community": 58,
+      "community": 11,
       "norm_label": ".endtocpage()"
     },
     {
@@ -7080,7 +7210,7 @@
       "source_location": "L3911",
       "_origin": "ast",
       "id": "vendor_tecnickcom_tcpdf_tcpdf_tcpdf_setcolorarray",
-      "community": 11,
+      "community": 83,
       "norm_label": ".setcolorarray()"
     },
     {
@@ -7220,7 +7350,7 @@
       "source_location": "L4267",
       "_origin": "ast",
       "id": "vendor_tecnickcom_tcpdf_tcpdf_tcpdf_addfont",
-      "community": 82,
+      "community": 62,
       "norm_label": ".addfont()"
     },
     {
@@ -7280,7 +7410,7 @@
       "source_location": "L4680",
       "_origin": "ast",
       "id": "vendor_tecnickcom_tcpdf_tcpdf_tcpdf_getfontdescent",
-      "community": 82,
+      "community": 62,
       "norm_label": ".getfontdescent()"
     },
     {
@@ -7290,7 +7420,7 @@
       "source_location": "L4701",
       "_origin": "ast",
       "id": "vendor_tecnickcom_tcpdf_tcpdf_tcpdf_getfontascent",
-      "community": 82,
+      "community": 62,
       "norm_label": ".getfontascent()"
     },
     {
@@ -7300,7 +7430,7 @@
       "source_location": "L4721",
       "_origin": "ast",
       "id": "vendor_tecnickcom_tcpdf_tcpdf_tcpdf_ischardefined",
-      "community": 82,
+      "community": 62,
       "norm_label": ".ischardefined()"
     },
     {
@@ -7310,7 +7440,7 @@
       "source_location": "L4748",
       "_origin": "ast",
       "id": "vendor_tecnickcom_tcpdf_tcpdf_tcpdf_replacemissingchars",
-      "community": 82,
+      "community": 62,
       "norm_label": ".replacemissingchars()"
     },
     {
@@ -7450,7 +7580,7 @@
       "source_location": "L5684",
       "_origin": "ast",
       "id": "vendor_tecnickcom_tcpdf_tcpdf_tcpdf_replacechar",
-      "community": 82,
+      "community": 62,
       "norm_label": ".replacechar()"
     },
     {
@@ -7690,7 +7820,7 @@
       "source_location": "L7957",
       "_origin": "ast",
       "id": "vendor_tecnickcom_tcpdf_tcpdf_tcpdf_getinternalpagenumberaliases",
-      "community": 65,
+      "community": 11,
       "norm_label": ".getinternalpagenumberaliases()"
     },
     {
@@ -7700,7 +7830,7 @@
       "source_location": "L7978",
       "_origin": "ast",
       "id": "vendor_tecnickcom_tcpdf_tcpdf_tcpdf_getallinternalpagenumberaliases",
-      "community": 65,
+      "community": 11,
       "norm_label": ".getallinternalpagenumberaliases()"
     },
     {
@@ -7710,7 +7840,7 @@
       "source_location": "L7996",
       "_origin": "ast",
       "id": "vendor_tecnickcom_tcpdf_tcpdf_tcpdf_replacerightshiftpagenumaliases",
-      "community": 65,
+      "community": 62,
       "norm_label": ".replacerightshiftpagenumaliases()"
     },
     {
@@ -7920,7 +8050,7 @@
       "source_location": "L10029",
       "_origin": "ast",
       "id": "vendor_tecnickcom_tcpdf_tcpdf_tcpdf_putviewerpreferences",
-      "community": 62,
+      "community": 59,
       "norm_label": "._putviewerpreferences()"
     },
     {
@@ -8180,7 +8310,7 @@
       "source_location": "L10551",
       "_origin": "ast",
       "id": "vendor_tecnickcom_tcpdf_tcpdf_tcpdf_getpdfdata",
-      "community": 58,
+      "community": 11,
       "norm_label": ".getpdfdata()"
     },
     {
@@ -8210,7 +8340,7 @@
       "source_location": "L10623",
       "_origin": "ast",
       "id": "vendor_tecnickcom_tcpdf_tcpdf_tcpdf_unhtmlentities",
-      "community": 60,
+      "community": 62,
       "norm_label": ".unhtmlentities()"
     },
     {
@@ -8220,7 +8350,7 @@
       "source_location": "L10638",
       "_origin": "ast",
       "id": "vendor_tecnickcom_tcpdf_tcpdf_tcpdf_objectkey",
-      "community": 62,
+      "community": 232,
       "norm_label": "._objectkey()"
     },
     {
@@ -8230,7 +8360,7 @@
       "source_location": "L10658",
       "_origin": "ast",
       "id": "vendor_tecnickcom_tcpdf_tcpdf_tcpdf_encrypt_data",
-      "community": 62,
+      "community": 232,
       "norm_label": "._encrypt_data()"
     },
     {
@@ -8320,7 +8450,7 @@
       "source_location": "L11141",
       "_origin": "ast",
       "id": "vendor_tecnickcom_tcpdf_tcpdf_tcpdf_starttransform",
-      "community": 11,
+      "community": 60,
       "norm_label": ".starttransform()"
     },
     {
@@ -8330,7 +8460,7 @@
       "source_location": "L11164",
       "_origin": "ast",
       "id": "vendor_tecnickcom_tcpdf_tcpdf_tcpdf_stoptransform",
-      "community": 11,
+      "community": 60,
       "norm_label": ".stoptransform()"
     },
     {
@@ -8510,7 +8640,7 @@
       "source_location": "L11491",
       "_origin": "ast",
       "id": "vendor_tecnickcom_tcpdf_tcpdf_tcpdf_getlinewidth",
-      "community": 58,
+      "community": 11,
       "norm_label": ".getlinewidth()"
     },
     {
@@ -8550,7 +8680,7 @@
       "source_location": "L11610",
       "_origin": "ast",
       "id": "vendor_tecnickcom_tcpdf_tcpdf_tcpdf_outrect",
-      "community": 62,
+      "community": 60,
       "norm_label": "._outrect()"
     },
     {
@@ -8810,7 +8940,7 @@
       "source_location": "L12703",
       "_origin": "ast",
       "id": "vendor_tecnickcom_tcpdf_tcpdf_tcpdf_addjavascriptobject",
-      "community": 58,
+      "community": 11,
       "norm_label": ".addjavascriptobject()"
     },
     {
@@ -9090,7 +9220,7 @@
       "source_location": "L13885",
       "_origin": "ast",
       "id": "vendor_tecnickcom_tcpdf_tcpdf_tcpdf_pagenoformatted",
-      "community": 11,
+      "community": 59,
       "norm_label": ".pagenoformatted()"
     },
     {
@@ -9310,7 +9440,7 @@
       "source_location": "L14511",
       "_origin": "ast",
       "id": "vendor_tecnickcom_tcpdf_tcpdf_tcpdf_lineargradient",
-      "community": 11,
+      "community": 226,
       "norm_label": ".lineargradient()"
     },
     {
@@ -9320,7 +9450,7 @@
       "source_location": "L14529",
       "_origin": "ast",
       "id": "vendor_tecnickcom_tcpdf_tcpdf_tcpdf_radialgradient",
-      "community": 11,
+      "community": 226,
       "norm_label": ".radialgradient()"
     },
     {
@@ -9330,7 +9460,7 @@
       "source_location": "L14552",
       "_origin": "ast",
       "id": "vendor_tecnickcom_tcpdf_tcpdf_tcpdf_coonspatchmesh",
-      "community": 11,
+      "community": 226,
       "norm_label": ".coonspatchmesh()"
     },
     {
@@ -9340,7 +9470,7 @@
       "source_location": "L14644",
       "_origin": "ast",
       "id": "vendor_tecnickcom_tcpdf_tcpdf_tcpdf_clip",
-      "community": 11,
+      "community": 226,
       "norm_label": ".clip()"
     },
     {
@@ -9350,7 +9480,7 @@
       "source_location": "L14671",
       "_origin": "ast",
       "id": "vendor_tecnickcom_tcpdf_tcpdf_tcpdf_gradient",
-      "community": 11,
+      "community": 226,
       "norm_label": ".gradient()"
     },
     {
@@ -9650,7 +9780,7 @@
       "source_location": "L17330",
       "_origin": "ast",
       "id": "vendor_tecnickcom_tcpdf_tcpdf_tcpdf_allowedtcpdftag",
-      "community": 58,
+      "community": 11,
       "norm_label": ".allowedtcpdftag()"
     },
     {
@@ -9660,7 +9790,7 @@
       "source_location": "L17358",
       "_origin": "ast",
       "id": "vendor_tecnickcom_tcpdf_tcpdf_tcpdf_writehtmlcell",
-      "community": 58,
+      "community": 11,
       "norm_label": ".writehtmlcell()"
     },
     {
@@ -9680,7 +9810,7 @@
       "source_location": "L18936",
       "_origin": "ast",
       "id": "vendor_tecnickcom_tcpdf_tcpdf_tcpdf_isrelativepath",
-      "community": 60,
+      "community": 62,
       "norm_label": ".isrelativepath()"
     },
     {
@@ -9730,7 +9860,7 @@
       "source_location": "L20262",
       "_origin": "ast",
       "id": "vendor_tecnickcom_tcpdf_tcpdf_tcpdf_getborderstartposition",
-      "community": 58,
+      "community": 11,
       "norm_label": ".getborderstartposition()"
     },
     {
@@ -9770,7 +9900,7 @@
       "source_location": "L20519",
       "_origin": "ast",
       "id": "vendor_tecnickcom_tcpdf_tcpdf_tcpdf_swapmargins",
-      "community": 58,
+      "community": 11,
       "norm_label": ".swapmargins()"
     },
     {
@@ -9960,7 +10090,7 @@
       "source_location": "L21133",
       "_origin": "ast",
       "id": "vendor_tecnickcom_tcpdf_tcpdf_tcpdf_setfontbuffer",
-      "community": 82,
+      "community": 62,
       "norm_label": ".setfontbuffer()"
     },
     {
@@ -9970,7 +10100,7 @@
       "source_location": "L21152",
       "_origin": "ast",
       "id": "vendor_tecnickcom_tcpdf_tcpdf_tcpdf_setfontsubbuffer",
-      "community": 82,
+      "community": 62,
       "norm_label": ".setfontsubbuffer()"
     },
     {
@@ -9980,7 +10110,7 @@
       "source_location": "L21166",
       "_origin": "ast",
       "id": "vendor_tecnickcom_tcpdf_tcpdf_tcpdf_getfontbuffer",
-      "community": 82,
+      "community": 62,
       "norm_label": ".getfontbuffer()"
     },
     {
@@ -10090,7 +10220,7 @@
       "source_location": "L22070",
       "_origin": "ast",
       "id": "vendor_tecnickcom_tcpdf_tcpdf_tcpdf_setcolumnsarray",
-      "community": 58,
+      "community": 11,
       "norm_label": ".setcolumnsarray()"
     },
     {
@@ -10160,7 +10290,7 @@
       "source_location": "L22300",
       "_origin": "ast",
       "id": "vendor_tecnickcom_tcpdf_tcpdf_tcpdf_hyphenateword",
-      "community": 65,
+      "community": 62,
       "norm_label": ".hyphenateword()"
     },
     {
@@ -10170,7 +10300,7 @@
       "source_location": "L22380",
       "_origin": "ast",
       "id": "vendor_tecnickcom_tcpdf_tcpdf_tcpdf_hyphenatetext",
-      "community": 65,
+      "community": 62,
       "norm_label": ".hyphenatetext()"
     },
     {
@@ -10450,7 +10580,7 @@
       "source_location": "L24738",
       "_origin": "ast",
       "id": "vendor_tecnickcom_tcpdf_tcpdf_tcpdf_endsvgelementhandler",
-      "community": 11,
+      "community": 60,
       "norm_label": ".endsvgelementhandler()"
     },
     {
@@ -10480,7 +10610,7 @@
       "source_location": "L24869",
       "_origin": "ast",
       "id": "vendor_tecnickcom_tcpdf_tcpdf_tcpdf_fileexists",
-      "community": 62,
+      "community": 59,
       "norm_label": ".fileexists()"
     },
     {
@@ -11112,6 +11242,46 @@
       "id": "views_partials_admin_nav",
       "community": 53,
       "norm_label": "admin_nav.php"
+    },
+    {
+      "label": "guest_footer.php",
+      "file_type": "code",
+      "source_file": "views/partials/guest_footer.php",
+      "source_location": "L1",
+      "_origin": "ast",
+      "id": "views_partials_guest_footer",
+      "community": 233,
+      "norm_label": "guest_footer.php"
+    },
+    {
+      "label": "guest_head.php",
+      "file_type": "code",
+      "source_file": "views/partials/guest_head.php",
+      "source_location": "L1",
+      "_origin": "ast",
+      "id": "views_partials_guest_head",
+      "community": 234,
+      "norm_label": "guest_head.php"
+    },
+    {
+      "label": "guest_hero.php",
+      "file_type": "code",
+      "source_file": "views/partials/guest_hero.php",
+      "source_location": "L1",
+      "_origin": "ast",
+      "id": "views_partials_guest_hero",
+      "community": 235,
+      "norm_label": "guest_hero.php"
+    },
+    {
+      "label": "guest_nav.php",
+      "file_type": "code",
+      "source_file": "views/partials/guest_nav.php",
+      "source_location": "L1",
+      "_origin": "ast",
+      "id": "views_partials_guest_nav",
+      "community": 236,
+      "norm_label": "guest_nav.php"
     },
     {
       "label": "register.php",
@@ -12094,6 +12264,606 @@
       "norm_label": "deploy notes"
     },
     {
+      "label": "guest_registration_ui_spec.md",
+      "file_type": "document",
+      "source_file": "TODOUI/guest_registration_ui_spec.md",
+      "source_location": "L1",
+      "_origin": "ast",
+      "id": "todoui_guest_registration_ui_spec",
+      "community": 92,
+      "norm_label": "guest_registration_ui_spec.md"
+    },
+    {
+      "label": "Guest Registration UI/UX Improvement Spec",
+      "file_type": "document",
+      "source_file": "TODOUI/guest_registration_ui_spec.md",
+      "source_location": "L1",
+      "_origin": "ast",
+      "id": "todoui_guest_registration_ui_spec_guest_registration_ui_ux_improvement_spec",
+      "community": 92,
+      "norm_label": "guest registration ui/ux improvement spec"
+    },
+    {
+      "label": "1. Executive Summary",
+      "file_type": "document",
+      "source_file": "TODOUI/guest_registration_ui_spec.md",
+      "source_location": "L3",
+      "_origin": "ast",
+      "id": "todoui_guest_registration_ui_spec_1_executive_summary",
+      "community": 230,
+      "norm_label": "1. executive summary"
+    },
+    {
+      "label": "Goals",
+      "file_type": "document",
+      "source_file": "TODOUI/guest_registration_ui_spec.md",
+      "source_location": "L9",
+      "_origin": "ast",
+      "id": "todoui_guest_registration_ui_spec_goals",
+      "community": 230,
+      "norm_label": "goals"
+    },
+    {
+      "label": "Out of scope (for this phase)",
+      "file_type": "document",
+      "source_file": "TODOUI/guest_registration_ui_spec.md",
+      "source_location": "L16",
+      "_origin": "ast",
+      "id": "todoui_guest_registration_ui_spec_out_of_scope_for_this_phase",
+      "community": 230,
+      "norm_label": "out of scope (for this phase)"
+    },
+    {
+      "label": "2. Current State Audit",
+      "file_type": "document",
+      "source_file": "TODOUI/guest_registration_ui_spec.md",
+      "source_location": "L24",
+      "_origin": "ast",
+      "id": "todoui_guest_registration_ui_spec_2_current_state_audit",
+      "community": 228,
+      "norm_label": "2. current state audit"
+    },
+    {
+      "label": "Files in scope",
+      "file_type": "document",
+      "source_file": "TODOUI/guest_registration_ui_spec.md",
+      "source_location": "L26",
+      "_origin": "ast",
+      "id": "todoui_guest_registration_ui_spec_files_in_scope",
+      "community": 228,
+      "norm_label": "files in scope"
+    },
+    {
+      "label": "What works today",
+      "file_type": "document",
+      "source_file": "TODOUI/guest_registration_ui_spec.md",
+      "source_location": "L34",
+      "_origin": "ast",
+      "id": "todoui_guest_registration_ui_spec_what_works_today",
+      "community": 228,
+      "norm_label": "what works today"
+    },
+    {
+      "label": "Pain points",
+      "file_type": "document",
+      "source_file": "TODOUI/guest_registration_ui_spec.md",
+      "source_location": "L40",
+      "_origin": "ast",
+      "id": "todoui_guest_registration_ui_spec_pain_points",
+      "community": 228,
+      "norm_label": "pain points"
+    },
+    {
+      "label": "3. Design Direction",
+      "file_type": "document",
+      "source_file": "TODOUI/guest_registration_ui_spec.md",
+      "source_location": "L56",
+      "_origin": "ast",
+      "id": "todoui_guest_registration_ui_spec_3_design_direction",
+      "community": 229,
+      "norm_label": "3. design direction"
+    },
+    {
+      "label": "Visual personality",
+      "file_type": "document",
+      "source_file": "TODOUI/guest_registration_ui_spec.md",
+      "source_location": "L58",
+      "_origin": "ast",
+      "id": "todoui_guest_registration_ui_spec_visual_personality",
+      "community": 229,
+      "norm_label": "visual personality"
+    },
+    {
+      "label": "Mood board keywords",
+      "file_type": "document",
+      "source_file": "TODOUI/guest_registration_ui_spec.md",
+      "source_location": "L61",
+      "_origin": "ast",
+      "id": "todoui_guest_registration_ui_spec_mood_board_keywords",
+      "community": 229,
+      "norm_label": "mood board keywords"
+    },
+    {
+      "label": "Proposed layout concept",
+      "file_type": "document",
+      "source_file": "TODOUI/guest_registration_ui_spec.md",
+      "source_location": "L68",
+      "_origin": "ast",
+      "id": "todoui_guest_registration_ui_spec_proposed_layout_concept",
+      "community": 229,
+      "norm_label": "proposed layout concept"
+    },
+    {
+      "label": "4. Responsive Strategy",
+      "file_type": "document",
+      "source_file": "TODOUI/guest_registration_ui_spec.md",
+      "source_location": "L90",
+      "_origin": "ast",
+      "id": "todoui_guest_registration_ui_spec_4_responsive_strategy",
+      "community": 224,
+      "norm_label": "4. responsive strategy"
+    },
+    {
+      "label": "Target devices",
+      "file_type": "document",
+      "source_file": "TODOUI/guest_registration_ui_spec.md",
+      "source_location": "L92",
+      "_origin": "ast",
+      "id": "todoui_guest_registration_ui_spec_target_devices",
+      "community": 224,
+      "norm_label": "target devices"
+    },
+    {
+      "label": "Breakpoints (Bootstrap-aligned)",
+      "file_type": "document",
+      "source_file": "TODOUI/guest_registration_ui_spec.md",
+      "source_location": "L101",
+      "_origin": "ast",
+      "id": "todoui_guest_registration_ui_spec_breakpoints_bootstrap_aligned",
+      "community": 224,
+      "norm_label": "breakpoints (bootstrap-aligned)"
+    },
+    {
+      "label": "Touch & kiosk requirements",
+      "file_type": "document",
+      "source_file": "TODOUI/guest_registration_ui_spec.md",
+      "source_location": "L111",
+      "_origin": "ast",
+      "id": "todoui_guest_registration_ui_spec_touch_kiosk_requirements",
+      "community": 224,
+      "norm_label": "touch & kiosk requirements"
+    },
+    {
+      "label": "Safe areas",
+      "file_type": "document",
+      "source_file": "TODOUI/guest_registration_ui_spec.md",
+      "source_location": "L119",
+      "_origin": "ast",
+      "id": "todoui_guest_registration_ui_spec_safe_areas",
+      "community": 224,
+      "norm_label": "safe areas"
+    },
+    {
+      "label": "5. Information Architecture \u2014 3-Step Form",
+      "file_type": "document",
+      "source_file": "TODOUI/guest_registration_ui_spec.md",
+      "source_location": "L125",
+      "_origin": "ast",
+      "id": "todoui_guest_registration_ui_spec_5_information_architecture_3_step_form",
+      "community": 225,
+      "norm_label": "5. information architecture \u2014 3-step form"
+    },
+    {
+      "label": "Step 1 \u2014 Personal details",
+      "file_type": "document",
+      "source_file": "TODOUI/guest_registration_ui_spec.md",
+      "source_location": "L129",
+      "_origin": "ast",
+      "id": "todoui_guest_registration_ui_spec_step_1_personal_details",
+      "community": 225,
+      "norm_label": "step 1 \u2014 personal details"
+    },
+    {
+      "label": "Step 2 \u2014 Work information",
+      "file_type": "document",
+      "source_file": "TODOUI/guest_registration_ui_spec.md",
+      "source_location": "L137",
+      "_origin": "ast",
+      "id": "todoui_guest_registration_ui_spec_step_2_work_information",
+      "community": 225,
+      "norm_label": "step 2 \u2014 work information"
+    },
+    {
+      "label": "Step 3 \u2014 Contact & submit",
+      "file_type": "document",
+      "source_file": "TODOUI/guest_registration_ui_spec.md",
+      "source_location": "L143",
+      "_origin": "ast",
+      "id": "todoui_guest_registration_ui_spec_step_3_contact_submit",
+      "community": 225,
+      "norm_label": "step 3 \u2014 contact & submit"
+    },
+    {
+      "label": "Stepper UI",
+      "file_type": "document",
+      "source_file": "TODOUI/guest_registration_ui_spec.md",
+      "source_location": "L148",
+      "_origin": "ast",
+      "id": "todoui_guest_registration_ui_spec_stepper_ui",
+      "community": 225,
+      "norm_label": "stepper ui"
+    },
+    {
+      "label": "6. Component Specifications",
+      "file_type": "document",
+      "source_file": "TODOUI/guest_registration_ui_spec.md",
+      "source_location": "L157",
+      "_origin": "ast",
+      "id": "todoui_guest_registration_ui_spec_6_component_specifications",
+      "community": 82,
+      "norm_label": "6. component specifications"
+    },
+    {
+      "label": "6.1 Guest page shell (shared across register / success / error)",
+      "file_type": "document",
+      "source_file": "TODOUI/guest_registration_ui_spec.md",
+      "source_location": "L159",
+      "_origin": "ast",
+      "id": "todoui_guest_registration_ui_spec_6_1_guest_page_shell_shared_across_register_success_error",
+      "community": 82,
+      "norm_label": "6.1 guest page shell (shared across register / success / error)"
+    },
+    {
+      "label": "6.2 Welcome hero panel",
+      "file_type": "document",
+      "source_file": "TODOUI/guest_registration_ui_spec.md",
+      "source_location": "L173",
+      "_origin": "ast",
+      "id": "todoui_guest_registration_ui_spec_6_2_welcome_hero_panel",
+      "community": 82,
+      "norm_label": "6.2 welcome hero panel"
+    },
+    {
+      "label": "6.3 Form card",
+      "file_type": "document",
+      "source_file": "TODOUI/guest_registration_ui_spec.md",
+      "source_location": "L187",
+      "_origin": "ast",
+      "id": "todoui_guest_registration_ui_spec_6_3_form_card",
+      "community": 82,
+      "norm_label": "6.3 form card"
+    },
+    {
+      "label": "6.4 Field styling",
+      "file_type": "document",
+      "source_file": "TODOUI/guest_registration_ui_spec.md",
+      "source_location": "L193",
+      "_origin": "ast",
+      "id": "todoui_guest_registration_ui_spec_6_4_field_styling",
+      "community": 82,
+      "norm_label": "6.4 field styling"
+    },
+    {
+      "label": "6.5 Agency & Designation picker (touch-friendly redesign)",
+      "file_type": "document",
+      "source_file": "TODOUI/guest_registration_ui_spec.md",
+      "source_location": "L203",
+      "_origin": "ast",
+      "id": "todoui_guest_registration_ui_spec_6_5_agency_designation_picker_touch_friendly_redesign",
+      "community": 82,
+      "norm_label": "6.5 agency & designation picker (touch-friendly redesign)"
+    },
+    {
+      "label": "6.6 Primary actions",
+      "file_type": "document",
+      "source_file": "TODOUI/guest_registration_ui_spec.md",
+      "source_location": "L214",
+      "_origin": "ast",
+      "id": "todoui_guest_registration_ui_spec_6_6_primary_actions",
+      "community": 82,
+      "norm_label": "6.6 primary actions"
+    },
+    {
+      "label": "6.7 Success page enhancements (`register_success.php`)",
+      "file_type": "document",
+      "source_file": "TODOUI/guest_registration_ui_spec.md",
+      "source_location": "L225",
+      "_origin": "ast",
+      "id": "todoui_guest_registration_ui_spec_6_7_success_page_enhancements_register_success_php",
+      "community": 82,
+      "norm_label": "6.7 success page enhancements (`register_success.php`)"
+    },
+    {
+      "label": "6.8 Error page enhancements (`register_error.php`)",
+      "file_type": "document",
+      "source_file": "TODOUI/guest_registration_ui_spec.md",
+      "source_location": "L233",
+      "_origin": "ast",
+      "id": "todoui_guest_registration_ui_spec_6_8_error_page_enhancements_register_error_php",
+      "community": 82,
+      "norm_label": "6.8 error page enhancements (`register_error.php`)"
+    },
+    {
+      "label": "7. Visual Design Tokens",
+      "file_type": "document",
+      "source_file": "TODOUI/guest_registration_ui_spec.md",
+      "source_location": "L240",
+      "_origin": "ast",
+      "id": "todoui_guest_registration_ui_spec_7_visual_design_tokens",
+      "community": 231,
+      "norm_label": "7. visual design tokens"
+    },
+    {
+      "label": "Typography scale",
+      "file_type": "document",
+      "source_file": "TODOUI/guest_registration_ui_spec.md",
+      "source_location": "L259",
+      "_origin": "ast",
+      "id": "todoui_guest_registration_ui_spec_typography_scale",
+      "community": 231,
+      "norm_label": "typography scale"
+    },
+    {
+      "label": "Color usage",
+      "file_type": "document",
+      "source_file": "TODOUI/guest_registration_ui_spec.md",
+      "source_location": "L267",
+      "_origin": "ast",
+      "id": "todoui_guest_registration_ui_spec_color_usage",
+      "community": 231,
+      "norm_label": "color usage"
+    },
+    {
+      "label": "8. Motion & Micro-interactions",
+      "file_type": "document",
+      "source_file": "TODOUI/guest_registration_ui_spec.md",
+      "source_location": "L275",
+      "_origin": "ast",
+      "id": "todoui_guest_registration_ui_spec_8_motion_micro_interactions",
+      "community": 92,
+      "norm_label": "8. motion & micro-interactions"
+    },
+    {
+      "label": "9. Accessibility",
+      "file_type": "document",
+      "source_file": "TODOUI/guest_registration_ui_spec.md",
+      "source_location": "L289",
+      "_origin": "ast",
+      "id": "todoui_guest_registration_ui_spec_9_accessibility",
+      "community": 92,
+      "norm_label": "9. accessibility"
+    },
+    {
+      "label": "10. Technical Implementation Plan",
+      "file_type": "document",
+      "source_file": "TODOUI/guest_registration_ui_spec.md",
+      "source_location": "L301",
+      "_origin": "ast",
+      "id": "todoui_guest_registration_ui_spec_10_technical_implementation_plan",
+      "community": 65,
+      "norm_label": "10. technical implementation plan"
+    },
+    {
+      "label": "Phase 1 \u2014 Foundation (low risk)",
+      "file_type": "document",
+      "source_file": "TODOUI/guest_registration_ui_spec.md",
+      "source_location": "L303",
+      "_origin": "ast",
+      "id": "todoui_guest_registration_ui_spec_phase_1_foundation_low_risk",
+      "community": 65,
+      "norm_label": "phase 1 \u2014 foundation (low risk)"
+    },
+    {
+      "label": "Phase 2 \u2014 Layout & responsiveness",
+      "file_type": "document",
+      "source_file": "TODOUI/guest_registration_ui_spec.md",
+      "source_location": "L309",
+      "_origin": "ast",
+      "id": "todoui_guest_registration_ui_spec_phase_2_layout_responsiveness",
+      "community": 65,
+      "norm_label": "phase 2 \u2014 layout & responsiveness"
+    },
+    {
+      "label": "Phase 3 \u2014 Stepped form UX",
+      "file_type": "document",
+      "source_file": "TODOUI/guest_registration_ui_spec.md",
+      "source_location": "L315",
+      "_origin": "ast",
+      "id": "todoui_guest_registration_ui_spec_phase_3_stepped_form_ux",
+      "community": 65,
+      "norm_label": "phase 3 \u2014 stepped form ux"
+    },
+    {
+      "label": "Phase 4 \u2014 Agency/Designation picker",
+      "file_type": "document",
+      "source_file": "TODOUI/guest_registration_ui_spec.md",
+      "source_location": "L321",
+      "_origin": "ast",
+      "id": "todoui_guest_registration_ui_spec_phase_4_agency_designation_picker",
+      "community": 65,
+      "norm_label": "phase 4 \u2014 agency/designation picker"
+    },
+    {
+      "label": "Phase 5 \u2014 Polish",
+      "file_type": "document",
+      "source_file": "TODOUI/guest_registration_ui_spec.md",
+      "source_location": "L326",
+      "_origin": "ast",
+      "id": "todoui_guest_registration_ui_spec_phase_5_polish",
+      "community": 65,
+      "norm_label": "phase 5 \u2014 polish"
+    },
+    {
+      "label": "Files to create",
+      "file_type": "document",
+      "source_file": "TODOUI/guest_registration_ui_spec.md",
+      "source_location": "L331",
+      "_origin": "ast",
+      "id": "todoui_guest_registration_ui_spec_files_to_create",
+      "community": 65,
+      "norm_label": "files to create"
+    },
+    {
+      "label": "Files to modify",
+      "file_type": "document",
+      "source_file": "TODOUI/guest_registration_ui_spec.md",
+      "source_location": "L340",
+      "_origin": "ast",
+      "id": "todoui_guest_registration_ui_spec_files_to_modify",
+      "community": 65,
+      "norm_label": "files to modify"
+    },
+    {
+      "label": "JS constraints",
+      "file_type": "document",
+      "source_file": "TODOUI/guest_registration_ui_spec.md",
+      "source_location": "L348",
+      "_origin": "ast",
+      "id": "todoui_guest_registration_ui_spec_js_constraints",
+      "community": 65,
+      "norm_label": "js constraints"
+    },
+    {
+      "label": "11. Wireframe Notes by Device",
+      "file_type": "document",
+      "source_file": "TODOUI/guest_registration_ui_spec.md",
+      "source_location": "L355",
+      "_origin": "ast",
+      "id": "todoui_guest_registration_ui_spec_11_wireframe_notes_by_device",
+      "community": 227,
+      "norm_label": "11. wireframe notes by device"
+    },
+    {
+      "label": "Smartphone (portrait, 390\u00d7844)",
+      "file_type": "document",
+      "source_file": "TODOUI/guest_registration_ui_spec.md",
+      "source_location": "L357",
+      "_origin": "ast",
+      "id": "todoui_guest_registration_ui_spec_smartphone_portrait_390_844",
+      "community": 227,
+      "norm_label": "smartphone (portrait, 390\u00d7844)"
+    },
+    {
+      "label": "iPad / Galaxy Tab (portrait, 768\u00d71024)",
+      "file_type": "document",
+      "source_file": "TODOUI/guest_registration_ui_spec.md",
+      "source_location": "L364",
+      "_origin": "ast",
+      "id": "todoui_guest_registration_ui_spec_ipad_galaxy_tab_portrait_768_1024",
+      "community": 227,
+      "norm_label": "ipad / galaxy tab (portrait, 768\u00d71024)"
+    },
+    {
+      "label": "Tablet kiosk (landscape, 1024\u00d7768 / 1280\u00d7800)",
+      "file_type": "document",
+      "source_file": "TODOUI/guest_registration_ui_spec.md",
+      "source_location": "L371",
+      "_origin": "ast",
+      "id": "todoui_guest_registration_ui_spec_tablet_kiosk_landscape_1024_768_1280_800",
+      "community": 227,
+      "norm_label": "tablet kiosk (landscape, 1024\u00d7768 / 1280\u00d7800)"
+    },
+    {
+      "label": "12. Acceptance Criteria",
+      "file_type": "document",
+      "source_file": "TODOUI/guest_registration_ui_spec.md",
+      "source_location": "L379",
+      "_origin": "ast",
+      "id": "todoui_guest_registration_ui_spec_12_acceptance_criteria",
+      "community": 222,
+      "norm_label": "12. acceptance criteria"
+    },
+    {
+      "label": "Visual",
+      "file_type": "document",
+      "source_file": "TODOUI/guest_registration_ui_spec.md",
+      "source_location": "L381",
+      "_origin": "ast",
+      "id": "todoui_guest_registration_ui_spec_visual",
+      "community": 222,
+      "norm_label": "visual"
+    },
+    {
+      "label": "Responsive",
+      "file_type": "document",
+      "source_file": "TODOUI/guest_registration_ui_spec.md",
+      "source_location": "L386",
+      "_origin": "ast",
+      "id": "todoui_guest_registration_ui_spec_responsive",
+      "community": 222,
+      "norm_label": "responsive"
+    },
+    {
+      "label": "UX",
+      "file_type": "document",
+      "source_file": "TODOUI/guest_registration_ui_spec.md",
+      "source_location": "L391",
+      "_origin": "ast",
+      "id": "todoui_guest_registration_ui_spec_ux",
+      "community": 222,
+      "norm_label": "ux"
+    },
+    {
+      "label": "Functional regression",
+      "file_type": "document",
+      "source_file": "TODOUI/guest_registration_ui_spec.md",
+      "source_location": "L397",
+      "_origin": "ast",
+      "id": "todoui_guest_registration_ui_spec_functional_regression",
+      "community": 222,
+      "norm_label": "functional regression"
+    },
+    {
+      "label": "Performance",
+      "file_type": "document",
+      "source_file": "TODOUI/guest_registration_ui_spec.md",
+      "source_location": "L403",
+      "_origin": "ast",
+      "id": "todoui_guest_registration_ui_spec_performance",
+      "community": 222,
+      "norm_label": "performance"
+    },
+    {
+      "label": "13. QA Device Checklist",
+      "file_type": "document",
+      "source_file": "TODOUI/guest_registration_ui_spec.md",
+      "source_location": "L410",
+      "_origin": "ast",
+      "id": "todoui_guest_registration_ui_spec_13_qa_device_checklist",
+      "community": 92,
+      "norm_label": "13. qa device checklist"
+    },
+    {
+      "label": "Browser matrix",
+      "file_type": "document",
+      "source_file": "TODOUI/guest_registration_ui_spec.md",
+      "source_location": "L421",
+      "_origin": "ast",
+      "id": "todoui_guest_registration_ui_spec_browser_matrix",
+      "community": 92,
+      "norm_label": "browser matrix"
+    },
+    {
+      "label": "14. Future Enhancements (post-MVP)",
+      "file_type": "document",
+      "source_file": "TODOUI/guest_registration_ui_spec.md",
+      "source_location": "L429",
+      "_origin": "ast",
+      "id": "todoui_guest_registration_ui_spec_14_future_enhancements_post_mvp",
+      "community": 92,
+      "norm_label": "14. future enhancements (post-mvp)"
+    },
+    {
+      "label": "15. Implementation Status",
+      "file_type": "document",
+      "source_file": "TODOUI/guest_registration_ui_spec.md",
+      "source_location": "L440",
+      "_origin": "ast",
+      "id": "todoui_guest_registration_ui_spec_15_implementation_status",
+      "community": 92,
+      "norm_label": "15. implementation status"
+    },
+    {
       "label": "README.md",
       "file_type": "document",
       "source_file": "vendor/tecnickcom/tcpdf/README.md",
@@ -12500,6 +13270,236 @@
     }
   ],
   "links": [
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "assets/guest-registration.js",
+      "source_location": "L228",
+      "weight": 1.0,
+      "source": "assets_guest_registration",
+      "target": "assets_guest_registration_buildpicker",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "assets/guest-registration.js",
+      "source_location": "L80",
+      "weight": 1.0,
+      "source": "assets_guest_registration",
+      "target": "assets_guest_registration_getfieldsinstep",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "assets/guest-registration.js",
+      "source_location": "L133",
+      "weight": 1.0,
+      "source": "assets_guest_registration",
+      "target": "assets_guest_registration_gotostep",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "assets/guest-registration.js",
+      "source_location": "L158",
+      "weight": 1.0,
+      "source": "assets_guest_registration",
+      "target": "assets_guest_registration_handleback",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "assets/guest-registration.js",
+      "source_location": "L154",
+      "weight": 1.0,
+      "source": "assets_guest_registration",
+      "target": "assets_guest_registration_handlecontinue",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "assets/guest-registration.js",
+      "source_location": "L40",
+      "weight": 1.0,
+      "source": "assets_guest_registration",
+      "target": "assets_guest_registration_hidesteperror",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "assets/guest-registration.js",
+      "source_location": "L185",
+      "weight": 1.0,
+      "source": "assets_guest_registration",
+      "target": "assets_guest_registration_setsubmitloading",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "assets/guest-registration.js",
+      "source_location": "L33",
+      "weight": 1.0,
+      "source": "assets_guest_registration",
+      "target": "assets_guest_registration_showsteperror",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "assets/guest-registration.js",
+      "source_location": "L140",
+      "weight": 1.0,
+      "source": "assets_guest_registration",
+      "target": "assets_guest_registration_updatereview",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "assets/guest-registration.js",
+      "source_location": "L46",
+      "weight": 1.0,
+      "source": "assets_guest_registration",
+      "target": "assets_guest_registration_updatestepper",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "assets/guest-registration.js",
+      "source_location": "L88",
+      "weight": 1.0,
+      "source": "assets_guest_registration",
+      "target": "assets_guest_registration_validatepickerfield",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "assets/guest-registration.js",
+      "source_location": "L95",
+      "weight": 1.0,
+      "source": "assets_guest_registration",
+      "target": "assets_guest_registration_validatestep",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "assets/guest-registration.js",
+      "source_location": "L117",
+      "weight": 1.0,
+      "source": "assets_guest_registration_validatestep",
+      "target": "assets_guest_registration_showsteperror",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "assets/guest-registration.js",
+      "source_location": "L136",
+      "weight": 1.0,
+      "source": "assets_guest_registration_gotostep",
+      "target": "assets_guest_registration_hidesteperror",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "assets/guest-registration.js",
+      "source_location": "L96",
+      "weight": 1.0,
+      "source": "assets_guest_registration_validatestep",
+      "target": "assets_guest_registration_hidesteperror",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "assets/guest-registration.js",
+      "source_location": "L135",
+      "weight": 1.0,
+      "source": "assets_guest_registration_gotostep",
+      "target": "assets_guest_registration_updatestepper",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "assets/guest-registration.js",
+      "source_location": "L77",
+      "weight": 1.0,
+      "source": "assets_guest_registration_updatestepper",
+      "target": "assets_guest_registration_updatereview",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "assets/guest-registration.js",
+      "source_location": "L97",
+      "weight": 1.0,
+      "source": "assets_guest_registration_validatestep",
+      "target": "assets_guest_registration_getfieldsinstep",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "assets/guest-registration.js",
+      "source_location": "L105",
+      "weight": 1.0,
+      "source": "assets_guest_registration_validatestep",
+      "target": "assets_guest_registration_validatepickerfield",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "assets/guest-registration.js",
+      "source_location": "L155",
+      "weight": 1.0,
+      "source": "assets_guest_registration_handlecontinue",
+      "target": "assets_guest_registration_validatestep",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "assets/guest-registration.js",
+      "source_location": "L159",
+      "weight": 1.0,
+      "source": "assets_guest_registration_handleback",
+      "target": "assets_guest_registration_gotostep",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "assets/guest-registration.js",
+      "source_location": "L155",
+      "weight": 1.0,
+      "source": "assets_guest_registration_handlecontinue",
+      "target": "assets_guest_registration_gotostep",
+      "confidence_score": 1.0
+    },
     {
       "relation": "contains",
       "confidence": "EXTRACTED",
@@ -38929,6 +39929,596 @@
     {
       "relation": "contains",
       "confidence": "EXTRACTED",
+      "source_file": "TODOUI/guest_registration_ui_spec.md",
+      "source_location": "L1",
+      "weight": 1.0,
+      "source": "todoui_guest_registration_ui_spec",
+      "target": "todoui_guest_registration_ui_spec_guest_registration_ui_ux_improvement_spec",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "TODOUI/guest_registration_ui_spec.md",
+      "source_location": "L301",
+      "weight": 1.0,
+      "source": "todoui_guest_registration_ui_spec_guest_registration_ui_ux_improvement_spec",
+      "target": "todoui_guest_registration_ui_spec_10_technical_implementation_plan",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "TODOUI/guest_registration_ui_spec.md",
+      "source_location": "L355",
+      "weight": 1.0,
+      "source": "todoui_guest_registration_ui_spec_guest_registration_ui_ux_improvement_spec",
+      "target": "todoui_guest_registration_ui_spec_11_wireframe_notes_by_device",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "TODOUI/guest_registration_ui_spec.md",
+      "source_location": "L379",
+      "weight": 1.0,
+      "source": "todoui_guest_registration_ui_spec_guest_registration_ui_ux_improvement_spec",
+      "target": "todoui_guest_registration_ui_spec_12_acceptance_criteria",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "TODOUI/guest_registration_ui_spec.md",
+      "source_location": "L410",
+      "weight": 1.0,
+      "source": "todoui_guest_registration_ui_spec_guest_registration_ui_ux_improvement_spec",
+      "target": "todoui_guest_registration_ui_spec_13_qa_device_checklist",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "TODOUI/guest_registration_ui_spec.md",
+      "source_location": "L429",
+      "weight": 1.0,
+      "source": "todoui_guest_registration_ui_spec_guest_registration_ui_ux_improvement_spec",
+      "target": "todoui_guest_registration_ui_spec_14_future_enhancements_post_mvp",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "TODOUI/guest_registration_ui_spec.md",
+      "source_location": "L440",
+      "weight": 1.0,
+      "source": "todoui_guest_registration_ui_spec_guest_registration_ui_ux_improvement_spec",
+      "target": "todoui_guest_registration_ui_spec_15_implementation_status",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "TODOUI/guest_registration_ui_spec.md",
+      "source_location": "L3",
+      "weight": 1.0,
+      "source": "todoui_guest_registration_ui_spec_guest_registration_ui_ux_improvement_spec",
+      "target": "todoui_guest_registration_ui_spec_1_executive_summary",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "TODOUI/guest_registration_ui_spec.md",
+      "source_location": "L24",
+      "weight": 1.0,
+      "source": "todoui_guest_registration_ui_spec_guest_registration_ui_ux_improvement_spec",
+      "target": "todoui_guest_registration_ui_spec_2_current_state_audit",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "TODOUI/guest_registration_ui_spec.md",
+      "source_location": "L56",
+      "weight": 1.0,
+      "source": "todoui_guest_registration_ui_spec_guest_registration_ui_ux_improvement_spec",
+      "target": "todoui_guest_registration_ui_spec_3_design_direction",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "TODOUI/guest_registration_ui_spec.md",
+      "source_location": "L90",
+      "weight": 1.0,
+      "source": "todoui_guest_registration_ui_spec_guest_registration_ui_ux_improvement_spec",
+      "target": "todoui_guest_registration_ui_spec_4_responsive_strategy",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "TODOUI/guest_registration_ui_spec.md",
+      "source_location": "L125",
+      "weight": 1.0,
+      "source": "todoui_guest_registration_ui_spec_guest_registration_ui_ux_improvement_spec",
+      "target": "todoui_guest_registration_ui_spec_5_information_architecture_3_step_form",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "TODOUI/guest_registration_ui_spec.md",
+      "source_location": "L157",
+      "weight": 1.0,
+      "source": "todoui_guest_registration_ui_spec_guest_registration_ui_ux_improvement_spec",
+      "target": "todoui_guest_registration_ui_spec_6_component_specifications",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "TODOUI/guest_registration_ui_spec.md",
+      "source_location": "L240",
+      "weight": 1.0,
+      "source": "todoui_guest_registration_ui_spec_guest_registration_ui_ux_improvement_spec",
+      "target": "todoui_guest_registration_ui_spec_7_visual_design_tokens",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "TODOUI/guest_registration_ui_spec.md",
+      "source_location": "L275",
+      "weight": 1.0,
+      "source": "todoui_guest_registration_ui_spec_guest_registration_ui_ux_improvement_spec",
+      "target": "todoui_guest_registration_ui_spec_8_motion_micro_interactions",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "TODOUI/guest_registration_ui_spec.md",
+      "source_location": "L289",
+      "weight": 1.0,
+      "source": "todoui_guest_registration_ui_spec_guest_registration_ui_ux_improvement_spec",
+      "target": "todoui_guest_registration_ui_spec_9_accessibility",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "TODOUI/guest_registration_ui_spec.md",
+      "source_location": "L9",
+      "weight": 1.0,
+      "source": "todoui_guest_registration_ui_spec_1_executive_summary",
+      "target": "todoui_guest_registration_ui_spec_goals",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "TODOUI/guest_registration_ui_spec.md",
+      "source_location": "L16",
+      "weight": 1.0,
+      "source": "todoui_guest_registration_ui_spec_1_executive_summary",
+      "target": "todoui_guest_registration_ui_spec_out_of_scope_for_this_phase",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "TODOUI/guest_registration_ui_spec.md",
+      "source_location": "L26",
+      "weight": 1.0,
+      "source": "todoui_guest_registration_ui_spec_2_current_state_audit",
+      "target": "todoui_guest_registration_ui_spec_files_in_scope",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "TODOUI/guest_registration_ui_spec.md",
+      "source_location": "L40",
+      "weight": 1.0,
+      "source": "todoui_guest_registration_ui_spec_2_current_state_audit",
+      "target": "todoui_guest_registration_ui_spec_pain_points",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "TODOUI/guest_registration_ui_spec.md",
+      "source_location": "L34",
+      "weight": 1.0,
+      "source": "todoui_guest_registration_ui_spec_2_current_state_audit",
+      "target": "todoui_guest_registration_ui_spec_what_works_today",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "TODOUI/guest_registration_ui_spec.md",
+      "source_location": "L61",
+      "weight": 1.0,
+      "source": "todoui_guest_registration_ui_spec_3_design_direction",
+      "target": "todoui_guest_registration_ui_spec_mood_board_keywords",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "TODOUI/guest_registration_ui_spec.md",
+      "source_location": "L68",
+      "weight": 1.0,
+      "source": "todoui_guest_registration_ui_spec_3_design_direction",
+      "target": "todoui_guest_registration_ui_spec_proposed_layout_concept",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "TODOUI/guest_registration_ui_spec.md",
+      "source_location": "L58",
+      "weight": 1.0,
+      "source": "todoui_guest_registration_ui_spec_3_design_direction",
+      "target": "todoui_guest_registration_ui_spec_visual_personality",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "TODOUI/guest_registration_ui_spec.md",
+      "source_location": "L101",
+      "weight": 1.0,
+      "source": "todoui_guest_registration_ui_spec_4_responsive_strategy",
+      "target": "todoui_guest_registration_ui_spec_breakpoints_bootstrap_aligned",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "TODOUI/guest_registration_ui_spec.md",
+      "source_location": "L119",
+      "weight": 1.0,
+      "source": "todoui_guest_registration_ui_spec_4_responsive_strategy",
+      "target": "todoui_guest_registration_ui_spec_safe_areas",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "TODOUI/guest_registration_ui_spec.md",
+      "source_location": "L92",
+      "weight": 1.0,
+      "source": "todoui_guest_registration_ui_spec_4_responsive_strategy",
+      "target": "todoui_guest_registration_ui_spec_target_devices",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "TODOUI/guest_registration_ui_spec.md",
+      "source_location": "L111",
+      "weight": 1.0,
+      "source": "todoui_guest_registration_ui_spec_4_responsive_strategy",
+      "target": "todoui_guest_registration_ui_spec_touch_kiosk_requirements",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "TODOUI/guest_registration_ui_spec.md",
+      "source_location": "L129",
+      "weight": 1.0,
+      "source": "todoui_guest_registration_ui_spec_5_information_architecture_3_step_form",
+      "target": "todoui_guest_registration_ui_spec_step_1_personal_details",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "TODOUI/guest_registration_ui_spec.md",
+      "source_location": "L137",
+      "weight": 1.0,
+      "source": "todoui_guest_registration_ui_spec_5_information_architecture_3_step_form",
+      "target": "todoui_guest_registration_ui_spec_step_2_work_information",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "TODOUI/guest_registration_ui_spec.md",
+      "source_location": "L143",
+      "weight": 1.0,
+      "source": "todoui_guest_registration_ui_spec_5_information_architecture_3_step_form",
+      "target": "todoui_guest_registration_ui_spec_step_3_contact_submit",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "TODOUI/guest_registration_ui_spec.md",
+      "source_location": "L148",
+      "weight": 1.0,
+      "source": "todoui_guest_registration_ui_spec_5_information_architecture_3_step_form",
+      "target": "todoui_guest_registration_ui_spec_stepper_ui",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "TODOUI/guest_registration_ui_spec.md",
+      "source_location": "L159",
+      "weight": 1.0,
+      "source": "todoui_guest_registration_ui_spec_6_component_specifications",
+      "target": "todoui_guest_registration_ui_spec_6_1_guest_page_shell_shared_across_register_success_error",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "TODOUI/guest_registration_ui_spec.md",
+      "source_location": "L173",
+      "weight": 1.0,
+      "source": "todoui_guest_registration_ui_spec_6_component_specifications",
+      "target": "todoui_guest_registration_ui_spec_6_2_welcome_hero_panel",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "TODOUI/guest_registration_ui_spec.md",
+      "source_location": "L187",
+      "weight": 1.0,
+      "source": "todoui_guest_registration_ui_spec_6_component_specifications",
+      "target": "todoui_guest_registration_ui_spec_6_3_form_card",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "TODOUI/guest_registration_ui_spec.md",
+      "source_location": "L193",
+      "weight": 1.0,
+      "source": "todoui_guest_registration_ui_spec_6_component_specifications",
+      "target": "todoui_guest_registration_ui_spec_6_4_field_styling",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "TODOUI/guest_registration_ui_spec.md",
+      "source_location": "L203",
+      "weight": 1.0,
+      "source": "todoui_guest_registration_ui_spec_6_component_specifications",
+      "target": "todoui_guest_registration_ui_spec_6_5_agency_designation_picker_touch_friendly_redesign",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "TODOUI/guest_registration_ui_spec.md",
+      "source_location": "L214",
+      "weight": 1.0,
+      "source": "todoui_guest_registration_ui_spec_6_component_specifications",
+      "target": "todoui_guest_registration_ui_spec_6_6_primary_actions",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "TODOUI/guest_registration_ui_spec.md",
+      "source_location": "L225",
+      "weight": 1.0,
+      "source": "todoui_guest_registration_ui_spec_6_component_specifications",
+      "target": "todoui_guest_registration_ui_spec_6_7_success_page_enhancements_register_success_php",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "TODOUI/guest_registration_ui_spec.md",
+      "source_location": "L233",
+      "weight": 1.0,
+      "source": "todoui_guest_registration_ui_spec_6_component_specifications",
+      "target": "todoui_guest_registration_ui_spec_6_8_error_page_enhancements_register_error_php",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "TODOUI/guest_registration_ui_spec.md",
+      "source_location": "L267",
+      "weight": 1.0,
+      "source": "todoui_guest_registration_ui_spec_7_visual_design_tokens",
+      "target": "todoui_guest_registration_ui_spec_color_usage",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "TODOUI/guest_registration_ui_spec.md",
+      "source_location": "L259",
+      "weight": 1.0,
+      "source": "todoui_guest_registration_ui_spec_7_visual_design_tokens",
+      "target": "todoui_guest_registration_ui_spec_typography_scale",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "TODOUI/guest_registration_ui_spec.md",
+      "source_location": "L331",
+      "weight": 1.0,
+      "source": "todoui_guest_registration_ui_spec_10_technical_implementation_plan",
+      "target": "todoui_guest_registration_ui_spec_files_to_create",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "TODOUI/guest_registration_ui_spec.md",
+      "source_location": "L340",
+      "weight": 1.0,
+      "source": "todoui_guest_registration_ui_spec_10_technical_implementation_plan",
+      "target": "todoui_guest_registration_ui_spec_files_to_modify",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "TODOUI/guest_registration_ui_spec.md",
+      "source_location": "L348",
+      "weight": 1.0,
+      "source": "todoui_guest_registration_ui_spec_10_technical_implementation_plan",
+      "target": "todoui_guest_registration_ui_spec_js_constraints",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "TODOUI/guest_registration_ui_spec.md",
+      "source_location": "L303",
+      "weight": 1.0,
+      "source": "todoui_guest_registration_ui_spec_10_technical_implementation_plan",
+      "target": "todoui_guest_registration_ui_spec_phase_1_foundation_low_risk",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "TODOUI/guest_registration_ui_spec.md",
+      "source_location": "L309",
+      "weight": 1.0,
+      "source": "todoui_guest_registration_ui_spec_10_technical_implementation_plan",
+      "target": "todoui_guest_registration_ui_spec_phase_2_layout_responsiveness",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "TODOUI/guest_registration_ui_spec.md",
+      "source_location": "L315",
+      "weight": 1.0,
+      "source": "todoui_guest_registration_ui_spec_10_technical_implementation_plan",
+      "target": "todoui_guest_registration_ui_spec_phase_3_stepped_form_ux",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "TODOUI/guest_registration_ui_spec.md",
+      "source_location": "L321",
+      "weight": 1.0,
+      "source": "todoui_guest_registration_ui_spec_10_technical_implementation_plan",
+      "target": "todoui_guest_registration_ui_spec_phase_4_agency_designation_picker",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "TODOUI/guest_registration_ui_spec.md",
+      "source_location": "L326",
+      "weight": 1.0,
+      "source": "todoui_guest_registration_ui_spec_10_technical_implementation_plan",
+      "target": "todoui_guest_registration_ui_spec_phase_5_polish",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "TODOUI/guest_registration_ui_spec.md",
+      "source_location": "L364",
+      "weight": 1.0,
+      "source": "todoui_guest_registration_ui_spec_11_wireframe_notes_by_device",
+      "target": "todoui_guest_registration_ui_spec_ipad_galaxy_tab_portrait_768_1024",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "TODOUI/guest_registration_ui_spec.md",
+      "source_location": "L357",
+      "weight": 1.0,
+      "source": "todoui_guest_registration_ui_spec_11_wireframe_notes_by_device",
+      "target": "todoui_guest_registration_ui_spec_smartphone_portrait_390_844",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "TODOUI/guest_registration_ui_spec.md",
+      "source_location": "L371",
+      "weight": 1.0,
+      "source": "todoui_guest_registration_ui_spec_11_wireframe_notes_by_device",
+      "target": "todoui_guest_registration_ui_spec_tablet_kiosk_landscape_1024_768_1280_800",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "TODOUI/guest_registration_ui_spec.md",
+      "source_location": "L397",
+      "weight": 1.0,
+      "source": "todoui_guest_registration_ui_spec_12_acceptance_criteria",
+      "target": "todoui_guest_registration_ui_spec_functional_regression",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "TODOUI/guest_registration_ui_spec.md",
+      "source_location": "L403",
+      "weight": 1.0,
+      "source": "todoui_guest_registration_ui_spec_12_acceptance_criteria",
+      "target": "todoui_guest_registration_ui_spec_performance",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "TODOUI/guest_registration_ui_spec.md",
+      "source_location": "L386",
+      "weight": 1.0,
+      "source": "todoui_guest_registration_ui_spec_12_acceptance_criteria",
+      "target": "todoui_guest_registration_ui_spec_responsive",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "TODOUI/guest_registration_ui_spec.md",
+      "source_location": "L391",
+      "weight": 1.0,
+      "source": "todoui_guest_registration_ui_spec_12_acceptance_criteria",
+      "target": "todoui_guest_registration_ui_spec_ux",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "TODOUI/guest_registration_ui_spec.md",
+      "source_location": "L381",
+      "weight": 1.0,
+      "source": "todoui_guest_registration_ui_spec_12_acceptance_criteria",
+      "target": "todoui_guest_registration_ui_spec_visual",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "TODOUI/guest_registration_ui_spec.md",
+      "source_location": "L421",
+      "weight": 1.0,
+      "source": "todoui_guest_registration_ui_spec_13_qa_device_checklist",
+      "target": "todoui_guest_registration_ui_spec_browser_matrix",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
       "source_file": "vendor/tecnickcom/tcpdf/README.md",
       "source_location": "L1",
       "weight": 1.0,
@@ -39048,5 +40638,5 @@
     }
   ],
   "hyperedges": [],
-  "built_at_commit": "2d500bfe4e5fc65db55f71da4875702a834703c3"
+  "built_at_commit": "15790e50fe6ac0b829dd6f20f021aef86156bbbe"
 }

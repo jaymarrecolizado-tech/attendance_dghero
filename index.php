@@ -33,8 +33,16 @@ try {
     // Load routes and dispatch
     $routes = require __DIR__ . DIRECTORY_SEPARATOR . 'config' . DIRECTORY_SEPARATOR . 'routes.php';
     $router = new Router($routes);
-    $routeName = (string)($_GET['r'] ?? 'register');
-    $router->dispatch($routeName, $_SERVER['REQUEST_METHOD'] ?? 'GET');
+    $method = strtoupper($_SERVER['REQUEST_METHOD'] ?? 'GET');
+    $routeName = trim((string)($_GET['r'] ?? ''));
+    if ($routeName === '') {
+        $routeName = 'register';
+        if ($method === 'GET' && !isset($_GET['r'])) {
+            header('Location: ?r=register');
+            exit;
+        }
+    }
+    $router->dispatch($routeName, $method);
 } catch (Throwable $e) {
     // Error handling for production
     error_log('ISSP Solo Error: ' . $e->getMessage() . ' in ' . $e->getFile() . ':' . $e->getLine());

@@ -1,16 +1,16 @@
 # Graph Report - attendance_digital  (2026-07-11)
 
 ## Corpus Check
-- 204 files · ~1,519,883 words
+- 210 files · ~1,524,046 words
 - Verdict: corpus is large enough that graph structure adds value.
 
 ## Summary
-- 1242 nodes · 2506 edges · 222 communities (179 shown, 43 thin omitted)
+- 1319 nodes · 2587 edges · 237 communities (197 shown, 40 thin omitted)
 - Extraction: 89% EXTRACTED · 11% INFERRED · 0% AMBIGUOUS · INFERRED: 281 edges (avg confidence: 0.8)
 - Token cost: 0 input · 0 output
 
 ## Graph Freshness
-- Built from commit: `2d500bfe`
+- Built from commit: `15790e50`
 - Run `git rev-parse HEAD` and compare to check if the graph is stale.
 - Run `graphify update .` after code changes (no API cost).
 
@@ -32,6 +32,7 @@
 - [[_COMMUNITY_TCPDF_STATIC|TCPDF_STATIC]]
 - [[_COMMUNITY_.startSVGElementHandler|.startSVGElementHandler]]
 - [[_COMMUNITY_ClassLoader|ClassLoader]]
+- [[_COMMUNITY_._out|._out]]
 - [[_COMMUNITY_QRcode|QRcode]]
 - [[_COMMUNITY_TCPDFBarcode|TCPDFBarcode]]
 - [[_COMMUNITY_TCPDF_FONTS|TCPDF_FONTS]]
@@ -45,7 +46,7 @@
 - [[_COMMUNITY_ISSP Solo - Hostinger Migration Package|ISSP Solo - Hostinger Migration Package]]
 - [[_COMMUNITY_RateLimiter|RateLimiter]]
 - [[_COMMUNITY_TCPDF2DBarcode|TCPDF2DBarcode]]
-- [[_COMMUNITY_file_get_contents|file_get_contents]]
+- [[_COMMUNITY_.AddFont|.AddFont]]
 - [[_COMMUNITY_.login|.login]]
 - [[_COMMUNITY_PDF417|PDF417]]
 - [[_COMMUNITY_TCPDF_IMAGES|TCPDF_IMAGES]]
@@ -73,6 +74,15 @@
 - [[_COMMUNITY_storage (qrcodes, signatures, imports, reports, runtime)|storage/ (qrcodes, signatures, imports, reports, runtime)]]
 - [[_COMMUNITY_TCPDF library (PDF generation)|TCPDF library (PDF generation)]]
 - [[_COMMUNITY_MIGRATION_SUMMARY.md (Hostinger Migration Package Summary)|MIGRATION_SUMMARY.md (Hostinger Migration Package Summary)]]
+- [[_COMMUNITY_12. Acceptance Criteria|12. Acceptance Criteria]]
+- [[_COMMUNITY_ExportController|ExportController]]
+- [[_COMMUNITY_4. Responsive Strategy|4. Responsive Strategy]]
+- [[_COMMUNITY_5. Information Architecture — 3-Step Form|5. Information Architecture — 3-Step Form]]
+- [[_COMMUNITY_11. Wireframe Notes by Device|11. Wireframe Notes by Device]]
+- [[_COMMUNITY_2. Current State Audit|2. Current State Audit]]
+- [[_COMMUNITY_3. Design Direction|3. Design Direction]]
+- [[_COMMUNITY_1. Executive Summary|1. Executive Summary]]
+- [[_COMMUNITY_7. Visual Design Tokens|7. Visual Design Tokens]]
 
 ## God Nodes (most connected - your core abstractions)
 1. `TCPDF` - 426 edges
@@ -101,7 +111,11 @@
 ## Import Cycles
 - None detected.
 
-## Communities (222 total, 43 thin omitted)
+## Communities (237 total, 40 thin omitted)
+
+### Community 0 - "Routing & Attendance Controllers"
+Cohesion: 0.11
+Nodes (5): AdminAttendanceGalleryController, AdminLogsController, ParticipantController, SampleCsvController, ScanController
 
 ### Community 1 - "Deployment & Config Docs"
 Cohesion: 0.33
@@ -112,12 +126,12 @@ Cohesion: 0.12
 Nodes (4): RegisterController, Mailer, ParticipantValidator, Uuid
 
 ### Community 3 - "Attendance & Advanced Export"
-Cohesion: 0.15
-Nodes (6): AdminAttendanceGalleryController, AdminLogsController, ExportController, ParticipantController, Database, PDO
+Cohesion: 0.16
+Nodes (4): AdminEventsController, AdvancedExportController, Database, PDO
 
 ### Community 4 - "Bootstrap, CSRF & Signature"
-Cohesion: 0.21
-Nodes (5): csrf_check(), AdminSignatureController, AttendanceController, Logger, SignatureService
+Cohesion: 0.16
+Nodes (6): csrf_check(), file_get_contents(), AdminSignatureController, AttendanceController, Logger, SignatureService
 
 ### Community 6 - "Registrants & QR Generation"
 Cohesion: 0.22
@@ -127,13 +141,21 @@ Nodes (3): AdminRegistrantsController, PDO, QrService
 Cohesion: 0.22
 Nodes (8): autoload, psr-4, description, name, App\\, require, tecnickcom/tcpdf, type
 
+### Community 10 - "Event Management"
+Cohesion: 0.28
+Nodes (10): getFieldsInStep(), goToStep(), handleBack(), handleContinue(), hideStepError(), showStepError(), updateReview(), updateStepper() (+2 more)
+
 ### Community 12 - "Admin Settings"
-Cohesion: 0.13
-Nodes (5): AdminAttendanceController, PDO, AdminExportPageController, SampleCsvController, SettingsController
+Cohesion: 0.16
+Nodes (4): AdminAttendanceController, PDO, AdminExportPageController, SettingsController
 
 ### Community 61 - "ClassLoader"
 Cohesion: 0.05
 Nodes (4): ComposerStaticInita87a1ab35444db1eaa92b92e19682ec1, ClassLoader, InstalledVersions, VersionParser
+
+### Community 65 - "TCPDF_FONTS"
+Cohesion: 0.22
+Nodes (9): 10. Technical Implementation Plan, Files to create, Files to modify, JS constraints, Phase 1 — Foundation (low risk), Phase 2 — Layout & responsiveness, Phase 3 — Stepped form UX, Phase 4 — Agency/Designation picker (+1 more)
 
 ### Community 66 - "🚀 Hostinger Migration Package - Summary"
 Cohesion: 0.08
@@ -159,24 +181,64 @@ Nodes (13): authors, autoload, classmap, description, homepage, keywords, licens
 Cohesion: 0.15
 Nodes (12): Database, 🚀 Deployment Steps, Email (SMTP), File Permissions, 📁 Folder Structure, 🔐 Important Files, ISSP Solo - Hostinger Migration Package, ✅ Post-Deployment Checklist (+4 more)
 
+### Community 82 - ".AddFont"
+Cohesion: 0.22
+Nodes (9): 6.1 Guest page shell (shared across register / success / error), 6.2 Welcome hero panel, 6.3 Form card, 6.4 Field styling, 6.5 Agency & Designation picker (touch-friendly redesign), 6.6 Primary actions, 6.7 Success page enhancements (`register_success.php`), 6.8 Error page enhancements (`register_error.php`) (+1 more)
+
 ### Community 87 - "Description"
 Cohesion: 0.25
 Nodes (7): Description, Developer(s) Contact, ICC profile:, Main Features:, NOTE, TCPDF, Third party fonts:
 
+### Community 92 - "AdvancedExportController"
+Cohesion: 0.25
+Nodes (7): 13. QA Device Checklist, 14. Future Enhancements (post-MVP), 15. Implementation Status, 8. Motion & Micro-interactions, 9. Accessibility, Browser matrix, Guest Registration UI/UX Improvement Spec
+
+### Community 222 - "12. Acceptance Criteria"
+Cohesion: 0.33
+Nodes (6): 12. Acceptance Criteria, Functional regression, Performance, Responsive, UX, Visual
+
+### Community 224 - "4. Responsive Strategy"
+Cohesion: 0.40
+Nodes (5): 4. Responsive Strategy, Breakpoints (Bootstrap-aligned), Safe areas, Target devices, Touch & kiosk requirements
+
+### Community 225 - "5. Information Architecture — 3-Step Form"
+Cohesion: 0.40
+Nodes (5): 5. Information Architecture — 3-Step Form, Step 1 — Personal details, Step 2 — Work information, Step 3 — Contact & submit, Stepper UI
+
+### Community 227 - "11. Wireframe Notes by Device"
+Cohesion: 0.50
+Nodes (4): 11. Wireframe Notes by Device, iPad / Galaxy Tab (portrait, 768×1024), Smartphone (portrait, 390×844), Tablet kiosk (landscape, 1024×768 / 1280×800)
+
+### Community 228 - "2. Current State Audit"
+Cohesion: 0.50
+Nodes (4): 2. Current State Audit, Files in scope, Pain points, What works today
+
+### Community 229 - "3. Design Direction"
+Cohesion: 0.50
+Nodes (4): 3. Design Direction, Mood board keywords, Proposed layout concept, Visual personality
+
+### Community 230 - "1. Executive Summary"
+Cohesion: 0.67
+Nodes (3): 1. Executive Summary, Goals, Out of scope (for this phase)
+
+### Community 231 - "7. Visual Design Tokens"
+Cohesion: 0.67
+Nodes (3): 7. Visual Design Tokens, Color usage, Typography scale
+
 ## Knowledge Gaps
-- **115 isolated node(s):** `name`, `description`, `type`, `tecnickcom/tcpdf`, `App\\` (+110 more)
+- **162 isolated node(s):** `name`, `description`, `type`, `tecnickcom/tcpdf`, `App\\` (+157 more)
   These have ≤1 connection - possible missing edges or undocumented components.
-- **43 thin communities (<3 nodes) omitted from report** — run `graphify query` to explore isolated nodes.
+- **40 thin communities (<3 nodes) omitted from report** — run `graphify query` to explore isolated nodes.
 
 ## Suggested Questions
 _Questions this graph is uniquely positioned to answer:_
 
-- **Why does `TCPDF` connect `TCPDF` to `CSV Export`, `Admin Settings`, `TCPDF_STATIC`, `.startSVGElementHandler`, `._out`, `TCPDF_FONTS`, `.Scale`, `.__construct`, `file_get_contents`, `.AddFont`, `.setColor`, `._destroy`, `._generateencryptionkey`, `.setAlpha`, `.getSignatureAppearanceArray`, `.getAbsFontMeasure`, `.hashTCPDFtag`, `.setAbsXY`, `.addPageRegion`, `._dolinethrough`, `._dooverline`, `._dounderline`, `.ImagePngAlpha`, `.getGroupPageNoFormatted`, `.setEqualColumns`, `.setContentMark`, `.setImageBuffer`, `.setSignature`?**
-  _High betweenness centrality (0.246) - this node is a cross-community bridge._
-- **Why does `TCPDF_STATIC` connect `TCPDF_STATIC` to `TCPDF_FONTS`, `Bootstrap, CSRF & Signature`, `.Scale`, `.__construct`, `.ImagePngAlpha`, `CSV Export`, `Admin Settings`, `.getGroupPageNoFormatted`, `.setEqualColumns`, `file_get_contents`, `.AddFont`, `TCPDF_IMAGES`, `._destroy`, `._generateencryptionkey`, `.startSVGElementHandler`, `ClassLoader`, `._out`, `.setAlpha`?**
-  _High betweenness centrality (0.087) - this node is a cross-community bridge._
-- **Why does `TCPDF_FONTS` connect `TCPDF_FONTS` to `Bootstrap, CSRF & Signature`, `.__construct`, `CSV Export`, `file_get_contents`, `.AddFont`, `._generateencryptionkey`, `.startSVGElementHandler`, `._out`?**
-  _High betweenness centrality (0.044) - this node is a cross-community bridge._
+- **Why does `TCPDF` connect `TCPDF` to `CSV Export`, `Admin Settings`, `TCPDF_STATIC`, `.startSVGElementHandler`, `._out`, `.Scale`, `.__construct`, `file_get_contents`, `.setColor`, `._destroy`, `._generateencryptionkey`, `.setAlpha`, `.getSignatureAppearanceArray`, `.getAbsFontMeasure`, `.Gradient`, `.hashTCPDFtag`, `.setAbsXY`, `.addPageRegion`, `._dolinethrough`, `._dooverline`, `._dounderline`, `._encrypt_data`, `.ImagePngAlpha`, `.getGroupPageNoFormatted`, `.setEqualColumns`, `.setContentMark`, `.setImageBuffer`, `.setSignature`?**
+  _High betweenness centrality (0.193) - this node is a cross-community bridge._
+- **Why does `TCPDF_STATIC` connect `TCPDF_STATIC` to `Bootstrap, CSRF & Signature`, `.Scale`, `.__construct`, `._encrypt_data`, `.ImagePngAlpha`, `CSV Export`, `Admin Settings`, `.getGroupPageNoFormatted`, `.setEqualColumns`, `file_get_contents`, `TCPDF_IMAGES`, `._destroy`, `._generateencryptionkey`, `.startSVGElementHandler`, `ClassLoader`, `._out`, `.setAlpha`?**
+  _High betweenness centrality (0.061) - this node is a cross-community bridge._
+- **Why does `TCPDF_FONTS` connect `._out` to `Bootstrap, CSRF & Signature`, `.__construct`, `CSV Export`, `._generateencryptionkey`, `.startSVGElementHandler`?**
+  _High betweenness centrality (0.039) - this node is a cross-community bridge._
 - **Are the 100 inferred relationships involving `TCPDF_STATIC` (e.g. with `.addTTFfont()` and `.getFontFullPath()`) actually correct?**
   _`TCPDF_STATIC` has 100 INFERRED edges - model-reasoned connections that need verification._
 - **Are the 26 inferred relationships involving `TCPDF_FONTS` (e.g. with `.AddFont()` and `.addHTMLTOC()`) actually correct?**
@@ -184,4 +246,4 @@ _Questions this graph is uniquely positioned to answer:_
 - **Are the 38 inferred relationships involving `Database` (e.g. with `.kpiJson()` and `.kpiStream()`) actually correct?**
   _`Database` has 38 INFERRED edges - model-reasoned connections that need verification._
 - **What connects `name`, `description`, `type` to the rest of the system?**
-  _117 weakly-connected nodes found - possible documentation gaps or missing edges._
+  _164 weakly-connected nodes found - possible documentation gaps or missing edges._

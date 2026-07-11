@@ -76,7 +76,7 @@ $token = function_exists('csrf_token') ? csrf_token() : '';
         <div class="card-body text-white">
           <div class="d-flex justify-content-between align-items-start">
             <div>
-              <div class="text-white-50 small mb-1">In Venue</div>
+              <div class="text-white-50 small mb-1">Present (Signed In)</div>
               <div class="h3 mb-0 fw-bold" id="kpi-today-count"><?= htmlspecialchars((string)($selectedDateCount ?? 0), ENT_QUOTES) ?></div>
               <div class="small mt-1" id="kpi-date-display"><?= htmlspecialchars($selectedDate ?? date('Y-m-d'), ENT_QUOTES) ?></div>
             </div>
@@ -150,7 +150,7 @@ $token = function_exists('csrf_token') ? csrf_token() : '';
         </div>
         <div class="col-12 col-md-4">
           <label class="form-label fw-bold">Attendance Date</label>
-          <input type="date" id="manualAttendanceDate" class="form-control" value="<?= date('Y-m-d') ?>">
+          <input type="date" id="manualAttendanceDate" class="form-control" value="<?= htmlspecialchars($selectedDate ?? date('Y-m-d'), ENT_QUOTES) ?>">
         </div>
       </div>
     </div>
@@ -180,25 +180,43 @@ $token = function_exists('csrf_token') ? csrf_token() : '';
     <div class="table-responsive table-modern">
       <table class="table table-sm align-middle">
         <thead>
-          <tr><th>#</th><th>Date</th><th>Time</th><th>Name</th><th>Agency</th><th>UUID</th><th>Signature</th></tr>
+          <tr><th>#</th><th>Status</th><th>Date</th><th>Time</th><th>Name</th><th>Agency</th><th>UUID</th><th>Signature</th></tr>
         </thead>
         <tbody>
         <?php if (!($rows??[])) : ?>
-          <tr><td colspan="7" class="text-center text-muted">No attendance records found</td></tr>
+          <tr><td colspan="8" class="text-center text-muted">No registrants found</td></tr>
         <?php endif; ?>
         <?php foreach (($rows??[]) as $i=>$r): ?>
-          <tr>
+          <?php $isPresent = !empty($r['is_present']); ?>
+          <tr class="<?= $isPresent ? '' : 'table-light' ?>">
             <td><?= ($i+1) + (($page-1)*20) ?></td>
-            <td><?= htmlspecialchars($r['attendance_date'], ENT_QUOTES) ?></td>
-            <td><?= htmlspecialchars($r['time_in'], ENT_QUOTES) ?></td>
-            <td><?= htmlspecialchars($r['first_name'].' '.$r['last_name'], ENT_QUOTES) ?></td>
+            <td>
+              <?php if ($isPresent): ?>
+                <span class="badge bg-success">Present</span>
+              <?php else: ?>
+                <span class="badge bg-secondary">Absent</span>
+              <?php endif; ?>
+            </td>
+            <td><?= htmlspecialchars($isPresent ? (string)$r['attendance_date'] : (string)($selectedDate ?? $date ?? date('Y-m-d')), ENT_QUOTES) ?></td>
+            <td><?= $isPresent ? htmlspecialchars((string)$r['time_in'], ENT_QUOTES) : '—' ?></td>
+            <td><?= htmlspecialchars(trim(($r['first_name'] ?? '') . ' ' . ($r['last_name'] ?? '')), ENT_QUOTES) ?></td>
             <td><?= htmlspecialchars($r['agency']??'', ENT_QUOTES) ?></td>
             <td><code><?= htmlspecialchars($r['uuid'], ENT_QUOTES) ?></code></td>
             <td>
-              <a class="btn btn-sm btn-outline-primary" href="<?= rtrim(dirname($_SERVER['SCRIPT_NAME']), '/') ?>/signature.php?aid=<?= (int)$r['id'] ?>" target="_blank">Download</a>
-              <img class="sig ms-2" src="<?= rtrim(dirname($_SERVER['SCRIPT_NAME']), '/') ?>/signature.php?aid=<?= (int)$r['id'] ?>" alt="sig">
-              <button class="btn btn-sm btn-outline-secondary ms-2" data-aid="<?= (int)$r['id'] ?>" data-uuid="<?= htmlspecialchars($r['uuid'], ENT_QUOTES) ?>" data-bs-toggle="modal" data-bs-target="#sigModal">Replace</button>
-              <button class="btn btn-sm btn-outline-success ms-1" data-new="true" data-uuid="<?= htmlspecialchars($r['uuid'], ENT_QUOTES) ?>" data-bs-toggle="modal" data-bs-target="#sigModal">New</button>
+              <?php if ($isPresent && !empty($r['id'])): ?>
+                <a class="btn btn-sm btn-outline-primary" href="<?= rtrim(dirname($_SERVER['SCRIPT_NAME']), '/') ?>/signature.php?aid=<?= (int)$r['id'] ?>" target="_blank">Download</a>
+                <img class="sig ms-2" src="<?= rtrim(dirname($_SERVER['SCRIPT_NAME']), '/') ?>/signature.php?aid=<?= (int)$r['id'] ?>" alt="sig">
+                <button class="btn btn-sm btn-outline-secondary ms-2" data-aid="<?= (int)$r['id'] ?>" data-uuid="<?= htmlspecialchars($r['uuid'], ENT_QUOTES) ?>" data-bs-toggle="modal" data-bs-target="#sigModal">Replace</button>
+                <button class="btn btn-sm btn-outline-success ms-1" data-new="true" data-uuid="<?= htmlspecialchars($r['uuid'], ENT_QUOTES) ?>" data-bs-toggle="modal" data-bs-target="#sigModal">New</button>
+              <?php else: ?>
+                <button class="btn btn-sm btn-primary mark-from-roster"
+                        type="button"
+                        data-participant-id="<?= (int)($r['participant_id'] ?? 0) ?>"
+                        data-participant-name="<?= htmlspecialchars(trim(($r['first_name'] ?? '') . ' ' . ($r['last_name'] ?? '')), ENT_QUOTES) ?>"
+                        data-participant-uuid="<?= htmlspecialchars($r['uuid'], ENT_QUOTES) ?>">
+                  Mark Attendance
+                </button>
+              <?php endif; ?>
             </td>
           </tr>
         <?php endforeach; ?>
@@ -416,13 +434,14 @@ $token = function_exists('csrf_token') ? csrf_token() : '';
     dateSelector.addEventListener('change', () => {
       const selectedDate = dateSelector.value;
       if (selectedDate) {
-        // Sync with filter form
         if (filterDateInput) {
           filterDateInput.value = selectedDate;
         }
-        // Update KPIs immediately
+        const manualDateInput = document.getElementById('manualAttendanceDate');
+        if (manualDateInput) {
+          manualDateInput.value = selectedDate;
+        }
         updateKPIs(selectedDate);
-        // Reload page to update attendance table
         setTimeout(() => {
           window.location.href = '?r=admin_attendance&date=' + encodeURIComponent(selectedDate);
         }, 500);
@@ -523,14 +542,21 @@ $token = function_exists('csrf_token') ? csrf_token() : '';
       }
       
       searchTimeout = setTimeout(() => {
-        fetch(`?r=admin_attendance_search&q=${encodeURIComponent(query)}`)
-          .then(r => r.json())
+        const attendanceDate = document.getElementById('manualAttendanceDate')?.value
+          || document.getElementById('kpiDateSelector')?.value
+          || new Date().toISOString().split('T')[0];
+        fetch(`?r=admin_attendance_search&q=${encodeURIComponent(query)}&date=${encodeURIComponent(attendanceDate)}`)
+          .then(r => {
+            if (!r.ok) throw new Error('Search request failed');
+            return r.json();
+          })
           .then(data => {
             displaySearchResults(data.results || []);
           })
           .catch(err => {
             console.error('Search error:', err);
             searchResultsList.innerHTML = '<div class="list-group-item text-danger">Error searching participants</div>';
+            searchResults.style.display = 'block';
           });
       }, 300);
     });
@@ -560,9 +586,8 @@ $token = function_exists('csrf_token') ? csrf_token() : '';
       const email = participant.email || '';
       const alreadyMarked = participant.already_marked || false;
       
-      const item = document.createElement('button');
-      item.type = 'button';
-      item.className = `list-group-item list-group-item-action ${alreadyMarked ? 'list-group-item-warning' : ''}`;
+      const item = document.createElement('div');
+      item.className = `list-group-item ${alreadyMarked ? 'list-group-item-success' : ''}`;
       item.innerHTML = `
         <div class="d-flex w-100 justify-content-between align-items-center">
           <div>
@@ -571,18 +596,20 @@ $token = function_exists('csrf_token') ? csrf_token() : '';
             ${email ? `<br><small class="text-muted">${escapeHtml(email)}</small>` : ''}
           </div>
           <div class="text-end">
-            ${alreadyMarked ? '<span class="badge bg-warning text-dark">Already Marked</span>' : '<span class="badge bg-success">Available</span>'}
-            <br><button class="btn btn-sm btn-primary mt-2" data-participant-id="${participant.id}" data-participant-name="${escapeHtml(fullName)}">Mark Attendance</button>
+            ${alreadyMarked ? '<span class="badge bg-success">Present</span>' : '<span class="badge bg-secondary">Not yet present</span>'}
+            ${alreadyMarked ? '' : `<br><button type="button" class="btn btn-sm btn-primary mt-2" data-participant-id="${participant.id}" data-participant-name="${escapeHtml(fullName)}">Mark Attendance</button>`}
           </div>
         </div>
       `;
       
       const markBtn = item.querySelector('button[data-participant-id]');
-      markBtn.addEventListener('click', (e) => {
-        e.stopPropagation();
-        selectedParticipant = participant;
-        openManualAttendanceModal(participant, fullName);
-      });
+      if (markBtn) {
+        markBtn.addEventListener('click', (e) => {
+          e.stopPropagation();
+          selectedParticipant = participant;
+          openManualAttendanceModal(participant, fullName);
+        });
+      }
       
       searchResultsList.appendChild(item);
     });
@@ -670,6 +697,20 @@ $token = function_exists('csrf_token') ? csrf_token() : '';
     });
   });
   
+  // Mark attendance from roster table
+  document.querySelectorAll('.mark-from-roster').forEach((btn) => {
+    btn.addEventListener('click', () => {
+      const participant = {
+        id: parseInt(btn.getAttribute('data-participant-id') || '0', 10),
+        uuid: btn.getAttribute('data-participant-uuid') || '',
+        first_name: '',
+        last_name: '',
+      };
+      const fullName = btn.getAttribute('data-participant-name') || 'Participant';
+      openManualAttendanceModal(participant, fullName);
+    });
+  });
+
   // Initialize signature pad when modal is shown
   document.getElementById('manualAttendanceModal')?.addEventListener('shown.bs.modal', () => {
     initManualSigPad();
