@@ -75,3 +75,10 @@ if (!function_exists('csrf_check')) {
         return is_string($token) && isset($_SESSION['csrf']) && hash_equals($_SESSION['csrf'], $token);
     }
 }
+
+if (!function_exists('csrf_rotate')) {
+    function csrf_rotate(): string {
+        $_SESSION['csrf'] = bin2hex(random_bytes(32));
+        return $_SESSION['csrf'];
+    }
+}

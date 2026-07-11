@@ -161,6 +161,9 @@ class RegisterController
 
         if (!isset($_SESSION['qr_allowed'])) $_SESSION['qr_allowed'] = [];
         $_SESSION['qr_allowed'][$uuid] = true;
+        if (function_exists('csrf_rotate')) {
+            csrf_rotate();
+        }
         header('Location: ?r=register_success&uuid=' . urlencode($uuid));
         exit;
     }

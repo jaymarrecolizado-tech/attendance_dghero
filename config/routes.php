@@ -77,6 +77,10 @@ return [
         'GET' => [AdminAttendanceController::class, 'kpiJson'],
         '_guards' => ['admin'],
     ],
+    'admin_attendance_kpi_stream' => [
+        'GET' => [AdminAttendanceController::class, 'kpiStream'],
+        '_guards' => ['admin'],
+    ],
     'admin_attendance_search' => [
         'GET' => [AdminAttendanceController::class, 'searchParticipants'],
         '_guards' => ['admin'],

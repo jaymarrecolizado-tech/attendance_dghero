@@ -97,6 +97,17 @@ class Database
         if (!self::tableExists($pdo, 'report_templates')) {
             self::executeSqlFile($pdo, $base . '004_report_templates.sql');
         }
+        // 005_performance_security
+        if (!self::tableExists($pdo, 'rate_limits')) {
+            self::executeSqlFile($pdo, $base . '005_performance_security.sql');
+        } else {
+            if (!self::indexExists($pdo, 'participants', 'idx_participants_agency')) {
+                $pdo->exec('ALTER TABLE participants ADD INDEX idx_participants_agency (agency(100))');
+            }
+            if (!self::indexExists($pdo, 'attendance', 'idx_attendance_date')) {
+                $pdo->exec('ALTER TABLE attendance ADD INDEX idx_attendance_date (attendance_date)');
+            }
+        }
     }
 
     private static function executeSqlFile(PDO $pdo, string $path): void

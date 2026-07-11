@@ -328,55 +328,57 @@ $token = function_exists('csrf_token') ? csrf_token() : '';
   
   let currentDate = dateSelector ? dateSelector.value : new Date().toISOString().split('T')[0];
   
+  // Apply KPI data to dashboard cards
+  function applyKpiData(data, date = currentDate) {
+    const todayCountEl = document.getElementById('kpi-today-count');
+    const attendanceRateEl = document.getElementById('kpi-attendance-rate');
+    const recentCountEl = document.getElementById('kpi-recent-count');
+    const peakHourEl = document.getElementById('kpi-peak-hour');
+    const dateDisplayEl = document.getElementById('kpi-date-display');
+    const recentLabelEl = document.getElementById('kpi-recent-label');
+
+    if (todayCountEl) {
+      const oldVal = parseInt(todayCountEl.textContent) || 0;
+      todayCountEl.textContent = data.dateCount || 0;
+      if (oldVal !== data.dateCount) {
+        todayCountEl.style.transform = 'scale(1.1)';
+        setTimeout(() => { todayCountEl.style.transform = 'scale(1)'; }, 300);
+      }
+    }
+    if (attendanceRateEl) {
+      attendanceRateEl.textContent = (data.attendanceRate || 0) + '%';
+      const parent = attendanceRateEl.closest('.card-body');
+      if (parent) {
+        const detail = parent.querySelector('.small.mt-1');
+        if (detail) detail.textContent = (data.dateCount || 0) + ' of ' + (data.totalRegistered || 0);
+      }
+    }
+    if (recentCountEl) {
+      recentCountEl.textContent = data.recentCount || 0;
+    }
+    if (peakHourEl) {
+      peakHourEl.textContent = data.peakHourText || 'N/A';
+    }
+    if (dateDisplayEl) {
+      dateDisplayEl.textContent = data.selectedDate || date;
+    }
+    if (selectedDateDisplay) {
+      selectedDateDisplay.textContent = data.selectedDate || date;
+    }
+    if (recentLabelEl) {
+      const isToday = (data.selectedDate || date) === new Date().toISOString().split('T')[0];
+      recentLabelEl.textContent = isToday ? 'Recent sign-ins' : 'N/A (past date)';
+    }
+
+    currentDate = data.selectedDate || date;
+  }
+
   // Update KPIs for selected date
   function updateKPIs(date = currentDate) {
     const url = '?r=admin_attendance_kpi' + (date ? '&date=' + encodeURIComponent(date) : '');
     fetch(url)
       .then(r => r.json())
-      .then(data => {
-        const todayCountEl = document.getElementById('kpi-today-count');
-        const attendanceRateEl = document.getElementById('kpi-attendance-rate');
-        const recentCountEl = document.getElementById('kpi-recent-count');
-        const peakHourEl = document.getElementById('kpi-peak-hour');
-        const dateDisplayEl = document.getElementById('kpi-date-display');
-        const recentLabelEl = document.getElementById('kpi-recent-label');
-        
-        if (todayCountEl) {
-          const oldVal = parseInt(todayCountEl.textContent) || 0;
-          todayCountEl.textContent = data.dateCount || 0;
-          // Animate if value changed
-          if (oldVal !== data.dateCount) {
-            todayCountEl.style.transform = 'scale(1.1)';
-            setTimeout(() => { todayCountEl.style.transform = 'scale(1)'; }, 300);
-          }
-        }
-        if (attendanceRateEl) {
-          attendanceRateEl.textContent = (data.attendanceRate || 0) + '%';
-          const parent = attendanceRateEl.closest('.card-body');
-          if (parent) {
-            const detail = parent.querySelector('.small.mt-1');
-            if (detail) detail.textContent = (data.dateCount || 0) + ' of ' + (data.totalRegistered || 0);
-          }
-        }
-        if (recentCountEl) {
-          recentCountEl.textContent = data.recentCount || 0;
-        }
-        if (peakHourEl) {
-          peakHourEl.textContent = data.peakHourText || 'N/A';
-        }
-        if (dateDisplayEl) {
-          dateDisplayEl.textContent = data.selectedDate || date;
-        }
-        if (selectedDateDisplay) {
-          selectedDateDisplay.textContent = data.selectedDate || date;
-        }
-        if (recentLabelEl) {
-          const isToday = (data.selectedDate || date) === new Date().toISOString().split('T')[0];
-          recentLabelEl.textContent = isToday ? 'Recent sign-ins' : 'N/A (past date)';
-        }
-        
-        currentDate = data.selectedDate || date;
-      })
+      .then(data => applyKpiData(data, date))
       .catch(err => {
         console.error('Failed to update KPIs:', err);
       });
@@ -428,11 +430,46 @@ $token = function_exists('csrf_token') ? csrf_token() : '';
     });
   }
   
-  // Update immediately on load, then every 30 seconds (only if viewing today)
+  // Live updates via SSE when viewing today; polling fallback otherwise
   const isToday = currentDate === new Date().toISOString().split('T')[0];
   updateKPIs(currentDate);
+
+  let kpiSource = null;
+  let pollFallback = null;
+
+  function startKpiStream(date) {
+    if (kpiSource) {
+      kpiSource.close();
+      kpiSource = null;
+    }
+    if (typeof EventSource === 'undefined') {
+      return false;
+    }
+    const streamUrl = '?r=admin_attendance_kpi_stream&date=' + encodeURIComponent(date);
+    kpiSource = new EventSource(streamUrl);
+    kpiSource.onmessage = (event) => {
+      try {
+        applyKpiData(JSON.parse(event.data), date);
+      } catch (err) {
+        console.error('Failed to parse KPI stream:', err);
+      }
+    };
+    kpiSource.onerror = () => {
+      if (kpiSource) {
+        kpiSource.close();
+        kpiSource = null;
+      }
+      if (!pollFallback) {
+        pollFallback = setInterval(() => updateKPIs(date), 30000);
+      }
+    };
+    return true;
+  }
+
   if (isToday) {
-    setInterval(() => updateKPIs(currentDate), 30000);
+    if (!startKpiStream(currentDate)) {
+      setInterval(() => updateKPIs(currentDate), 30000);
+    }
   }
   
   // Add smooth transition
