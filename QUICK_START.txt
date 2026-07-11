@@ -1,0 +1,107 @@
+================================================================================
+ISSP SOLO - QUICK DEPLOYMENT GUIDE FOR HOSTINGER
+================================================================================
+
+STEP 1: UPLOAD FILES
+--------------------
+Upload ALL files from this folder to your Hostinger public_html directory.
+You can use:
+- File Manager in hPanel
+- FTP Client (FileZilla, WinSCP)
+- SSH (if available)
+
+STEP 2: CREATE DATABASE
+-----------------------
+1. Log in to Hostinger hPanel
+2. Go to Databases → MySQL Databases
+3. Create new database (e.g., digitalbayanihan_db)
+4. Create database user with strong password
+5. Add user to database with ALL PRIVILEGES
+6. Note: Database host is usually "localhost"
+
+STEP 3: CONFIGURE ENVIRONMENT
+------------------------------
+1. In public_html, copy env.example to .env:
+   cp env.example .env
+   
+2. Edit .env file with your actual credentials:
+   DB_HOST=localhost
+   DB_NAME=your_database_name
+   DB_USER=your_database_user
+   DB_PASS=your_database_password
+   DB_AUTO_MIGRATE=false
+   
+   SMTP_HOST=smtp.hostinger.com
+   SMTP_PORT=465
+   SMTP_USER=your_email@digitalbayanihan.site
+   SMTP_PASS=your_email_password
+   SMTP_SECURE=ssl
+   SMTP_FROM=your_email@digitalbayanihan.site
+   
+   APP_URL=https://digitalbayanihan.site
+
+STEP 4: RUN MIGRATIONS
+----------------------
+Option A - Via SSH (Recommended):
+  cd ~/public_html
+  php scripts/run_migrations.php
+
+Option B - Via Browser (Temporary):
+  1. Create file: run_migrations_once.php
+  2. Add this code:
+     <?php
+     require __DIR__ . '/config/bootstrap.php';
+     require __DIR__ . '/vendor/autoload.php';
+     \App\Services\Database::migrate();
+     echo "Migrations completed!";
+  3. Visit: https://digitalbayanihan.site/run_migrations_once.php
+  4. DELETE the file immediately after!
+
+STEP 5: CREATE ADMIN USER
+--------------------------
+Option A - Via SSH:
+  php scripts/seed_admin.php admin your_secure_password
+
+Option B - Via Browser (Temporary):
+  1. Create file: create_admin.php
+  2. Add this code:
+     <?php
+     require __DIR__ . '/config/bootstrap.php';
+     require __DIR__ . '/vendor/autoload.php';
+     $pdo = \App\Services\Database::pdo();
+     $username = 'admin';
+     $password = password_hash('your_secure_password', PASSWORD_DEFAULT);
+     $stmt = $pdo->prepare('INSERT INTO admins (username, password_hash) VALUES (?, ?)');
+     $stmt->execute([$username, $password]);
+     echo "Admin created!";
+  3. Visit the URL once
+  4. DELETE immediately!
+
+STEP 6: SET PERMISSIONS
+-----------------------
+Set these directories to 755 (writable):
+- storage/qrcodes/
+- storage/signatures/
+- storage/imports/
+- storage/reports/
+- storage/runtime/
+
+STEP 7: TEST
+------------
+1. Visit: https://digitalbayanihan.site/
+2. Test registration
+3. Login as admin: ?r=admin_login
+4. Configure SMTP: ?r=admin_settings
+5. Test all features
+
+STEP 8: SECURITY
+----------------
+1. Ensure .env file permissions: chmod 600 .env
+2. Delete any temporary migration/admin creation files
+3. Enable HTTPS/SSL if available
+4. Review .htaccess security settings
+
+================================================================================
+For detailed instructions, see DEPLOYMENT.md
+================================================================================
+

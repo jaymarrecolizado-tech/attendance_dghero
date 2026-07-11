@@ -1,0 +1,429 @@
+<?php
+declare(strict_types=1);
+
+namespace App\Controllers;
+
+use App\Services\Database;
+use App\Services\SignatureService;
+
+class AdminAttendanceController
+{
+    private function requireAdmin(): bool
+    {
+        if (empty($_SESSION['admin_id'])) { header('Location: ?r=admin_login'); return false; }
+        return true;
+    }
+
+    public function list(): void
+    {
+        if (!$this->requireAdmin()) return;
+        $pdo = Database::pdo();
+        $date = trim((string)($_GET['date'] ?? ''));
+        $agency = trim((string)($_GET['agency'] ?? ''));
+        $name = trim((string)($_GET['name'] ?? ''));
+        $page = max(1, (int)($_GET['page'] ?? 1));
+        $per = 20;
+        $offset = ($page - 1) * $per;
+
+        $where = [];
+        $bind = [];
+        if ($date !== '') { $where[] = 'a.attendance_date = ?'; $bind[] = $date; }
+        if ($agency !== '') { $where[] = 'p.agency LIKE ?'; $bind[] = "%{$agency}%"; }
+        if ($name !== '') { $where[] = '(p.first_name LIKE ? OR p.last_name LIKE ?)'; $bind[] = "%{$name}%"; $bind[] = "%{$name}%"; }
+        $sqlWhere = $where ? ('WHERE ' . implode(' AND ', $where)) : '';
+
+        $stmt = $pdo->prepare("SELECT SQL_CALC_FOUND_ROWS a.id, a.attendance_date, a.time_in, a.signature_path, p.first_name, p.last_name, p.agency, p.uuid FROM attendance a JOIN participants p ON p.id = a.participant_id $sqlWhere ORDER BY a.id DESC LIMIT $per OFFSET $offset");
+        $stmt->execute($bind);
+        $rows = $stmt->fetchAll();
+        $total = (int)$pdo->query('SELECT FOUND_ROWS() AS t')->fetch()['t'];
+        $pages = max(1, (int)ceil($total / $per));
+
+        // KPI Metrics - Use selected date or default to today
+        $selectedDate = $date !== '' ? $date : date('Y-m-d');
+        $stmt = $pdo->prepare("SELECT COUNT(DISTINCT a.participant_id) FROM attendance a WHERE a.attendance_date = ?");
+        $stmt->execute([$selectedDate]);
+        $selectedDateCount = (int)$stmt->fetchColumn();
+        
+        $totalRegistered = (int)$pdo->query('SELECT COUNT(*) FROM participants')->fetchColumn();
+        $attendanceRate = $totalRegistered > 0 ? round(($selectedDateCount / $totalRegistered) * 100, 1) : 0;
+        
+        // Last hour activity (only relevant if viewing today)
+        $recentCount = 0;
+        if ($selectedDate === date('Y-m-d')) {
+            $lastHourTime = date('H:i:s', strtotime('-1 hour'));
+            $stmt = $pdo->prepare("SELECT COUNT(*) FROM attendance WHERE attendance_date = ? AND time_in >= ?");
+            $stmt->execute([$selectedDate, $lastHourTime]);
+            $recentCount = (int)$stmt->fetchColumn();
+        }
+        
+        // Peak hour for selected date
+        $stmt = $pdo->prepare("SELECT HOUR(time_in) as hour, COUNT(*) as cnt FROM attendance WHERE attendance_date = ? GROUP BY HOUR(time_in) ORDER BY cnt DESC LIMIT 1");
+        $stmt->execute([$selectedDate]);
+        $peakHour = $stmt->fetch();
+        $peakHourText = $peakHour ? sprintf('%02d:00 (%d sign-ins)', (int)$peakHour['hour'], (int)$peakHour['cnt']) : 'N/A';
+
+        $data = compact('rows','page','pages','date','agency','name','total','selectedDateCount','totalRegistered','attendanceRate','recentCount','peakHourText','selectedDate');
+        require dirname(__DIR__, 2) . DIRECTORY_SEPARATOR . 'views' . DIRECTORY_SEPARATOR . 'admin_attendance.php';
+    }
+
+    public function kpiJson(): void
+    {
+        if (!$this->requireAdmin()) return;
+        header('Content-Type: application/json');
+        $pdo = Database::pdo();
+        
+        // Get date from query parameter or use today
+        $selectedDate = isset($_GET['date']) && trim($_GET['date']) !== '' ? trim($_GET['date']) : date('Y-m-d');
+        
+        $stmt = $pdo->prepare("SELECT COUNT(DISTINCT a.participant_id) FROM attendance a WHERE a.attendance_date = ?");
+        $stmt->execute([$selectedDate]);
+        $dateCount = (int)$stmt->fetchColumn();
+        
+        $totalRegistered = (int)$pdo->query('SELECT COUNT(*) FROM participants')->fetchColumn();
+        $attendanceRate = $totalRegistered > 0 ? round(($dateCount / $totalRegistered) * 100, 1) : 0;
+        
+        // Last hour activity (only relevant if viewing today)
+        $recentCount = 0;
+        if ($selectedDate === date('Y-m-d')) {
+            $lastHourTime = date('H:i:s', strtotime('-1 hour'));
+            $stmt = $pdo->prepare("SELECT COUNT(*) FROM attendance WHERE attendance_date = ? AND time_in >= ?");
+            $stmt->execute([$selectedDate, $lastHourTime]);
+            $recentCount = (int)$stmt->fetchColumn();
+        }
+        
+        // Peak hour for selected date
+        $stmt = $pdo->prepare("SELECT HOUR(time_in) as hour, COUNT(*) as cnt FROM attendance WHERE attendance_date = ? GROUP BY HOUR(time_in) ORDER BY cnt DESC LIMIT 1");
+        $stmt->execute([$selectedDate]);
+        $peakHour = $stmt->fetch();
+        $peakHourText = $peakHour ? sprintf('%02d:00 (%d sign-ins)', (int)$peakHour['hour'], (int)$peakHour['cnt']) : 'N/A';
+        
+        echo json_encode([
+            'dateCount' => $dateCount,
+            'totalRegistered' => $totalRegistered,
+            'attendanceRate' => $attendanceRate,
+            'recentCount' => $recentCount,
+            'peakHourText' => $peakHourText,
+            'selectedDate' => $selectedDate,
+            'timestamp' => time()
+        ]);
+    }
+
+    public function searchParticipants(): void
+    {
+        if (!$this->requireAdmin()) return;
+        header('Content-Type: application/json');
+        
+        $query = trim((string)($_GET['q'] ?? ''));
+        if (strlen($query) < 2) {
+            echo json_encode(['results' => []]);
+            return;
+        }
+        
+        $pdo = Database::pdo();
+        $stmt = $pdo->prepare("SELECT id, uuid, first_name, last_name, middle_name, agency, email FROM participants WHERE first_name LIKE ? OR last_name LIKE ? OR email LIKE ? OR CONCAT(first_name, ' ', last_name) LIKE ? ORDER BY last_name, first_name LIMIT 20");
+        $searchTerm = "%{$query}%";
+        $stmt->execute([$searchTerm, $searchTerm, $searchTerm, $searchTerm]);
+        $results = $stmt->fetchAll();
+        
+        // Check if already marked today
+        $today = date('Y-m-d');
+        $event = $pdo->query('SELECT id FROM events WHERE active=1 ORDER BY id DESC LIMIT 1')->fetch();
+        $eventId = $event ? (int)$event['id'] : null;
+        
+        foreach ($results as &$result) {
+            $chk = $pdo->prepare('SELECT id FROM attendance WHERE participant_id=? AND attendance_date=?' . ($eventId ? ' AND event_id=?' : ''));
+            $bind = $eventId ? [(int)$result['id'], $today, $eventId] : [(int)$result['id'], $today];
+            $chk->execute($bind);
+            $result['already_marked'] = $chk->fetch() !== false;
+        }
+        
+        echo json_encode(['results' => $results]);
+    }
+
+    public function manualAttendance(): void
+    {
+        if (!$this->requireAdmin()) return;
+        header('Content-Type: application/json');
+        
+        $csrf = $_SERVER['HTTP_X_CSRF_TOKEN'] ?? '';
+        if (!function_exists('csrf_check') || !csrf_check($csrf)) {
+            http_response_code(400);
+            echo json_encode(['ok' => false, 'error' => 'csrf']);
+            return;
+        }
+        
+        $input = file_get_contents('php://input');
+        $payload = json_decode($input, true);
+        if (!is_array($payload)) {
+            http_response_code(400);
+            echo json_encode(['ok' => false, 'error' => 'invalid']);
+            return;
+        }
+        
+        $participantId = (int)($payload['participant_id'] ?? 0);
+        $signature = (string)($payload['signature'] ?? '');
+        $attendanceDate = trim((string)($payload['date'] ?? date('Y-m-d')));
+        
+        if ($participantId <= 0) {
+            http_response_code(422);
+            echo json_encode(['ok' => false, 'error' => 'missing_participant']);
+            return;
+        }
+        
+        $pdo = Database::pdo();
+        
+        // Check if participant exists
+        $stmt = $pdo->prepare('SELECT id, uuid FROM participants WHERE id = ?');
+        $stmt->execute([$participantId]);
+        $participant = $stmt->fetch();
+        if (!$participant) {
+            http_response_code(404);
+            echo json_encode(['ok' => false, 'error' => 'not_found']);
+            return;
+        }
+        
+        // Create default signature if none provided
+        if ($signature === '') {
+            // Create a simple 1x1 transparent PNG as default signature
+            $signature = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg==';
+        }
+        
+        // Get event info
+        $event = $pdo->query('SELECT id, enforce_single_time_in FROM events WHERE active=1 ORDER BY id DESC LIMIT 1')->fetch();
+        $eventId = $event ? (int)$event['id'] : null;
+        $enforce = $event ? (int)$event['enforce_single_time_in'] === 1 : false;
+        
+        // Check if already marked (if enforcement is enabled)
+        if ($enforce) {
+            $chk = $pdo->prepare('SELECT id FROM attendance WHERE participant_id=? AND attendance_date=?' . ($eventId ? ' AND event_id=?' : ''));
+            $bind = $eventId ? [$participantId, $attendanceDate, $eventId] : [$participantId, $attendanceDate];
+            $chk->execute($bind);
+            if ($chk->fetch()) {
+                echo json_encode(['ok' => false, 'error' => 'already_marked']);
+                return;
+            }
+        }
+        
+        // Save signature
+        $path = SignatureService::saveBase64($participant['uuid'], $signature);
+        $time = date('H:i:s');
+        
+        // Insert attendance
+        $ins = $pdo->prepare('INSERT INTO attendance (participant_id, attendance_date, time_in, signature_path, event_id) VALUES (?,?,?,?,?)');
+        $ins->execute([$participantId, $attendanceDate, $time, $path, $eventId]);
+        
+        echo json_encode(['ok' => true, 'message' => 'Attendance marked successfully']);
+    }
+}
+
+
+
+// <?php
+// declare(strict_types=1);
+
+// namespace App\Controllers;
+
+// use App\Services\Database;
+// use App\Services\SignatureService;
+
+// class AdminAttendanceController
+// {
+//     private function requireAdmin(): bool
+//     {
+//         if (empty($_SESSION['admin_id'])) { header('Location: ?r=admin_login'); return false; }
+//         return true;
+//     }
+
+//     public function list(): void
+//     {
+//         if (!$this->requireAdmin()) return;
+//         $pdo = Database::pdo();
+//         $date = trim((string)($_GET['date'] ?? ''));
+//         $agency = trim((string)($_GET['agency'] ?? ''));
+//         $name = trim((string)($_GET['name'] ?? ''));
+//         $page = max(1, (int)($_GET['page'] ?? 1));
+//         $per = 20;
+//         $offset = ($page - 1) * $per;
+
+//         $where = [];
+//         $bind = [];
+//         if ($date !== '') { $where[] = 'a.attendance_date = ?'; $bind[] = $date; }
+//         if ($agency !== '') { $where[] = 'p.agency LIKE ?'; $bind[] = "%{$agency}%"; }
+//         if ($name !== '') { $where[] = '(p.first_name LIKE ? OR p.last_name LIKE ?)'; $bind[] = "%{$name}%"; $bind[] = "%{$name}%"; }
+//         $sqlWhere = $where ? ('WHERE ' . implode(' AND ', $where)) : '';
+
+//         $stmt = $pdo->prepare("SELECT SQL_CALC_FOUND_ROWS a.id, a.attendance_date, a.time_in, a.signature_path, p.first_name, p.last_name, p.agency, p.uuid FROM attendance a JOIN participants p ON p.id = a.participant_id $sqlWhere ORDER BY a.id DESC LIMIT $per OFFSET $offset");
+//         $stmt->execute($bind);
+//         $rows = $stmt->fetchAll();
+//         $total = (int)$pdo->query('SELECT FOUND_ROWS() AS t')->fetch()['t'];
+//         $pages = max(1, (int)ceil($total / $per));
+
+//         // KPI Metrics
+//         $today = date('Y-m-d');
+//         $stmt = $pdo->prepare("SELECT COUNT(DISTINCT a.participant_id) FROM attendance a WHERE a.attendance_date = ?");
+//         $stmt->execute([$today]);
+//         $todayCount = (int)$stmt->fetchColumn();
+        
+//         $totalRegistered = (int)$pdo->query('SELECT COUNT(*) FROM participants')->fetchColumn();
+//         $attendanceRate = $totalRegistered > 0 ? round(($todayCount / $totalRegistered) * 100, 1) : 0;
+        
+//         // Last hour activity
+//         $lastHourTime = date('H:i:s', strtotime('-1 hour'));
+//         $stmt = $pdo->prepare("SELECT COUNT(*) FROM attendance WHERE attendance_date = ? AND time_in >= ?");
+//         $stmt->execute([$today, $lastHourTime]);
+//         $recentCount = (int)$stmt->fetchColumn();
+        
+//         // Peak hour today
+//         $stmt = $pdo->prepare("SELECT HOUR(time_in) as hour, COUNT(*) as cnt FROM attendance WHERE attendance_date = ? GROUP BY HOUR(time_in) ORDER BY cnt DESC LIMIT 1");
+//         $stmt->execute([$today]);
+//         $peakHour = $stmt->fetch();
+//         $peakHourText = $peakHour ? sprintf('%02d:00 (%d sign-ins)', (int)$peakHour['hour'], (int)$peakHour['cnt']) : 'N/A';
+
+//         $data = compact('rows','page','pages','date','agency','name','total','todayCount','totalRegistered','attendanceRate','recentCount','peakHourText','today');
+//         require dirname(__DIR__, 2) . DIRECTORY_SEPARATOR . 'views' . DIRECTORY_SEPARATOR . 'admin_attendance.php';
+//     }
+
+//     public function kpiJson(): void
+//     {
+//         if (!$this->requireAdmin()) return;
+//         header('Content-Type: application/json');
+//         $pdo = Database::pdo();
+        
+//         $today = date('Y-m-d');
+//         $stmt = $pdo->prepare("SELECT COUNT(DISTINCT a.participant_id) FROM attendance a WHERE a.attendance_date = ?");
+//         $stmt->execute([$today]);
+//         $todayCount = (int)$stmt->fetchColumn();
+        
+//         $totalRegistered = (int)$pdo->query('SELECT COUNT(*) FROM participants')->fetchColumn();
+//         $attendanceRate = $totalRegistered > 0 ? round(($todayCount / $totalRegistered) * 100, 1) : 0;
+        
+//         // Last hour activity
+//         $lastHourTime = date('H:i:s', strtotime('-1 hour'));
+//         $stmt = $pdo->prepare("SELECT COUNT(*) FROM attendance WHERE attendance_date = ? AND time_in >= ?");
+//         $stmt->execute([$today, $lastHourTime]);
+//         $recentCount = (int)$stmt->fetchColumn();
+        
+//         // Peak hour today
+//         $stmt = $pdo->prepare("SELECT HOUR(time_in) as hour, COUNT(*) as cnt FROM attendance WHERE attendance_date = ? GROUP BY HOUR(time_in) ORDER BY cnt DESC LIMIT 1");
+//         $stmt->execute([$today]);
+//         $peakHour = $stmt->fetch();
+//         $peakHourText = $peakHour ? sprintf('%02d:00 (%d sign-ins)', (int)$peakHour['hour'], (int)$peakHour['cnt']) : 'N/A';
+        
+//         echo json_encode([
+//             'todayCount' => $todayCount,
+//             'totalRegistered' => $totalRegistered,
+//             'attendanceRate' => $attendanceRate,
+//             'recentCount' => $recentCount,
+//             'peakHourText' => $peakHourText,
+//             'today' => $today,
+//             'timestamp' => time()
+//         ]);
+//     }
+
+//     public function searchParticipants(): void
+//     {
+//         if (!$this->requireAdmin()) return;
+//         header('Content-Type: application/json');
+        
+//         $query = trim((string)($_GET['q'] ?? ''));
+//         if (strlen($query) < 2) {
+//             echo json_encode(['results' => []]);
+//             return;
+//         }
+        
+//         $pdo = Database::pdo();
+//         $stmt = $pdo->prepare("SELECT id, uuid, first_name, last_name, middle_name, agency, email FROM participants WHERE first_name LIKE ? OR last_name LIKE ? OR email LIKE ? OR CONCAT(first_name, ' ', last_name) LIKE ? ORDER BY last_name, first_name LIMIT 20");
+//         $searchTerm = "%{$query}%";
+//         $stmt->execute([$searchTerm, $searchTerm, $searchTerm, $searchTerm]);
+//         $results = $stmt->fetchAll();
+        
+//         // Check if already marked today
+//         $today = date('Y-m-d');
+//         $event = $pdo->query('SELECT id FROM events WHERE active=1 ORDER BY id DESC LIMIT 1')->fetch();
+//         $eventId = $event ? (int)$event['id'] : null;
+        
+//         foreach ($results as &$result) {
+//             $chk = $pdo->prepare('SELECT id FROM attendance WHERE participant_id=? AND attendance_date=?' . ($eventId ? ' AND event_id=?' : ''));
+//             $bind = $eventId ? [(int)$result['id'], $today, $eventId] : [(int)$result['id'], $today];
+//             $chk->execute($bind);
+//             $result['already_marked'] = $chk->fetch() !== false;
+//         }
+        
+//         echo json_encode(['results' => $results]);
+//     }
+
+//     public function manualAttendance(): void
+//     {
+//         if (!$this->requireAdmin()) return;
+//         header('Content-Type: application/json');
+        
+//         $csrf = $_SERVER['HTTP_X_CSRF_TOKEN'] ?? '';
+//         if (!function_exists('csrf_check') || !csrf_check($csrf)) {
+//             http_response_code(400);
+//             echo json_encode(['ok' => false, 'error' => 'csrf']);
+//             return;
+//         }
+        
+//         $input = file_get_contents('php://input');
+//         $payload = json_decode($input, true);
+//         if (!is_array($payload)) {
+//             http_response_code(400);
+//             echo json_encode(['ok' => false, 'error' => 'invalid']);
+//             return;
+//         }
+        
+//         $participantId = (int)($payload['participant_id'] ?? 0);
+//         $signature = (string)($payload['signature'] ?? '');
+//         $attendanceDate = trim((string)($payload['date'] ?? date('Y-m-d')));
+        
+//         if ($participantId <= 0) {
+//             http_response_code(422);
+//             echo json_encode(['ok' => false, 'error' => 'missing_participant']);
+//             return;
+//         }
+        
+//         $pdo = Database::pdo();
+        
+//         // Check if participant exists
+//         $stmt = $pdo->prepare('SELECT id, uuid FROM participants WHERE id = ?');
+//         $stmt->execute([$participantId]);
+//         $participant = $stmt->fetch();
+//         if (!$participant) {
+//             http_response_code(404);
+//             echo json_encode(['ok' => false, 'error' => 'not_found']);
+//             return;
+//         }
+        
+//         // Create default signature if none provided
+//         if ($signature === '') {
+//             // Create a simple 1x1 transparent PNG as default signature
+//             $signature = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg==';
+//         }
+        
+//         // Get event info
+//         $event = $pdo->query('SELECT id, enforce_single_time_in FROM events WHERE active=1 ORDER BY id DESC LIMIT 1')->fetch();
+//         $eventId = $event ? (int)$event['id'] : null;
+//         $enforce = $event ? (int)$event['enforce_single_time_in'] === 1 : false;
+        
+//         // Check if already marked (if enforcement is enabled)
+//         if ($enforce) {
+//             $chk = $pdo->prepare('SELECT id FROM attendance WHERE participant_id=? AND attendance_date=?' . ($eventId ? ' AND event_id=?' : ''));
+//             $bind = $eventId ? [$participantId, $attendanceDate, $eventId] : [$participantId, $attendanceDate];
+//             $chk->execute($bind);
+//             if ($chk->fetch()) {
+//                 echo json_encode(['ok' => false, 'error' => 'already_marked']);
+//                 return;
+//             }
+//         }
+        
+//         // Save signature
+//         $path = SignatureService::saveBase64($participant['uuid'], $signature);
+//         $time = date('H:i:s');
+        
+//         // Insert attendance
+//         $ins = $pdo->prepare('INSERT INTO attendance (participant_id, attendance_date, time_in, signature_path, event_id) VALUES (?,?,?,?,?)');
+//         $ins->execute([$participantId, $attendanceDate, $time, $path, $eventId]);
+        
+//         echo json_encode(['ok' => true, 'message' => 'Attendance marked successfully']);
+//     }
+// }
