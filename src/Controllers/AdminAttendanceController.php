@@ -104,36 +104,14 @@ class AdminAttendanceController
 
     public function kpiStream(): void
     {
+        // Long-lived SSE holds PHP session locks and exhausts Apache/WAMP workers.
+        // Prefer short JSON polling via kpiJson(); keep this route as a safe no-op redirect.
         if (!$this->requireAdmin()) return;
-
-        header('Content-Type: text/event-stream');
-        header('Cache-Control: no-cache, no-store');
-        header('Connection: keep-alive');
-        header('X-Accel-Buffering: no');
-
-        if (function_exists('apache_setenv')) {
-            @apache_setenv('no-gzip', '1');
-        }
-        @ini_set('output_buffering', 'off');
-        @ini_set('zlib.output_compression', '0');
-        while (ob_get_level() > 0) {
-            ob_end_flush();
-        }
-
+        header('Content-Type: application/json');
+        header('Cache-Control: no-store');
         $pdo = Database::pdo();
         $selectedDate = isset($_GET['date']) && trim($_GET['date']) !== '' ? trim($_GET['date']) : date('Y-m-d');
-        $lastPayload = '';
-
-        while (!connection_aborted()) {
-            $kpi = $this->computeKpis($pdo, $selectedDate);
-            $payload = json_encode($kpi);
-            if ($payload !== $lastPayload) {
-                echo 'data: ' . $payload . "\n\n";
-                $lastPayload = $payload;
-                flush();
-            }
-            sleep(3);
-        }
+        echo json_encode($this->computeKpis($pdo, $selectedDate));
     }
 
     private function getActiveEventId(\PDO $pdo): ?int

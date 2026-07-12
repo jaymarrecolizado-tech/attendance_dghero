@@ -475,47 +475,21 @@ $token = function_exists('csrf_token') ? csrf_token() : '';
     });
   }
   
-  // Live updates via SSE when viewing today; polling fallback otherwise
+  // Poll KPIs periodically when viewing today (SSE removed: it blocked PHP session/workers on WAMP)
   const isToday = currentDate === new Date().toISOString().split('T')[0];
   updateKPIs(currentDate);
 
-  let kpiSource = null;
   let pollFallback = null;
-
-  function startKpiStream(date) {
-    if (kpiSource) {
-      kpiSource.close();
-      kpiSource = null;
-    }
-    if (typeof EventSource === 'undefined') {
-      return false;
-    }
-    const streamUrl = '?r=admin_attendance_kpi_stream&date=' + encodeURIComponent(date);
-    kpiSource = new EventSource(streamUrl);
-    kpiSource.onmessage = (event) => {
-      try {
-        applyKpiData(JSON.parse(event.data), date);
-      } catch (err) {
-        console.error('Failed to parse KPI stream:', err);
-      }
-    };
-    kpiSource.onerror = () => {
-      if (kpiSource) {
-        kpiSource.close();
-        kpiSource = null;
-      }
-      if (!pollFallback) {
-        pollFallback = setInterval(() => updateKPIs(date), 30000);
-      }
-    };
-    return true;
+  if (isToday && !pollFallback) {
+    pollFallback = setInterval(() => updateKPIs(currentDate), 15000);
   }
 
-  if (isToday) {
-    if (!startKpiStream(currentDate)) {
-      setInterval(() => updateKPIs(currentDate), 30000);
+  window.addEventListener('pagehide', () => {
+    if (pollFallback) {
+      clearInterval(pollFallback);
+      pollFallback = null;
     }
-  }
+  });
   
   // Add smooth transition
   const cards = kpiDashboard.querySelectorAll('.kpi-card');

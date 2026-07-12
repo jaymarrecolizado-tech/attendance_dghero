@@ -65,7 +65,7 @@ This document outlines the architectural, security, and user experience (UX) imp
 | 3.1 Session cookies | Already done | `config/bootstrap.php` sets httponly, secure (HTTPS), SameSite Strict |
 | 3.2 Admin lockout | Done | 5 failed logins → 15 min IP lockout; failures logged to `action_logs` |
 | 3.3 CSRF rotation | Partial | Token rotates on admin login and successful registration; single-use invalidation not yet applied |
-| 4.1 Real-time KPI (SSE) | Done | `admin_attendance_kpi_stream` route; EventSource with 30s polling fallback |
+| 4.1 Real-time KPI (SSE) | Reverted to polling | SSE blocked PHP session locks / WAMP workers; attendance page now polls every 15s |
 | 4.2 Offline scanner PWA | Pending | Not started |
 
 ### Deploy notes
