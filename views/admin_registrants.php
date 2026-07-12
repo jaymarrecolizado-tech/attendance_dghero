@@ -35,6 +35,16 @@ $defaultMessage = 'Thank you for joining and registering for the event. Please k
   <?php if ($flash): ?>
     <div class="alert alert-<?= htmlspecialchars($flash['type'] ?? 'info', ENT_QUOTES) ?>"><?= htmlspecialchars($flash['message'] ?? '', ENT_QUOTES) ?></div>
   <?php endif; ?>
+  <?php if (!empty($canManageVip)): ?>
+    <div class="alert alert-info border-0 shadow-sm">
+      <strong>VIP guests:</strong> Use <em>Mark VIP</em> on a registrant to add them to the SEO Viewer dashboard watchlist.
+      <?php if (($vipCount ?? 0) > 0): ?>
+        <span class="badge text-bg-warning ms-1"><?= (int)$vipCount ?> VIP<?= (int)$vipCount === 1 ? '' : 's' ?> flagged</span>
+      <?php else: ?>
+        <span class="text-muted ms-1">No VIPs flagged yet — the SEO dashboard will stay empty until you mark some.</span>
+      <?php endif; ?>
+    </div>
+  <?php endif; ?>
   <nav aria-label="breadcrumb">
     <ol class="breadcrumb">
       <li class="breadcrumb-item"><a href="?r=register">Home</a></li>
@@ -64,6 +74,14 @@ $defaultMessage = 'Thank you for joining and registering for the event. Please k
           Search
         </button>
       </div>
+      <?php if (!empty($canManageVip)): ?>
+      <div class="col-12 col-md-3">
+        <div class="form-check mt-2">
+          <input class="form-check-input" type="checkbox" name="vip" value="1" id="vipOnly" <?= !empty($vipOnly) ? 'checked' : '' ?>>
+          <label class="form-check-label" for="vipOnly">Show VIP only</label>
+        </div>
+      </div>
+      <?php endif; ?>
     </div>
   </form>
   <datalist id="agencyList">
@@ -86,14 +104,15 @@ $defaultMessage = 'Thank you for joining and registering for the event. Please k
     <div class="table-responsive table-modern">
       <table class="table table-sm align-middle">
         <thead>
-          <tr><th>#</th><th>Name</th><th>Agency</th><th>Sector</th><th>Email</th><th>UUID</th><th>Actions</th></tr>
+          <tr><th>#</th><th>Name</th><th>Agency</th><th>Sector</th><th>Email</th><th>VIP</th><th>UUID</th><th>Actions</th></tr>
         </thead>
         <tbody>
         <?php if (!($rows??[])) : ?>
-          <tr><td colspan="7" class="text-center text-muted">No registrants found</td></tr>
+          <tr><td colspan="8" class="text-center text-muted">No registrants found</td></tr>
         <?php endif; ?>
         <?php foreach (($rows??[]) as $i=>$r):
               $displayEmail = $r['email'] ?: ($r['office_email'] ?? '');
+              $isVip = (int)($r['is_vip'] ?? 0) === 1;
         ?>
           <tr>
             <td><?= ($i+1) + (($page-1)*20) ?></td>
@@ -101,6 +120,22 @@ $defaultMessage = 'Thank you for joining and registering for the event. Please k
             <td><?= htmlspecialchars($r['agency']??'', ENT_QUOTES) ?></td>
             <td><?= htmlspecialchars($r['sector']??'', ENT_QUOTES) ?></td>
             <td><?= htmlspecialchars($displayEmail, ENT_QUOTES) ?></td>
+            <td>
+              <?php if (!empty($canManageVip)): ?>
+              <form method="post" action="?r=admin_registrant_vip" class="d-inline">
+                <input type="hidden" name="csrf" value="<?= htmlspecialchars($token, ENT_QUOTES) ?>">
+                <input type="hidden" name="participant_id" value="<?= (int)$r['id'] ?>">
+                <input type="hidden" name="is_vip" value="<?= $isVip ? '0' : '1' ?>">
+                <input type="hidden" name="q" value="<?= htmlspecialchars($q ?? '', ENT_QUOTES) ?>">
+                <input type="hidden" name="agency" value="<?= htmlspecialchars($agency ?? '', ENT_QUOTES) ?>">
+                <input type="hidden" name="sector" value="<?= htmlspecialchars($sector ?? '', ENT_QUOTES) ?>">
+                <input type="hidden" name="page" value="<?= (int)($page ?? 1) ?>">
+                <button class="btn btn-sm <?= $isVip ? 'btn-warning' : 'btn-outline-secondary' ?>" type="submit"><?= $isVip ? 'VIP' : 'Mark VIP' ?></button>
+              </form>
+              <?php else: ?>
+                <?= $isVip ? '<span class="badge text-bg-warning">VIP</span>' : '<span class="text-muted">—</span>' ?>
+              <?php endif; ?>
+            </td>
             <td><code><?= htmlspecialchars($r['uuid'], ENT_QUOTES) ?></code></td>
             <td>
               <div class="d-flex flex-wrap gap-2">

@@ -1,8 +1,11 @@
 <?php
 declare(strict_types=1);
 
+use App\Services\AuthService;
+
 $guestShowActions = $guestShowActions ?? true;
-$isAdmin = !empty($_SESSION['admin_id']);
+$isLoggedIn = AuthService::check();
+$dashboardRoute = $isLoggedIn ? AuthService::loginHomeRoute() : 'admin_login';
 ?>
 <nav class="navbar navbar-expand-lg navbar-dark guest-navbar sticky-top">
   <div class="container guest-container">
@@ -21,8 +24,8 @@ $isAdmin = !empty($_SESSION['admin_id']);
         <span class="guest-nav-icon d-md-none" aria-hidden="true">&#128247;</span>
         <span class="d-none d-md-inline">Scan &amp; Sign</span>
       </a>
-      <?php if ($isAdmin): ?>
-      <a class="btn btn-outline-light guest-nav-btn" href="?r=admin_registrants" title="Admin Dashboard">
+      <?php if ($isLoggedIn): ?>
+      <a class="btn btn-outline-light guest-nav-btn" href="?r=<?= htmlspecialchars($dashboardRoute, ENT_QUOTES) ?>" title="Dashboard">
         <span class="guest-nav-icon d-md-none" aria-hidden="true">&#9881;</span>
         <span class="d-none d-md-inline">Dashboard</span>
       </a>

@@ -20,7 +20,7 @@ $token = function_exists('csrf_token') ? csrf_token() : '';
   <div class="row justify-content-center">
     <div class="col-12 col-lg-5">
       <div class="card p-4 p-md-5">
-        <p class="text-uppercase text-muted mb-2" style="letter-spacing:.3em;font-size:.75rem;">Admin Portal</p>
+        <p class="text-uppercase text-muted mb-2" style="letter-spacing:.3em;font-size:.75rem;">Staff &amp; Admin Portal</p>
         <h1 class="page-heading h3 mb-4">Sign in to manage the event</h1>
         <form method="post" action="?r=admin_login_post" class="needs-validation" novalidate>
           <input type="hidden" name="csrf" value="<?= htmlspecialchars($token, ENT_QUOTES) ?>">

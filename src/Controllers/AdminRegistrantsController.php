@@ -3,7 +3,9 @@ declare(strict_types=1);
 
 namespace App\Controllers;
 
+use App\Services\AuthService;
 use App\Services\Database;
+use App\Services\Logger;
 use App\Services\QrService;
 use App\Services\Mailer;
 
@@ -22,6 +24,7 @@ class AdminRegistrantsController
         $q = trim((string)($_GET['q'] ?? ''));
         $agency = trim((string)($_GET['agency'] ?? ''));
         $sector = trim((string)($_GET['sector'] ?? ''));
+        $vipOnly = isset($_GET['vip']) && (string)$_GET['vip'] === '1';
         $page = max(1, (int)($_GET['page'] ?? 1));
         $per = 20;
         $offset = ($page - 1) * $per;
@@ -31,9 +34,10 @@ class AdminRegistrantsController
         if ($q !== '') { $where[] = '(first_name LIKE ? OR last_name LIKE ?)'; $bind[] = "%{$q}%"; $bind[] = "%{$q}%"; }
         if ($agency !== '') { $where[] = 'agency LIKE ?'; $bind[] = "%{$agency}%"; }
         if ($sector !== '') { $where[] = 'sector LIKE ?'; $bind[] = "%{$sector}%"; }
+        if ($vipOnly) { $where[] = 'is_vip = 1'; }
         $sqlWhere = $where ? ('WHERE ' . implode(' AND ', $where)) : '';
 
-        $stmt = $pdo->prepare("SELECT SQL_CALC_FOUND_ROWS id, uuid, first_name, last_name, agency, sector, email, office_email FROM participants $sqlWhere ORDER BY id DESC LIMIT $per OFFSET $offset");
+        $stmt = $pdo->prepare("SELECT SQL_CALC_FOUND_ROWS id, uuid, first_name, last_name, agency, sector, email, office_email, is_vip FROM participants $sqlWhere ORDER BY id DESC LIMIT $per OFFSET $offset");
         $stmt->execute($bind);
         $rows = $stmt->fetchAll();
         $total = (int)$pdo->query('SELECT FOUND_ROWS() AS t')->fetch()['t'];
@@ -41,8 +45,47 @@ class AdminRegistrantsController
 
         $agenciesList = $pdo->query("SELECT DISTINCT agency FROM participants WHERE agency IS NOT NULL AND agency <> '' ORDER BY agency ASC LIMIT 500")->fetchAll();
         $sectorsList = $pdo->query("SELECT DISTINCT sector FROM participants WHERE sector IS NOT NULL AND sector <> '' ORDER BY sector ASC LIMIT 500")->fetchAll();
-        $data = compact('rows','page','pages','q','agency','sector','total','agenciesList','sectorsList');
+        $vipCount = (int)$pdo->query('SELECT COUNT(*) FROM participants WHERE is_vip = 1')->fetchColumn();
+        $canManageVip = AuthService::isAdmin();
+        $data = compact('rows','page','pages','q','agency','sector','total','agenciesList','sectorsList','canManageVip','vipOnly','vipCount');
         require dirname(__DIR__, 2) . DIRECTORY_SEPARATOR . 'views' . DIRECTORY_SEPARATOR . 'admin_registrants.php';
+    }
+
+    public function toggleVip(): void
+    {
+        if (!AuthService::isAdmin()) {
+            AuthService::deny('POST');
+            return;
+        }
+        if (!isset($_POST['csrf']) || !function_exists('csrf_check') || !csrf_check($_POST['csrf'])) {
+            http_response_code(400);
+            echo 'Invalid CSRF';
+            return;
+        }
+        $id = (int)($_POST['participant_id'] ?? 0);
+        $isVip = isset($_POST['is_vip']) && (string)$_POST['is_vip'] === '1' ? 1 : 0;
+        if ($id <= 0) {
+            $_SESSION['flash'] = ['type' => 'danger', 'message' => 'Missing participant'];
+            header('Location: ?r=admin_registrants');
+            return;
+        }
+        $pdo = Database::pdo();
+        $stmt = $pdo->prepare('UPDATE participants SET is_vip = ? WHERE id = ?');
+        $stmt->execute([$isVip, $id]);
+        Logger::log(AuthService::id(), 'participant_vip_toggled', [
+            'participant_id' => $id,
+            'is_vip' => $isVip,
+            'role' => AuthService::role(),
+        ]);
+        $_SESSION['flash'] = ['type' => 'success', 'message' => $isVip ? 'Marked as VIP.' : 'VIP flag cleared.'];
+        $q = http_build_query(array_filter([
+            'r' => 'admin_registrants',
+            'q' => $_POST['q'] ?? null,
+            'agency' => $_POST['agency'] ?? null,
+            'sector' => $_POST['sector'] ?? null,
+            'page' => $_POST['page'] ?? null,
+        ], static fn($v) => $v !== null && $v !== ''));
+        header('Location: ?' . $q);
     }
 
     public function generateQrBatch(): void

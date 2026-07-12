@@ -112,6 +112,14 @@ class Database
         if (self::tableExists($pdo, 'attendance') && !self::columnExists($pdo, 'attendance', 'status')) {
             self::executeSqlFile($pdo, $base . '006_attendance_status.sql');
         }
+        // 007_rbac_roles
+        if (self::tableExists($pdo, 'admins') && !self::columnExists($pdo, 'admins', 'role')) {
+            self::executeSqlFile($pdo, $base . '007_rbac_roles.sql');
+        }
+        // 008_participant_vip
+        if (self::tableExists($pdo, 'participants') && !self::columnExists($pdo, 'participants', 'is_vip')) {
+            self::executeSqlFile($pdo, $base . '008_participant_vip.sql');
+        }
     }
 
     private static function executeSqlFile(PDO $pdo, string $path): void

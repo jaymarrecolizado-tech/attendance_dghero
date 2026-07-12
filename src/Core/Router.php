@@ -3,6 +3,9 @@ declare(strict_types=1);
 
 namespace App\Core;
 
+use App\Services\AuthService;
+use App\Services\Logger;
+
 final class Router
 {
     /**
@@ -37,33 +40,63 @@ final class Router
             return;
         }
 
-        if (!$this->runGuards($route, $method)) {
+        if (!$this->runGuards($route, $method, $routeName)) {
             return;
         }
 
         $this->invokeHandler($handler);
     }
 
-    private function runGuards(array $route, string $method): bool
+    private function runGuards(array $route, string $method, string $routeName): bool
     {
         if (empty($route['_guards']) || !is_array($route['_guards'])) {
             return true;
         }
 
         foreach ($route['_guards'] as $guard) {
-            if ($guard === 'admin' && empty($_SESSION['admin_id'])) {
-                if ($method === 'GET') {
-                    header('Location: ?r=admin_login');
-                } else {
+            if (!is_string($guard) || $guard === '') {
+                continue;
+            }
+
+            if ($guard === 'staff') {
+                $ok = !empty($_SESSION['staff']) || AuthService::hasRole(AuthService::ROLE_ADMIN, AuthService::ROLE_CHECKER);
+                if (!$ok) {
                     http_response_code(403);
                     echo 'Forbidden';
+                    return false;
                 }
-                return false;
+                continue;
             }
-            if ($guard === 'staff' && empty($_SESSION['staff'])) {
-                http_response_code(403);
-                echo 'Forbidden';
-                return false;
+
+            // Legacy: any authenticated account
+            if ($guard === 'admin' || $guard === 'auth') {
+                if (!AuthService::check()) {
+                    AuthService::deny($method);
+                    return false;
+                }
+                continue;
+            }
+
+            if (str_starts_with($guard, 'role:')) {
+                if (!AuthService::check()) {
+                    AuthService::deny($method);
+                    return false;
+                }
+                $roles = array_values(array_filter(array_map('trim', explode('|', substr($guard, 5)))));
+                if ($roles && !AuthService::hasRole(...$roles)) {
+                    try {
+                        Logger::log(AuthService::id(), 'role_denied', [
+                            'route' => $routeName,
+                            'role' => AuthService::role(),
+                            'required' => $roles,
+                        ]);
+                    } catch (\Throwable $e) {
+                        // ignore logging failures
+                    }
+                    AuthService::deny($method);
+                    return false;
+                }
+                continue;
             }
         }
 
@@ -96,4 +129,3 @@ final class Router
         throw new \RuntimeException('Invalid route handler');
     }
 }
-

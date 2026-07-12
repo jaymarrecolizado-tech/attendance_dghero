@@ -3,6 +3,7 @@ declare(strict_types=1);
 
 namespace App\Controllers;
 
+use App\Services\AuthService;
 use App\Services\Database;
 use App\Services\RateLimiter;
 
@@ -13,8 +14,8 @@ class AuthController
 
     public function loginForm(): void
     {
-        if (!empty($_SESSION['admin_id'])) {
-            header('Location: ?r=admin_registrants');
+        if (AuthService::check()) {
+            header('Location: ?r=' . AuthService::loginHomeRoute());
             return;
         }
         require dirname(__DIR__, 2) . DIRECTORY_SEPARATOR . 'views' . DIRECTORY_SEPARATOR . 'admin_login.php';
@@ -53,11 +54,15 @@ class AuthController
         }
 
         $pdo = Database::pdo();
-        $stmt = $pdo->prepare('SELECT id, username, password_hash FROM admins WHERE username = ?');
+        $stmt = $pdo->prepare('SELECT id, username, password_hash, email, role, is_active, display_name FROM admins WHERE username = ? LIMIT 1');
         $stmt->execute([$username]);
         $admin = $stmt->fetch();
 
-        if (!$admin || !password_verify($password, $admin['password_hash'])) {
+        if (
+            !$admin
+            || (int)($admin['is_active'] ?? 0) !== 1
+            || !password_verify($password, (string)$admin['password_hash'])
+        ) {
             RateLimiter::increment($failKey, self::LOCKOUT_WINDOW);
             \App\Services\Logger::log(null, 'login_failed', ['username' => $username, 'ip' => $ip]);
             http_response_code(401);
@@ -66,17 +71,26 @@ class AuthController
         }
 
         RateLimiter::clear($failKey);
-        \App\Services\Logger::log((int)$admin['id'], 'login_success', ['ip' => $ip]);
-        $_SESSION['admin_id'] = (int)$admin['id'];
-        if (function_exists('csrf_rotate')) {
-            csrf_rotate();
-        }
-        header('Location: ?r=admin_registrants');
+        AuthService::establishSession($admin);
+
+        $upd = $pdo->prepare('UPDATE admins SET last_login_at = NOW() WHERE id = ?');
+        $upd->execute([(int)$admin['id']]);
+
+        \App\Services\Logger::log((int)$admin['id'], 'login_success', [
+            'ip' => $ip,
+            'role' => (string)($admin['role'] ?? AuthService::ROLE_ADMIN),
+        ]);
+
+        header('Location: ?r=' . AuthService::loginHomeRoute((string)($admin['role'] ?? AuthService::ROLE_ADMIN)));
     }
 
     public function logout(): void
     {
-        unset($_SESSION['admin_id']);
+        $id = AuthService::id();
+        if ($id) {
+            \App\Services\Logger::log($id, 'logout', ['role' => AuthService::role()]);
+        }
+        AuthService::logoutLocal();
         header('Location: ?r=admin_login');
     }
 }

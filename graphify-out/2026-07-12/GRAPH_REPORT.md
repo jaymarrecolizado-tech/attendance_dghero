@@ -1,12 +1,12 @@
 # Graph Report - attendance_digital  (2026-07-12)
 
 ## Corpus Check
-- 222 files · ~1,632,397 words
+- 221 files · ~1,631,632 words
 - Verdict: corpus is large enough that graph structure adds value.
 
 ## Summary
-- 1443 nodes · 2812 edges · 241 communities (202 shown, 39 thin omitted)
-- Extraction: 89% EXTRACTED · 11% INFERRED · 0% AMBIGUOUS · INFERRED: 321 edges (avg confidence: 0.8)
+- 1432 nodes · 2791 edges · 235 communities (194 shown, 41 thin omitted)
+- Extraction: 89% EXTRACTED · 11% INFERRED · 0% AMBIGUOUS · INFERRED: 320 edges (avg confidence: 0.8)
 - Token cost: 0 input · 0 output
 
 ## Graph Freshness
@@ -30,7 +30,9 @@
 - [[_COMMUNITY_Validation|Validation]]
 - [[_COMMUNITY_TCPDF|TCPDF]]
 - [[_COMMUNITY_TCPDF_STATIC|TCPDF_STATIC]]
+- [[_COMMUNITY_.startSVGElementHandler|.startSVGElementHandler]]
 - [[_COMMUNITY_ClassLoader|ClassLoader]]
+- [[_COMMUNITY_._out|._out]]
 - [[_COMMUNITY_QRcode|QRcode]]
 - [[_COMMUNITY_TCPDFBarcode|TCPDFBarcode]]
 - [[_COMMUNITY_TCPDF_FONTS|TCPDF_FONTS]]
@@ -55,7 +57,6 @@
 - [[_COMMUNITY_Description|Description]]
 - [[_COMMUNITY_AdvancedExportController|AdvancedExportController]]
 - [[_COMMUNITY_ComposerAutoloaderInita87a1ab35444db1eaa92b92e19682ec1|ComposerAutoloaderInita87a1ab35444db1eaa92b92e19682ec1]]
-- [[_COMMUNITY_.convertData|.convertData]]
 - [[_COMMUNITY_.getSignatureAppearanceArray|.getSignatureAppearanceArray]]
 - [[_COMMUNITY_.hashTCPDFtag|.hashTCPDFtag]]
 - [[_COMMUNITY_.setAbsXY|.setAbsXY]]
@@ -93,7 +94,6 @@
 - [[_COMMUNITY_2. Current State Audit|2. Current State Audit]]
 - [[_COMMUNITY_3. Design Direction|3. Design Direction]]
 - [[_COMMUNITY_1. Executive Summary|1. Executive Summary]]
-- [[_COMMUNITY_seo-dashboard.js|seo-dashboard.js]]
 
 ## God Nodes (most connected - your core abstractions)
 1. `TCPDF` - 426 edges
@@ -122,7 +122,7 @@
 ## Import Cycles
 - None detected.
 
-## Communities (241 total, 39 thin omitted)
+## Communities (235 total, 41 thin omitted)
 
 ### Community 0 - "Routing & Attendance Controllers"
 Cohesion: 0.10
@@ -137,7 +137,7 @@ Cohesion: 0.10
 Nodes (5): csrf_rotate(), RegisterController, Mailer, ParticipantValidator, Uuid
 
 ### Community 3 - "Attendance & Advanced Export"
-Cohesion: 0.19
+Cohesion: 0.18
 Nodes (3): AdvancedExportController, Database, PDO
 
 ### Community 4 - "Bootstrap, CSRF & Signature"
@@ -153,7 +153,7 @@ Cohesion: 0.22
 Nodes (8): autoload, psr-4, description, name, App\\, require, tecnickcom/tcpdf, type
 
 ### Community 9 - "Front Controller & Router"
-Cohesion: 0.22
+Cohesion: 0.24
 Nodes (6): assertTrue(), ensureUser(), loginAs(), PDO, probeRoute(), Router
 
 ### Community 10 - "Event Management"
@@ -203,10 +203,6 @@ Nodes (9): 6.1 Guest page shell (shared across register / success / error), 6.2 
 ### Community 83 - ".setColor"
 Cohesion: 0.22
 Nodes (8): 11. Risks & Mitigations, 12. Out of Scope (this RBAC track), 13. Proposed Files (implementation later), 14. Acceptance Criteria (definition of done), 15. Implementation Status, 4. Route → Role Mapping, Guard evolution, Role-Based Access Control (RBAC) & Security Hardening Spec
-
-### Community 84 - ".login"
-Cohesion: 0.11
-Nodes (4): AdminUsersController, PDO, AuthController, AuthService
 
 ### Community 87 - "Description"
 Cohesion: 0.25
@@ -280,22 +276,18 @@ Nodes (4): 3. Design Direction, Mood board keywords, Proposed layout concept, Vi
 Cohesion: 0.67
 Nodes (3): 1. Executive Summary, Goals, Out of scope (for this phase)
 
-### Community 236 - "seo-dashboard.js"
-Cohesion: 0.38
-Nodes (10): applyFilter(), compositionWidths(), esc(), initials(), load(), render(), renderAgencies(), renderFeed() (+2 more)
-
 ## Knowledge Gaps
 - **205 isolated node(s):** `name`, `description`, `type`, `tecnickcom/tcpdf`, `App\\` (+200 more)
   These have ≤1 connection - possible missing edges or undocumented components.
-- **39 thin communities (<3 nodes) omitted from report** — run `graphify query` to explore isolated nodes.
+- **41 thin communities (<3 nodes) omitted from report** — run `graphify query` to explore isolated nodes.
 
 ## Suggested Questions
 _Questions this graph is uniquely positioned to answer:_
 
-- **Why does `TCPDF` connect `TCPDF` to `CSV Export`, `Admin Settings`, `Nav Partial`, `TCPDF_STATIC`, `.startSVGElementHandler`, `._out`, `.init`, `file_get_contents`, `._destroy`, `._generateencryptionkey`, `.convertData`, `.setAlpha`, `.getAbsFontMeasure`, `.Gradient`, `.openHTMLTagHandler`, `._dolinethrough`, `._encrypt_data`, `.setEqualColumns`, `.setContentMark`, `.setFont`, `.setColor`, `._putpages`?**
+- **Why does `TCPDF` connect `TCPDF` to `.getAbsFontMeasure`, `.Gradient`, `._encrypt_data`, `._generateencryptionkey`, `CSV Export`, `.setEqualColumns`, `.setContentMark`, `Admin Settings`, `.init`, `Nav Partial`, `._destroy`, `TCPDF_STATIC`, `.startSVGElementHandler`, `._out`, `.setAlpha`?**
   _High betweenness centrality (0.161) - this node is a cross-community bridge._
-- **Why does `TCPDF_STATIC` connect `TCPDF_STATIC` to `Bootstrap, CSRF & Signature`, `CSV Export`, `Admin Settings`, `TCPDF`, `.startSVGElementHandler`, `ClassLoader`, `._out`, `.init`, `file_get_contents`, `TCPDF_IMAGES`, `._destroy`, `._generateencryptionkey`, `.convertData`, `.setAlpha`, `.getAbsFontMeasure`, `.openHTMLTagHandler`, `._encrypt_data`, `._dolinethrough`, `.setEqualColumns`, `.setContentMark`, `.setFont`, `._putpages`?**
-  _High betweenness centrality (0.065) - this node is a cross-community bridge._
+- **Why does `TCPDF_STATIC` connect `TCPDF_STATIC` to `.getAbsFontMeasure`, `Attendance & Advanced Export`, `Bootstrap, CSRF & Signature`, `TCPDF`, `._encrypt_data`, `CSV Export`, `Admin Settings`, `.setEqualColumns`, `.setContentMark`, `.init`, `Nav Partial`, `TCPDF_IMAGES`, `._destroy`, `._generateencryptionkey`, `.startSVGElementHandler`, `ClassLoader`, `._out`, `.setAlpha`?**
+  _High betweenness centrality (0.069) - this node is a cross-community bridge._
 - **Are the 100 inferred relationships involving `TCPDF_STATIC` (e.g. with `.addTTFfont()` and `.getFontFullPath()`) actually correct?**
   _`TCPDF_STATIC` has 100 INFERRED edges - model-reasoned connections that need verification._
 - **Are the 47 inferred relationships involving `Database` (e.g. with `.clearAbsent()` and `.kpiJson()`) actually correct?**
@@ -305,4 +297,4 @@ _Questions this graph is uniquely positioned to answer:_
 - **What connects `name`, `description`, `type` to the rest of the system?**
   _207 weakly-connected nodes found - possible documentation gaps or missing edges._
 - **Should `Routing & Attendance Controllers` be split into smaller, more focused modules?**
-  _Cohesion score 0.10037878787878787 - nodes in this community are weakly interconnected._
+  _Cohesion score 0.09803921568627451 - nodes in this community are weakly interconnected._
