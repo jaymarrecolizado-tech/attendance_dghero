@@ -89,6 +89,14 @@ return [
         'POST' => [AdminAttendanceController::class, 'manualAttendance'],
         '_guards' => ['admin'],
     ],
+    'admin_attendance_mark_absent' => [
+        'POST' => [AdminAttendanceController::class, 'markAbsent'],
+        '_guards' => ['admin'],
+    ],
+    'admin_attendance_clear_absent' => [
+        'POST' => [AdminAttendanceController::class, 'clearAbsent'],
+        '_guards' => ['admin'],
+    ],
     'admin_attendance_gallery' => [
         'GET' => [AdminAttendanceGalleryController::class, 'list'],
         '_guards' => ['admin'],

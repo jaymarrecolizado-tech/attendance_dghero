@@ -69,7 +69,7 @@ class AdminSignatureController
             if ($chk->fetch()) { echo json_encode(['ok'=>false,'error'=>'already_marked']); return; }
         }
         $path = SignatureService::saveBase64($uuid, $sig);
-        $ins = $pdo->prepare('INSERT INTO attendance (participant_id, attendance_date, time_in, signature_path, event_id) VALUES (?,?,?,?,?)');
+        $ins = $pdo->prepare("INSERT INTO attendance (participant_id, attendance_date, time_in, signature_path, event_id, status) VALUES (?,?,?,?,?,'present')");
         $ins->execute([(int)$p['id'], $date, date('H:i:s'), $path, $eventId]);
         $aid = (int)$pdo->lastInsertId();
         Logger::log($_SESSION['admin_id'] ?? null, 'signature_new', ['aid'=>$aid,'uuid'=>$uuid,'date'=>$date,'ip'=>$ip]);
@@ -118,7 +118,7 @@ class AdminSignatureController
             if ($chk->fetch()) return ['ok'=>false,'error'=>'already_marked'];
         }
         $path = SignatureService::saveBase64($uuid, $sig);
-        $ins = $pdo->prepare('INSERT INTO attendance (participant_id, attendance_date, time_in, signature_path, event_id) VALUES (?,?,?,?,?)');
+        $ins = $pdo->prepare("INSERT INTO attendance (participant_id, attendance_date, time_in, signature_path, event_id, status) VALUES (?,?,?,?,?,'present')");
         $ins->execute([(int)$p['id'], $date, date('H:i:s'), $path, $eventId]);
         return ['ok'=>true];
     }

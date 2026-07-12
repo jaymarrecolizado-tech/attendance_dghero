@@ -76,7 +76,7 @@ $token = function_exists('csrf_token') ? csrf_token() : '';
         <div class="card-body text-white">
           <div class="d-flex justify-content-between align-items-start">
             <div>
-              <div class="text-white-50 small mb-1">Present (Signed In)</div>
+              <div class="text-white-50 small mb-1">Signed In</div>
               <div class="h3 mb-0 fw-bold" id="kpi-today-count"><?= htmlspecialchars((string)($selectedDateCount ?? 0), ENT_QUOTES) ?></div>
               <div class="small mt-1" id="kpi-date-display"><?= htmlspecialchars($selectedDate ?? date('Y-m-d'), ENT_QUOTES) ?></div>
             </div>
@@ -90,9 +90,9 @@ $token = function_exists('csrf_token') ? csrf_token() : '';
         <div class="card-body text-white">
           <div class="d-flex justify-content-between align-items-start">
             <div>
-              <div class="text-white-50 small mb-1">Attendance Rate</div>
+              <div class="text-white-50 small mb-1">In Vicinity Rate</div>
               <div class="h3 mb-0 fw-bold" id="kpi-attendance-rate"><?= htmlspecialchars((string)($attendanceRate ?? 0), ENT_QUOTES) ?>%</div>
-              <div class="small mt-1"><?= htmlspecialchars((string)($selectedDateCount ?? 0), ENT_QUOTES) ?> of <?= htmlspecialchars((string)($totalRegistered ?? 0), ENT_QUOTES) ?></div>
+              <div class="small mt-1" id="kpi-rate-detail"><?= htmlspecialchars((string)(($totalRegistered ?? 0) - ($absentCount ?? 0)), ENT_QUOTES) ?> of <?= htmlspecialchars((string)($totalRegistered ?? 0), ENT_QUOTES) ?> (excl. absent)</div>
             </div>
             <div class="fs-1 opacity-50">📊</div>
           </div>
@@ -187,17 +187,23 @@ $token = function_exists('csrf_token') ? csrf_token() : '';
           <tr><td colspan="8" class="text-center text-muted">No registrants found</td></tr>
         <?php endif; ?>
         <?php foreach (($rows??[]) as $i=>$r): ?>
-          <?php $isPresent = !empty($r['is_present']); ?>
-          <tr class="<?= $isPresent ? '' : 'table-light' ?>">
+          <?php
+            $guestStatus = (string)($r['guest_status'] ?? 'in_vicinity');
+            $isPresent = $guestStatus === 'present';
+            $isAbsent = $guestStatus === 'absent';
+          ?>
+          <tr class="<?= $isAbsent ? 'table-warning' : ($isPresent ? '' : 'table-light') ?>">
             <td><?= ($i+1) + (($page-1)*20) ?></td>
             <td>
               <?php if ($isPresent): ?>
                 <span class="badge bg-success">Present</span>
+              <?php elseif ($isAbsent): ?>
+                <span class="badge bg-danger">Absent</span>
               <?php else: ?>
-                <span class="badge bg-secondary">Absent</span>
+                <span class="badge bg-info text-dark">In Vicinity</span>
               <?php endif; ?>
             </td>
-            <td><?= htmlspecialchars($isPresent ? (string)$r['attendance_date'] : (string)($selectedDate ?? $date ?? date('Y-m-d')), ENT_QUOTES) ?></td>
+            <td><?= htmlspecialchars($isPresent || $isAbsent ? (string)($r['attendance_date'] ?? ($selectedDate ?? $date ?? date('Y-m-d'))) : (string)($selectedDate ?? $date ?? date('Y-m-d')), ENT_QUOTES) ?></td>
             <td><?= $isPresent ? htmlspecialchars((string)$r['time_in'], ENT_QUOTES) : '—' ?></td>
             <td><?= htmlspecialchars(trim(($r['first_name'] ?? '') . ' ' . ($r['last_name'] ?? '')), ENT_QUOTES) ?></td>
             <td><?= htmlspecialchars($r['agency']??'', ENT_QUOTES) ?></td>
@@ -208,6 +214,19 @@ $token = function_exists('csrf_token') ? csrf_token() : '';
                 <img class="sig ms-2" src="<?= rtrim(dirname($_SERVER['SCRIPT_NAME']), '/') ?>/signature.php?aid=<?= (int)$r['id'] ?>" alt="sig">
                 <button class="btn btn-sm btn-outline-secondary ms-2" data-aid="<?= (int)$r['id'] ?>" data-uuid="<?= htmlspecialchars($r['uuid'], ENT_QUOTES) ?>" data-bs-toggle="modal" data-bs-target="#sigModal">Replace</button>
                 <button class="btn btn-sm btn-outline-success ms-1" data-new="true" data-uuid="<?= htmlspecialchars($r['uuid'], ENT_QUOTES) ?>" data-bs-toggle="modal" data-bs-target="#sigModal">New</button>
+              <?php elseif ($isAbsent): ?>
+                <button class="btn btn-sm btn-outline-info clear-absent-btn"
+                        type="button"
+                        data-participant-id="<?= (int)($r['participant_id'] ?? 0) ?>">
+                  Mark In Vicinity
+                </button>
+                <button class="btn btn-sm btn-primary mark-from-roster ms-1"
+                        type="button"
+                        data-participant-id="<?= (int)($r['participant_id'] ?? 0) ?>"
+                        data-participant-name="<?= htmlspecialchars(trim(($r['first_name'] ?? '') . ' ' . ($r['last_name'] ?? '')), ENT_QUOTES) ?>"
+                        data-participant-uuid="<?= htmlspecialchars($r['uuid'], ENT_QUOTES) ?>">
+                  Check In
+                </button>
               <?php else: ?>
                 <button class="btn btn-sm btn-primary mark-from-roster"
                         type="button"
@@ -215,6 +234,12 @@ $token = function_exists('csrf_token') ? csrf_token() : '';
                         data-participant-name="<?= htmlspecialchars(trim(($r['first_name'] ?? '') . ' ' . ($r['last_name'] ?? '')), ENT_QUOTES) ?>"
                         data-participant-uuid="<?= htmlspecialchars($r['uuid'], ENT_QUOTES) ?>">
                   Mark Attendance
+                </button>
+                <button class="btn btn-sm btn-outline-danger mark-absent-btn ms-1"
+                        type="button"
+                        data-participant-id="<?= (int)($r['participant_id'] ?? 0) ?>"
+                        data-participant-name="<?= htmlspecialchars(trim(($r['first_name'] ?? '') . ' ' . ($r['last_name'] ?? '')), ENT_QUOTES) ?>">
+                  Mark Absent
                 </button>
               <?php endif; ?>
             </td>
@@ -365,10 +390,11 @@ $token = function_exists('csrf_token') ? csrf_token() : '';
     }
     if (attendanceRateEl) {
       attendanceRateEl.textContent = (data.attendanceRate || 0) + '%';
-      const parent = attendanceRateEl.closest('.card-body');
-      if (parent) {
-        const detail = parent.querySelector('.small.mt-1');
-        if (detail) detail.textContent = (data.dateCount || 0) + ' of ' + (data.totalRegistered || 0);
+      const detail = document.getElementById('kpi-rate-detail');
+      if (detail) {
+        const total = data.totalRegistered || 0;
+        const absent = data.absentCount || 0;
+        detail.textContent = Math.max(0, total - absent) + ' of ' + total + ' (excl. absent)';
       }
     }
     if (recentCountEl) {
@@ -584,10 +610,18 @@ $token = function_exists('csrf_token') ? csrf_token() : '';
       const fullName = `${participant.first_name || ''} ${participant.middle_name || ''} ${participant.last_name || ''}`.trim();
       const agency = participant.agency || 'N/A';
       const email = participant.email || '';
-      const alreadyMarked = participant.already_marked || false;
+      const guestStatus = participant.guest_status || (participant.already_marked ? 'present' : 'in_vicinity');
+      const statusBadge = guestStatus === 'present'
+        ? '<span class="badge bg-success">Present</span>'
+        : (guestStatus === 'absent'
+          ? '<span class="badge bg-danger">Absent</span>'
+          : '<span class="badge bg-info text-dark">In Vicinity</span>');
+      const actions = guestStatus === 'present'
+        ? ''
+        : `<br><button type="button" class="btn btn-sm btn-primary mt-2" data-participant-id="${participant.id}" data-participant-name="${escapeHtml(fullName)}">Mark Attendance</button>`;
       
       const item = document.createElement('div');
-      item.className = `list-group-item ${alreadyMarked ? 'list-group-item-success' : ''}`;
+      item.className = `list-group-item ${guestStatus === 'present' ? 'list-group-item-success' : (guestStatus === 'absent' ? 'list-group-item-warning' : '')}`;
       item.innerHTML = `
         <div class="d-flex w-100 justify-content-between align-items-center">
           <div>
@@ -596,8 +630,8 @@ $token = function_exists('csrf_token') ? csrf_token() : '';
             ${email ? `<br><small class="text-muted">${escapeHtml(email)}</small>` : ''}
           </div>
           <div class="text-end">
-            ${alreadyMarked ? '<span class="badge bg-success">Present</span>' : '<span class="badge bg-secondary">Not yet present</span>'}
-            ${alreadyMarked ? '' : `<br><button type="button" class="btn btn-sm btn-primary mt-2" data-participant-id="${participant.id}" data-participant-name="${escapeHtml(fullName)}">Mark Attendance</button>`}
+            ${statusBadge}
+            ${actions}
           </div>
         </div>
       `;
@@ -708,6 +742,66 @@ $token = function_exists('csrf_token') ? csrf_token() : '';
       };
       const fullName = btn.getAttribute('data-participant-name') || 'Participant';
       openManualAttendanceModal(participant, fullName);
+    });
+  });
+
+  function postStatusChange(route, participantId) {
+    const attendanceDate = document.getElementById('manualAttendanceDate')?.value
+      || document.getElementById('kpiDateSelector')?.value
+      || new Date().toISOString().split('T')[0];
+    return fetch('?r=' + route, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'X-CSRF-Token': csrf
+      },
+      body: JSON.stringify({
+        participant_id: participantId,
+        date: attendanceDate
+      })
+    }).then(r => r.json());
+  }
+
+  document.querySelectorAll('.mark-absent-btn').forEach((btn) => {
+    btn.addEventListener('click', () => {
+      const id = parseInt(btn.getAttribute('data-participant-id') || '0', 10);
+      const name = btn.getAttribute('data-participant-name') || 'this guest';
+      if (!id || !confirm('Mark ' + name + ' as ABSENT?')) return;
+      btn.disabled = true;
+      postStatusChange('admin_attendance_mark_absent', id)
+        .then((data) => {
+          if (data.ok) {
+            window.location.reload();
+          } else {
+            showToast(false, data.error || 'Failed to mark absent');
+            btn.disabled = false;
+          }
+        })
+        .catch(() => {
+          showToast(false, 'Failed to mark absent');
+          btn.disabled = false;
+        });
+    });
+  });
+
+  document.querySelectorAll('.clear-absent-btn').forEach((btn) => {
+    btn.addEventListener('click', () => {
+      const id = parseInt(btn.getAttribute('data-participant-id') || '0', 10);
+      if (!id) return;
+      btn.disabled = true;
+      postStatusChange('admin_attendance_clear_absent', id)
+        .then((data) => {
+          if (data.ok) {
+            window.location.reload();
+          } else {
+            showToast(false, data.error || 'Failed to update status');
+            btn.disabled = false;
+          }
+        })
+        .catch(() => {
+          showToast(false, 'Failed to update status');
+          btn.disabled = false;
+        });
     });
   });
 

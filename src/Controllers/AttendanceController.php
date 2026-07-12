@@ -45,7 +45,7 @@ class AttendanceController
             $chk->execute($bind);
             if ($chk->fetch()) { echo json_encode(['ok'=>false,'error'=>'already_marked']); return; }
         }
-        $ins = $pdo->prepare('INSERT INTO attendance (participant_id, attendance_date, time_in, signature_path, event_id) VALUES (?,?,?,?,?)');
+        $ins = $pdo->prepare("INSERT INTO attendance (participant_id, attendance_date, time_in, signature_path, event_id, status) VALUES (?,?,?,?,?,'present')");
         $ins->execute([(int)$row['id'], $date, $time, $path, $eventId]);
         echo json_encode(['ok'=>true]);
     }
@@ -74,7 +74,7 @@ class AttendanceController
             $chk->execute($bind);
             if ($chk->fetch()) return ['ok'=>false,'error'=>'already_marked'];
         }
-        $ins = $pdo->prepare('INSERT INTO attendance (participant_id, attendance_date, time_in, signature_path, event_id) VALUES (?,?,?,?,?)');
+        $ins = $pdo->prepare("INSERT INTO attendance (participant_id, attendance_date, time_in, signature_path, event_id, status) VALUES (?,?,?,?,?,'present')");
         $ins->execute([(int)$row['id'], $date, $time, $path, $eventId]);
         return ['ok'=>true];
     }

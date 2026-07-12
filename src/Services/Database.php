@@ -108,6 +108,10 @@ class Database
                 $pdo->exec('ALTER TABLE attendance ADD INDEX idx_attendance_date (attendance_date)');
             }
         }
+        // 006_attendance_status
+        if (self::tableExists($pdo, 'attendance') && !self::columnExists($pdo, 'attendance', 'status')) {
+            self::executeSqlFile($pdo, $base . '006_attendance_status.sql');
+        }
     }
 
     private static function executeSqlFile(PDO $pdo, string $path): void
@@ -130,6 +134,13 @@ class Database
     {
         $stmt = $pdo->prepare('SELECT 1 FROM information_schema.statistics WHERE table_schema = DATABASE() AND table_name = ? AND index_name = ?');
         $stmt->execute([$table, $index]);
+        return (bool)$stmt->fetchColumn();
+    }
+
+    private static function columnExists(PDO $pdo, string $table, string $column): bool
+    {
+        $stmt = $pdo->prepare('SELECT 1 FROM information_schema.columns WHERE table_schema = DATABASE() AND table_name = ? AND column_name = ?');
+        $stmt->execute([$table, $column]);
         return (bool)$stmt->fetchColumn();
     }
 }

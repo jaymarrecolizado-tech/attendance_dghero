@@ -28,7 +28,7 @@ class AdminAttendanceController
         $selectedDate = $date !== '' ? $date : date('Y-m-d');
         $eventId = $this->getActiveEventId($pdo);
 
-        $joinOn = "a.participant_id = p.id AND a.attendance_date = ? AND COALESCE(a.signature_path, '') <> ''";
+        $joinOn = 'a.participant_id = p.id AND a.attendance_date = ?';
         $bind = [$selectedDate];
         if ($eventId !== null) {
             $joinOn .= ' AND (a.event_id = ? OR a.event_id IS NULL)';
@@ -51,15 +51,27 @@ class AdminAttendanceController
                 a.attendance_date,
                 a.time_in,
                 a.signature_path,
-                CASE WHEN a.id IS NOT NULL THEN 1 ELSE 0 END AS is_present
+                a.status AS attendance_status
              FROM participants p
              LEFT JOIN attendance a ON {$joinOn}
              {$sqlWhere}
-             ORDER BY is_present DESC, p.last_name ASC, p.first_name ASC
+             ORDER BY
+                CASE
+                    WHEN a.status = 'absent' THEN 3
+                    WHEN a.id IS NOT NULL AND COALESCE(a.signature_path, '') <> '' THEN 1
+                    ELSE 2
+                END ASC,
+                p.last_name ASC,
+                p.first_name ASC
              LIMIT {$per} OFFSET {$offset}"
         );
         $stmt->execute($bind);
         $rows = $stmt->fetchAll();
+        foreach ($rows as &$row) {
+            $row['guest_status'] = $this->resolveGuestStatus($row);
+        }
+        unset($row);
+
         $total = (int)$pdo->query('SELECT FOUND_ROWS() AS t')->fetch()['t'];
         $pages = max(1, (int)ceil($total / $per));
 
@@ -74,6 +86,8 @@ class AdminAttendanceController
                 'attendanceRate' => $kpi['attendanceRate'],
                 'recentCount' => $kpi['recentCount'],
                 'peakHourText' => $kpi['peakHourText'],
+                'vicinityCount' => $kpi['vicinityCount'],
+                'absentCount' => $kpi['absentCount'],
             ]
         );
         require dirname(__DIR__, 2) . DIRECTORY_SEPARATOR . 'views' . DIRECTORY_SEPARATOR . 'admin_attendance.php';
@@ -129,11 +143,26 @@ class AdminAttendanceController
     }
 
     /**
+     * @param array<string,mixed> $row
+     */
+    private function resolveGuestStatus(array $row): string
+    {
+        $status = (string)($row['attendance_status'] ?? '');
+        if ($status === 'absent') {
+            return 'absent';
+        }
+        if (!empty($row['id']) && trim((string)($row['signature_path'] ?? '')) !== '') {
+            return 'present';
+        }
+        return 'in_vicinity';
+    }
+
+    /**
      * @return array{0:string,1:array<int,mixed>}
      */
     private function presentAttendanceScope(\PDO $pdo, string $alias = 'a'): array
     {
-        $sql = "COALESCE({$alias}.signature_path, '') <> ''";
+        $sql = "COALESCE({$alias}.signature_path, '') <> '' AND COALESCE({$alias}.status, 'present') = 'present'";
         $params = [];
         $eventId = $this->getActiveEventId($pdo);
         if ($eventId !== null) {
@@ -143,14 +172,27 @@ class AdminAttendanceController
         return [$sql, $params];
     }
 
-    private function isPresentForDate(\PDO $pdo, int $participantId, string $date): bool
+    private function getGuestStatusForDate(\PDO $pdo, int $participantId, string $date): string
     {
-        [$scopeSql, $scopeParams] = $this->presentAttendanceScope($pdo);
-        $stmt = $pdo->prepare(
-            "SELECT id FROM attendance WHERE participant_id = ? AND attendance_date = ? AND {$scopeSql} LIMIT 1"
-        );
-        $stmt->execute(array_merge([$participantId, $date], $scopeParams));
-        return $stmt->fetch() !== false;
+        $eventId = $this->getActiveEventId($pdo);
+        $sql = 'SELECT id, signature_path, status FROM attendance WHERE participant_id = ? AND attendance_date = ?';
+        $bind = [$participantId, $date];
+        if ($eventId !== null) {
+            $sql .= ' AND (event_id = ? OR event_id IS NULL)';
+            $bind[] = $eventId;
+        }
+        $sql .= ' ORDER BY id DESC LIMIT 1';
+        $stmt = $pdo->prepare($sql);
+        $stmt->execute($bind);
+        $row = $stmt->fetch();
+        if (!$row) {
+            return 'in_vicinity';
+        }
+        return $this->resolveGuestStatus([
+            'id' => $row['id'],
+            'signature_path' => $row['signature_path'],
+            'attendance_status' => $row['status'] ?? 'present',
+        ]);
     }
 
     private function computeKpis(\PDO $pdo, string $selectedDate): array
@@ -164,7 +206,22 @@ class AdminAttendanceController
         $dateCount = (int)$stmt->fetchColumn();
 
         $totalRegistered = (int)$pdo->query('SELECT COUNT(*) FROM participants')->fetchColumn();
-        $attendanceRate = $totalRegistered > 0 ? round(($dateCount / $totalRegistered) * 100, 1) : 0;
+
+        $eventId = $this->getActiveEventId($pdo);
+        $absentSql = "SELECT COUNT(DISTINCT a.participant_id) FROM attendance a WHERE a.attendance_date = ? AND a.status = 'absent'";
+        $absentBind = [$selectedDate];
+        if ($eventId !== null) {
+            $absentSql .= ' AND (a.event_id = ? OR a.event_id IS NULL)';
+            $absentBind[] = $eventId;
+        }
+        $absentStmt = $pdo->prepare($absentSql);
+        $absentStmt->execute($absentBind);
+        $absentCount = (int)$absentStmt->fetchColumn();
+
+        $vicinityCount = max(0, $totalRegistered - $dateCount - $absentCount);
+        // Assumed in-vicinity guests count as accounted for unless explicitly absent.
+        $accountedFor = max(0, $totalRegistered - $absentCount);
+        $attendanceRate = $totalRegistered > 0 ? round(($accountedFor / $totalRegistered) * 100, 1) : 0;
 
         $recentCount = 0;
         if ($selectedDate === date('Y-m-d')) {
@@ -189,6 +246,8 @@ class AdminAttendanceController
             'attendanceRate' => $attendanceRate,
             'recentCount' => $recentCount,
             'peakHourText' => $peakHourText,
+            'vicinityCount' => $vicinityCount,
+            'absentCount' => $absentCount,
             'selectedDate' => $selectedDate,
             'timestamp' => time(),
         ];
@@ -198,13 +257,13 @@ class AdminAttendanceController
     {
         if (!$this->requireAdmin()) return;
         header('Content-Type: application/json');
-        
+
         $query = trim((string)($_GET['q'] ?? ''));
         if (strlen($query) < 2) {
             echo json_encode(['results' => []]);
             return;
         }
-        
+
         $pdo = Database::pdo();
         $stmt = $pdo->prepare("SELECT id, uuid, first_name, last_name, middle_name, agency, email FROM participants WHERE first_name LIKE ? OR last_name LIKE ? OR email LIKE ? OR CONCAT(first_name, ' ', last_name) LIKE ? ORDER BY last_name, first_name LIMIT 20");
         $searchTerm = "%{$query}%";
@@ -216,45 +275,42 @@ class AdminAttendanceController
             : date('Y-m-d');
 
         foreach ($results as &$result) {
-            $result['already_marked'] = $this->isPresentForDate($pdo, (int)$result['id'], $attendanceDate);
+            $status = $this->getGuestStatusForDate($pdo, (int)$result['id'], $attendanceDate);
+            $result['guest_status'] = $status;
+            $result['already_marked'] = $status === 'present';
         }
-        
+
         echo json_encode(['results' => $results]);
     }
 
-    public function manualAttendance(): void
+    public function markAbsent(): void
     {
         if (!$this->requireAdmin()) return;
         header('Content-Type: application/json');
-        
+
         $csrf = $_SERVER['HTTP_X_CSRF_TOKEN'] ?? '';
         if (!function_exists('csrf_check') || !csrf_check($csrf)) {
             http_response_code(400);
             echo json_encode(['ok' => false, 'error' => 'csrf']);
             return;
         }
-        
-        $input = file_get_contents('php://input');
-        $payload = json_decode($input, true);
+
+        $payload = json_decode((string)file_get_contents('php://input'), true);
         if (!is_array($payload)) {
             http_response_code(400);
             echo json_encode(['ok' => false, 'error' => 'invalid']);
             return;
         }
-        
+
         $participantId = (int)($payload['participant_id'] ?? 0);
-        $signature = (string)($payload['signature'] ?? '');
         $attendanceDate = trim((string)($payload['date'] ?? date('Y-m-d')));
-        
-        if ($participantId <= 0) {
+        if ($participantId <= 0 || !preg_match('/^\d{4}-\d{2}-\d{2}$/', $attendanceDate)) {
             http_response_code(422);
-            echo json_encode(['ok' => false, 'error' => 'missing_participant']);
+            echo json_encode(['ok' => false, 'error' => 'invalid']);
             return;
         }
-        
+
         $pdo = Database::pdo();
-        
-        // Check if participant exists
         $stmt = $pdo->prepare('SELECT id, uuid FROM participants WHERE id = ?');
         $stmt->execute([$participantId]);
         $participant = $stmt->fetch();
@@ -263,37 +319,148 @@ class AdminAttendanceController
             echo json_encode(['ok' => false, 'error' => 'not_found']);
             return;
         }
-        
-        // Create default signature if none provided
+
+        $eventId = $this->getActiveEventId($pdo);
+        $existing = $this->findAttendanceRow($pdo, $participantId, $attendanceDate, $eventId);
+        if ($existing && trim((string)($existing['signature_path'] ?? '')) !== '' && ($existing['status'] ?? 'present') === 'present') {
+            echo json_encode(['ok' => false, 'error' => 'already_present']);
+            return;
+        }
+
+        if ($existing) {
+            $upd = $pdo->prepare("UPDATE attendance SET status = 'absent', signature_path = NULL, time_in = ? WHERE id = ?");
+            $upd->execute([date('H:i:s'), (int)$existing['id']]);
+        } else {
+            $ins = $pdo->prepare("INSERT INTO attendance (participant_id, attendance_date, time_in, signature_path, event_id, status) VALUES (?,?,?,?,?,'absent')");
+            $ins->execute([$participantId, $attendanceDate, date('H:i:s'), null, $eventId]);
+        }
+
+        echo json_encode(['ok' => true, 'message' => 'Guest marked absent']);
+    }
+
+    public function clearAbsent(): void
+    {
+        if (!$this->requireAdmin()) return;
+        header('Content-Type: application/json');
+
+        $csrf = $_SERVER['HTTP_X_CSRF_TOKEN'] ?? '';
+        if (!function_exists('csrf_check') || !csrf_check($csrf)) {
+            http_response_code(400);
+            echo json_encode(['ok' => false, 'error' => 'csrf']);
+            return;
+        }
+
+        $payload = json_decode((string)file_get_contents('php://input'), true);
+        if (!is_array($payload)) {
+            http_response_code(400);
+            echo json_encode(['ok' => false, 'error' => 'invalid']);
+            return;
+        }
+
+        $participantId = (int)($payload['participant_id'] ?? 0);
+        $attendanceDate = trim((string)($payload['date'] ?? date('Y-m-d')));
+        if ($participantId <= 0 || !preg_match('/^\d{4}-\d{2}-\d{2}$/', $attendanceDate)) {
+            http_response_code(422);
+            echo json_encode(['ok' => false, 'error' => 'invalid']);
+            return;
+        }
+
+        $pdo = Database::pdo();
+        $eventId = $this->getActiveEventId($pdo);
+        $existing = $this->findAttendanceRow($pdo, $participantId, $attendanceDate, $eventId);
+        if ($existing && ($existing['status'] ?? '') === 'absent') {
+            $del = $pdo->prepare('DELETE FROM attendance WHERE id = ?');
+            $del->execute([(int)$existing['id']]);
+        }
+
+        echo json_encode(['ok' => true, 'message' => 'Guest returned to in vicinity']);
+    }
+
+    /**
+     * @return array<string,mixed>|false
+     */
+    private function findAttendanceRow(\PDO $pdo, int $participantId, string $date, ?int $eventId)
+    {
+        $sql = 'SELECT id, signature_path, status FROM attendance WHERE participant_id = ? AND attendance_date = ?';
+        $bind = [$participantId, $date];
+        if ($eventId !== null) {
+            $sql .= ' AND (event_id = ? OR event_id IS NULL)';
+            $bind[] = $eventId;
+        }
+        $sql .= ' ORDER BY id DESC LIMIT 1';
+        $stmt = $pdo->prepare($sql);
+        $stmt->execute($bind);
+        return $stmt->fetch();
+    }
+
+    public function manualAttendance(): void
+    {
+        if (!$this->requireAdmin()) return;
+        header('Content-Type: application/json');
+
+        $csrf = $_SERVER['HTTP_X_CSRF_TOKEN'] ?? '';
+        if (!function_exists('csrf_check') || !csrf_check($csrf)) {
+            http_response_code(400);
+            echo json_encode(['ok' => false, 'error' => 'csrf']);
+            return;
+        }
+
+        $input = file_get_contents('php://input');
+        $payload = json_decode($input, true);
+        if (!is_array($payload)) {
+            http_response_code(400);
+            echo json_encode(['ok' => false, 'error' => 'invalid']);
+            return;
+        }
+
+        $participantId = (int)($payload['participant_id'] ?? 0);
+        $signature = (string)($payload['signature'] ?? '');
+        $attendanceDate = trim((string)($payload['date'] ?? date('Y-m-d')));
+
+        if ($participantId <= 0) {
+            http_response_code(422);
+            echo json_encode(['ok' => false, 'error' => 'missing_participant']);
+            return;
+        }
+
+        $pdo = Database::pdo();
+
+        $stmt = $pdo->prepare('SELECT id, uuid FROM participants WHERE id = ?');
+        $stmt->execute([$participantId]);
+        $participant = $stmt->fetch();
+        if (!$participant) {
+            http_response_code(404);
+            echo json_encode(['ok' => false, 'error' => 'not_found']);
+            return;
+        }
+
         if ($signature === '') {
-            // Create a simple 1x1 transparent PNG as default signature
             $signature = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg==';
         }
-        
-        // Get event info
+
         $event = $pdo->query('SELECT id, enforce_single_time_in FROM events WHERE active=1 ORDER BY id DESC LIMIT 1')->fetch();
         $eventId = $event ? (int)$event['id'] : null;
         $enforce = $event ? (int)$event['enforce_single_time_in'] === 1 : false;
-        
-        // Check if already marked (if enforcement is enabled)
-        if ($enforce) {
-            $chk = $pdo->prepare('SELECT id FROM attendance WHERE participant_id=? AND attendance_date=?' . ($eventId ? ' AND event_id=?' : ''));
-            $bind = $eventId ? [$participantId, $attendanceDate, $eventId] : [$participantId, $attendanceDate];
-            $chk->execute($bind);
-            if ($chk->fetch()) {
+
+        $existing = $this->findAttendanceRow($pdo, $participantId, $attendanceDate, $eventId);
+        if ($existing && ($existing['status'] ?? 'present') === 'present' && trim((string)($existing['signature_path'] ?? '')) !== '') {
+            if ($enforce) {
                 echo json_encode(['ok' => false, 'error' => 'already_marked']);
                 return;
             }
         }
-        
-        // Save signature
+
         $path = SignatureService::saveBase64($participant['uuid'], $signature);
         $time = date('H:i:s');
-        
-        // Insert attendance
-        $ins = $pdo->prepare('INSERT INTO attendance (participant_id, attendance_date, time_in, signature_path, event_id) VALUES (?,?,?,?,?)');
-        $ins->execute([$participantId, $attendanceDate, $time, $path, $eventId]);
-        
+
+        if ($existing) {
+            $upd = $pdo->prepare("UPDATE attendance SET status = 'present', signature_path = ?, time_in = ?, event_id = ? WHERE id = ?");
+            $upd->execute([$path, $time, $eventId, (int)$existing['id']]);
+        } else {
+            $ins = $pdo->prepare("INSERT INTO attendance (participant_id, attendance_date, time_in, signature_path, event_id, status) VALUES (?,?,?,?,?,'present')");
+            $ins->execute([$participantId, $attendanceDate, $time, $path, $eventId]);
+        }
+
         echo json_encode(['ok' => true, 'message' => 'Attendance marked successfully']);
     }
 }
