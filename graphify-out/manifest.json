@@ -10,8 +10,8 @@
     "semantic_hash": ""
   },
   "config/routes.php": {
-    "mtime": 1783821647.0730736,
-    "ast_hash": "5476df453c9e80947893aa947a100fae",
+    "mtime": 1783833367.978783,
+    "ast_hash": "d7ff3e5ebb615b7c7e08665829842a96",
     "semantic_hash": ""
   },
   "copy_files.ps1": {
@@ -5615,8 +5615,8 @@
     "semantic_hash": ""
   },
   "views/partials/guest_nav.php": {
-    "mtime": 1783821472.9627194,
-    "ast_hash": "9661023c3e5b1cd74104a63e8a68b80c",
+    "mtime": 1783827810.416578,
+    "ast_hash": "f012c02a74dde18510abe92b1a3a97f7",
     "semantic_hash": ""
   },
   "TODOUI/guest_registration_ui_spec.md": {
@@ -5660,8 +5660,8 @@
     "semantic_hash": ""
   },
   "src/Controllers/AdminSeoController.php": {
-    "mtime": 1783821486.6740234,
-    "ast_hash": "853e58b4e0a78f773ce9ed20ccfae42a",
+    "mtime": 1783833365.9305956,
+    "ast_hash": "e744974d2bfe1825f01c816f3a1b9ae7",
     "semantic_hash": ""
   },
   "src/Controllers/AdminUsersController.php": {
@@ -5675,8 +5675,8 @@
     "semantic_hash": ""
   },
   "views/admin_seo_dashboard.php": {
-    "mtime": 1783822901.659579,
-    "ast_hash": "edaf16c502d1a432b3b69781001dc962",
+    "mtime": 1783833371.59646,
+    "ast_hash": "27baf9a5334efb1d0e2ba6d8390edb46",
     "semantic_hash": ""
   },
   "views/admin_users.php": {
@@ -5765,8 +5765,8 @@
     "semantic_hash": ""
   },
   "assets/seo-dashboard.js": {
-    "mtime": 1783822891.3137784,
-    "ast_hash": "c39f9211648eadea928fe48f2413f39c",
+    "mtime": 1783833386.209896,
+    "ast_hash": "6729d9b15c64314873eeb11c34664088",
     "semantic_hash": ""
   }
 }

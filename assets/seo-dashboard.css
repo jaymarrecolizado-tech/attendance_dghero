@@ -36,6 +36,91 @@
   animation: seoRise 0.55s ease both;
 }
 
+.seo-search-panel {
+  background: var(--seo-surface);
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 255, 255, 0.7);
+  border-radius: 20px;
+  padding: 1.1rem 1.15rem 1.2rem;
+  box-shadow: 0 14px 34px rgba(15, 23, 42, 0.06);
+  margin-bottom: 1.25rem;
+  animation: seoRise 0.6s ease 0.04s both;
+}
+
+.seo-search-head {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  gap: 0.75rem;
+  align-items: center;
+  margin-bottom: 0.85rem;
+}
+
+.seo-search-head h2 {
+  margin: 0;
+  font-family: 'Outfit', 'DM Sans', sans-serif;
+  font-size: 1.05rem;
+  font-weight: 600;
+}
+
+.seo-search-head p {
+  margin: 0.2rem 0 0;
+  font-size: 0.8rem;
+  color: var(--seo-muted);
+}
+
+.seo-search-row {
+  display: flex;
+  gap: 0.6rem;
+  align-items: center;
+}
+
+.seo-search-input {
+  flex: 1;
+  min-width: 0;
+  border: 1px solid var(--seo-line);
+  border-radius: 14px;
+  padding: 0.75rem 1rem;
+  font: inherit;
+  font-size: 0.95rem;
+  background: #fff;
+  color: var(--seo-ink);
+  box-shadow: inset 0 1px 2px rgba(15, 23, 42, 0.03);
+}
+
+.seo-search-input:focus {
+  outline: none;
+  border-color: rgba(15, 118, 110, 0.45);
+  box-shadow: 0 0 0 3px rgba(13, 148, 136, 0.15);
+}
+
+.seo-search-meta {
+  margin-top: 0.65rem;
+  font-size: 0.8rem;
+  color: var(--seo-muted);
+}
+
+.seo-search-results {
+  margin-top: 0.85rem;
+}
+
+.seo-vip-pill {
+  display: inline-flex;
+  align-items: center;
+  border-radius: 999px;
+  padding: 0.22rem 0.55rem;
+  font-size: 0.72rem;
+  font-weight: 700;
+  background: rgba(217, 119, 6, 0.14);
+  color: #b45309;
+}
+
+.seo-vip-pill.is-muted {
+  background: #f1f5f9;
+  color: var(--seo-muted);
+  font-weight: 600;
+}
+
 @media (min-width: 900px) {
   .seo-hero {
     grid-template-columns: 1fr auto;
@@ -312,6 +397,17 @@
     grid-template-columns: minmax(0, 1.7fr) minmax(280px, 1fr);
     align-items: start;
   }
+}
+
+.seo-main-col {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.seo-inline-counts {
+  color: var(--seo-muted);
+  font-weight: 500;
 }
 
 .seo-panel {

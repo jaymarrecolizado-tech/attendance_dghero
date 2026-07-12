@@ -119,6 +119,10 @@ return [
         'GET' => [AdminSeoController::class, 'summaryJson'],
         '_guards' => [$rolesSeoRead],
     ],
+    'admin_seo_search' => [
+        'GET' => [AdminSeoController::class, 'searchJson'],
+        '_guards' => [$rolesSeoRead],
+    ],
     'admin_users' => [
         'GET' => [AdminUsersController::class, 'list'],
         '_guards' => [$rolesAdmin],

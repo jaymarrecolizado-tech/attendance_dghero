@@ -1,16 +1,16 @@
 # Graph Report - attendance_digital  (2026-07-12)
 
 ## Corpus Check
-- 222 files · ~1,632,397 words
+- 222 files · ~1,632,713 words
 - Verdict: corpus is large enough that graph structure adds value.
 
 ## Summary
-- 1443 nodes · 2812 edges · 241 communities (202 shown, 39 thin omitted)
+- 1443 nodes · 2813 edges · 236 communities (197 shown, 39 thin omitted)
 - Extraction: 89% EXTRACTED · 11% INFERRED · 0% AMBIGUOUS · INFERRED: 321 edges (avg confidence: 0.8)
 - Token cost: 0 input · 0 output
 
 ## Graph Freshness
-- Built from commit: `eceeb2e5`
+- Built from commit: `c5d4f9b0`
 - Run `git rev-parse HEAD` and compare to check if the graph is stale.
 - Run `graphify update .` after code changes (no API cost).
 
@@ -55,7 +55,6 @@
 - [[_COMMUNITY_Description|Description]]
 - [[_COMMUNITY_AdvancedExportController|AdvancedExportController]]
 - [[_COMMUNITY_ComposerAutoloaderInita87a1ab35444db1eaa92b92e19682ec1|ComposerAutoloaderInita87a1ab35444db1eaa92b92e19682ec1]]
-- [[_COMMUNITY_.convertData|.convertData]]
 - [[_COMMUNITY_.getSignatureAppearanceArray|.getSignatureAppearanceArray]]
 - [[_COMMUNITY_.hashTCPDFtag|.hashTCPDFtag]]
 - [[_COMMUNITY_.setAbsXY|.setAbsXY]]
@@ -66,6 +65,7 @@
 - [[_COMMUNITY_._dounderline|._dounderline]]
 - [[_COMMUNITY_.ImagePngAlpha|.ImagePngAlpha]]
 - [[_COMMUNITY_.getGroupPageNoFormatted|.getGroupPageNoFormatted]]
+- [[_COMMUNITY_.setEqualColumns|.setEqualColumns]]
 - [[_COMMUNITY_.setImageBuffer|.setImageBuffer]]
 - [[_COMMUNITY_CHECKLIST.md (Pre-Deployment Checklist)|CHECKLIST.md (Pre-Deployment Checklist)]]
 - [[_COMMUNITY_r=admin_login (admin login route)|?r=admin_login (admin login route)]]
@@ -94,6 +94,7 @@
 - [[_COMMUNITY_3. Design Direction|3. Design Direction]]
 - [[_COMMUNITY_1. Executive Summary|1. Executive Summary]]
 - [[_COMMUNITY_seo-dashboard.js|seo-dashboard.js]]
+- [[_COMMUNITY_.setColor|.setColor]]
 
 ## God Nodes (most connected - your core abstractions)
 1. `TCPDF` - 426 edges
@@ -122,10 +123,10 @@
 ## Import Cycles
 - None detected.
 
-## Communities (241 total, 39 thin omitted)
+## Communities (236 total, 39 thin omitted)
 
 ### Community 0 - "Routing & Attendance Controllers"
-Cohesion: 0.10
+Cohesion: 0.09
 Nodes (4): AdminAttendanceGalleryController, AdminLogsController, ParticipantController, ScanController
 
 ### Community 1 - "Deployment & Config Docs"
@@ -137,12 +138,12 @@ Cohesion: 0.10
 Nodes (5): csrf_rotate(), RegisterController, Mailer, ParticipantValidator, Uuid
 
 ### Community 3 - "Attendance & Advanced Export"
-Cohesion: 0.19
-Nodes (3): AdvancedExportController, Database, PDO
+Cohesion: 0.18
+Nodes (3): ReportController, Database, PDO
 
 ### Community 4 - "Bootstrap, CSRF & Signature"
-Cohesion: 0.17
-Nodes (6): csrf_check(), file_get_contents(), AdminSignatureController, AttendanceController, Logger, SignatureService
+Cohesion: 0.15
+Nodes (5): csrf_check(), file_get_contents(), AdminSignatureController, AttendanceController, SignatureService
 
 ### Community 6 - "Registrants & QR Generation"
 Cohesion: 0.22
@@ -152,8 +153,12 @@ Nodes (3): AdminRegistrantsController, PDO, QrService
 Cohesion: 0.22
 Nodes (8): autoload, psr-4, description, name, App\\, require, tecnickcom/tcpdf, type
 
+### Community 8 - "Report Templates"
+Cohesion: 0.25
+Nodes (3): AdminUsersController, PDO, Logger
+
 ### Community 9 - "Front Controller & Router"
-Cohesion: 0.22
+Cohesion: 0.24
 Nodes (6): assertTrue(), ensureUser(), loginAs(), PDO, probeRoute(), Router
 
 ### Community 10 - "Event Management"
@@ -161,8 +166,8 @@ Cohesion: 0.28
 Nodes (10): getFieldsInStep(), goToStep(), handleBack(), handleContinue(), hideStepError(), showStepError(), updateReview(), updateStepper() (+2 more)
 
 ### Community 12 - "Admin Settings"
-Cohesion: 0.10
-Nodes (5): AdminEventsController, AdminExportPageController, ExportController, SampleCsvController, SettingsController
+Cohesion: 0.09
+Nodes (6): AdminEventsController, AdminExportPageController, AdvancedExportController, ExportController, SampleCsvController, SettingsController
 
 ### Community 61 - "ClassLoader"
 Cohesion: 0.05
@@ -204,17 +209,13 @@ Nodes (9): 6.1 Guest page shell (shared across register / success / error), 6.2 
 Cohesion: 0.22
 Nodes (8): 11. Risks & Mitigations, 12. Out of Scope (this RBAC track), 13. Proposed Files (implementation later), 14. Acceptance Criteria (definition of done), 15. Implementation Status, 4. Route → Role Mapping, Guard evolution, Role-Based Access Control (RBAC) & Security Hardening Spec
 
-### Community 84 - ".login"
-Cohesion: 0.11
-Nodes (4): AdminUsersController, PDO, AuthController, AuthService
-
 ### Community 87 - "Description"
 Cohesion: 0.25
 Nodes (7): Description, Developer(s) Contact, ICC profile:, Main Features:, NOTE, TCPDF, Third party fonts:
 
 ### Community 92 - "AdvancedExportController"
-Cohesion: 0.18
-Nodes (10): 13. QA Device Checklist, 14. Future Enhancements (post-MVP), 15. Implementation Status, 7. Visual Design Tokens, 8. Motion & Micro-interactions, 9. Accessibility, Browser matrix, Color usage (+2 more)
+Cohesion: 0.25
+Nodes (7): 13. QA Device Checklist, 14. Future Enhancements (post-MVP), 15. Implementation Status, 8. Motion & Micro-interactions, 9. Accessibility, Browser matrix, Guest Registration UI/UX Improvement Spec
 
 ### Community 96 - ".getSignatureAppearanceArray"
 Cohesion: 0.29
@@ -247,6 +248,10 @@ Nodes (4): 5.1 Migration `007_rbac_roles.sql` (proposed), 5.2 Migration `008_par
 ### Community 107 - ".getGroupPageNoFormatted"
 Cohesion: 0.67
 Nodes (3): 1. Executive Summary, Design principles, Roles (display names)
+
+### Community 108 - ".setEqualColumns"
+Cohesion: 0.67
+Nodes (3): 7. Visual Design Tokens, Color usage, Typography scale
 
 ### Community 110 - ".setImageBuffer"
 Cohesion: 0.67
@@ -292,9 +297,9 @@ Nodes (10): applyFilter(), compositionWidths(), esc(), initials(), load(), rende
 ## Suggested Questions
 _Questions this graph is uniquely positioned to answer:_
 
-- **Why does `TCPDF` connect `TCPDF` to `CSV Export`, `Admin Settings`, `Nav Partial`, `TCPDF_STATIC`, `.startSVGElementHandler`, `._out`, `.init`, `file_get_contents`, `._destroy`, `._generateencryptionkey`, `.convertData`, `.setAlpha`, `.getAbsFontMeasure`, `.Gradient`, `.openHTMLTagHandler`, `._dolinethrough`, `._encrypt_data`, `.setEqualColumns`, `.setContentMark`, `.setFont`, `.setColor`, `._putpages`?**
+- **Why does `TCPDF` connect `TCPDF` to `.getAbsFontMeasure`, `Bootstrap, CSRF & Signature`, `._dolinethrough`, `._encrypt_data`, `._generateencryptionkey`, `CSV Export`, `Admin Settings`, `.setContentMark`, `.init`, `.setSignature`, `file_get_contents`, `.setColor`, `Nav Partial`, `.convertData`, `TCPDF_STATIC`, `._out`, `.setAlpha`?**
   _High betweenness centrality (0.161) - this node is a cross-community bridge._
-- **Why does `TCPDF_STATIC` connect `TCPDF_STATIC` to `Bootstrap, CSRF & Signature`, `CSV Export`, `Admin Settings`, `TCPDF`, `.startSVGElementHandler`, `ClassLoader`, `._out`, `.init`, `file_get_contents`, `TCPDF_IMAGES`, `._destroy`, `._generateencryptionkey`, `.convertData`, `.setAlpha`, `.getAbsFontMeasure`, `.openHTMLTagHandler`, `._encrypt_data`, `._dolinethrough`, `.setEqualColumns`, `.setContentMark`, `.setFont`, `._putpages`?**
+- **Why does `TCPDF_STATIC` connect `TCPDF_STATIC` to `Bootstrap, CSRF & Signature`, `Report Templates`, `CSV Export`, `Admin Settings`, `Nav Partial`, `TCPDF`, `ClassLoader`, `._out`, `.init`, `file_get_contents`, `TCPDF_IMAGES`, `._generateencryptionkey`, `.convertData`, `.setAlpha`, `.getAbsFontMeasure`, `._dolinethrough`, `._encrypt_data`, `.setContentMark`, `.setColor`, `.setSignature`?**
   _High betweenness centrality (0.065) - this node is a cross-community bridge._
 - **Are the 100 inferred relationships involving `TCPDF_STATIC` (e.g. with `.addTTFfont()` and `.getFontFullPath()`) actually correct?**
   _`TCPDF_STATIC` has 100 INFERRED edges - model-reasoned connections that need verification._
@@ -305,4 +310,4 @@ _Questions this graph is uniquely positioned to answer:_
 - **What connects `name`, `description`, `type` to the rest of the system?**
   _207 weakly-connected nodes found - possible documentation gaps or missing edges._
 - **Should `Routing & Attendance Controllers` be split into smaller, more focused modules?**
-  _Cohesion score 0.10037878787878787 - nodes in this community are weakly interconnected._
+  _Cohesion score 0.09411764705882353 - nodes in this community are weakly interconnected._

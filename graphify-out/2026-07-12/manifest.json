@@ -190,8 +190,8 @@
     "semantic_hash": ""
   },
   "src/Controllers/AdminAttendanceController.php": {
-    "mtime": 1783818139.5273685,
-    "ast_hash": "572bf883d43ecd26d83475b70e71975d",
+    "mtime": 1783826038.2221472,
+    "ast_hash": "a714abafcdb6a122442f458f0bf14e52",
     "semantic_hash": ""
   },
   "src/Controllers/AdminAttendanceGalleryController.php": {
@@ -220,8 +220,8 @@
     "semantic_hash": "e91e52411c80a7243e2c130f6bbcc13f"
   },
   "src/Controllers/AdminRegistrantsController.php": {
-    "mtime": 1783821464.4355426,
-    "ast_hash": "18f61534b8cb85665a8edc8c7ab03c0c",
+    "mtime": 1783826033.719652,
+    "ast_hash": "5d7154d637b852edd8f4170dc48f35a6",
     "semantic_hash": ""
   },
   "src/Controllers/AdminSignatureController.php": {
@@ -250,9 +250,9 @@
     "semantic_hash": "b9d93f71cfa9f3b1818e37058a38775f"
   },
   "src/Controllers/ParticipantController.php": {
-    "mtime": 1763499137.0,
-    "ast_hash": "2c57cdfb2c2c08df8ef5f73768740427",
-    "semantic_hash": "2c57cdfb2c2c08df8ef5f73768740427"
+    "mtime": 1783826043.3360515,
+    "ast_hash": "efa156583897d0bd01fcb172d158f16b",
+    "semantic_hash": ""
   },
   "src/Controllers/RegisterController.php": {
     "mtime": 1783769299.3341892,
@@ -335,8 +335,8 @@
     "semantic_hash": "2f818d078a82145634ff1dd1930ecd57"
   },
   "views/admin_attendance.php": {
-    "mtime": 1783818139.5273685,
-    "ast_hash": "4948e9e31631efc65808612faf3d9b91",
+    "mtime": 1783826066.119059,
+    "ast_hash": "197e8acefa8774243c6d04aa2684b1ca",
     "semantic_hash": ""
   },
   "views/admin_attendance_gallery.php": {
@@ -375,8 +375,8 @@
     "semantic_hash": "8c6b631a9af39cfef0c445f893b9ce4c"
   },
   "views/admin_registrants.php": {
-    "mtime": 1783821472.0946732,
-    "ast_hash": "2c14dea195487a8d8c96b30779a14bab",
+    "mtime": 1783826035.8851314,
+    "ast_hash": "f826102b05c5562da350b5663cb00070",
     "semantic_hash": ""
   },
   "views/admin_report.php": {
@@ -410,8 +410,8 @@
     "semantic_hash": ""
   },
   "views/scan.php": {
-    "mtime": 1783777692.3566484,
-    "ast_hash": "f940aed0b090d80a3a9973e41125daec",
+    "mtime": 1783826066.84188,
+    "ast_hash": "cba1bd4eb6f4433479879c9e06e2ff9f",
     "semantic_hash": ""
   },
   "CHECKLIST.md": {
@@ -5675,8 +5675,8 @@
     "semantic_hash": ""
   },
   "views/admin_seo_dashboard.php": {
-    "mtime": 1783822538.920045,
-    "ast_hash": "0fd8042f33acac560c9565f6a7781e61",
+    "mtime": 1783822901.659579,
+    "ast_hash": "edaf16c502d1a432b3b69781001dc962",
     "semantic_hash": ""
   },
   "views/admin_users.php": {
@@ -5765,8 +5765,8 @@
     "semantic_hash": ""
   },
   "assets/seo-dashboard.js": {
-    "mtime": 1783822540.1440806,
-    "ast_hash": "a9351fd6dfbff550f1bb4396f3bfe20d",
+    "mtime": 1783822891.3137784,
+    "ast_hash": "c39f9211648eadea928fe48f2413f39c",
     "semantic_hash": ""
   }
 }

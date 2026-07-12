@@ -7,6 +7,8 @@ $selectedDate = $selectedDate ?? date('Y-m-d');
 $kpi = $kpi ?? [];
 $vipCounts = $vipCounts ?? ['total' => 0, 'present' => 0, 'in_vicinity' => 0, 'absent' => 0];
 $vips = $vips ?? [];
+$guestCounts = $guestCounts ?? ['total' => 0, 'present' => 0, 'in_vicinity' => 0, 'absent' => 0, 'listed' => 0, 'truncated' => false];
+$guests = $guests ?? [];
 $agencyRollup = $agencyRollup ?? [];
 $recentVip = $recentVip ?? [];
 $attention = $attention ?? [];
@@ -84,6 +86,46 @@ $registered = (int)($kpi['totalRegistered'] ?? 0);
       </div>
     </header>
 
+    <section class="seo-search-panel" aria-label="Guest search">
+      <div class="seo-search-head">
+        <div>
+          <h2>Find a guest</h2>
+          <p>Search VIPs or any registered attendee by name, agency, or designation</p>
+        </div>
+        <div class="seo-filters" id="seoSearchScope" role="tablist" aria-label="Search scope">
+          <button type="button" class="seo-chip is-active" data-scope="all">All attendees</button>
+          <button type="button" class="seo-chip" data-scope="vip">VIP only</button>
+        </div>
+      </div>
+      <div class="seo-search-row">
+        <input
+          type="search"
+          id="seoSearchInput"
+          class="seo-search-input"
+          placeholder="Type at least 2 characters — e.g. surname, agency, or title"
+          autocomplete="off"
+          aria-label="Search guests"
+        >
+        <button type="button" class="seo-btn seo-btn-ghost" id="seoSearchClear" style="display:none">Clear</button>
+      </div>
+      <div id="seoSearchMeta" class="seo-search-meta" hidden></div>
+      <div class="seo-table-wrap seo-search-results" id="seoSearchResultsWrap" hidden>
+        <table class="seo-table">
+          <thead>
+            <tr>
+              <th>Guest</th>
+              <th>Agency</th>
+              <th>VIP</th>
+              <th>Status</th>
+              <th>Signed in at</th>
+            </tr>
+          </thead>
+          <tbody id="seoSearchResults"></tbody>
+        </table>
+      </div>
+      <div id="seoSearchEmpty" class="seo-empty" hidden>No matching guests for this search.</div>
+    </section>
+
     <div class="seo-kpi-grid" id="seoKpiStrip">
       <article class="seo-kpi" data-tone="present">
         <div class="seo-kpi-label">Signed in</div>
@@ -108,12 +150,12 @@ $registered = (int)($kpi['totalRegistered'] ?? 0);
       <article class="seo-kpi" data-tone="hour">
         <div class="seo-kpi-label">Last hour</div>
         <div class="seo-kpi-value" id="kpiRecent"><?= (int)($kpi['recentCount'] ?? 0) ?></div>
-        <div class="seo-kpi-hint">Fresh sign-ins</div>
+        <div class="seo-kpi-hint">Sign-ins in the past 60 minutes</div>
       </article>
       <article class="seo-kpi" data-tone="peak">
-        <div class="seo-kpi-label">Peak hour</div>
+        <div class="seo-kpi-label">Busiest hour</div>
         <div class="seo-kpi-value" id="kpiPeak" style="font-size:1.05rem;line-height:1.25"><?= htmlspecialchars((string)($kpi['peakHourText'] ?? 'N/A'), ENT_QUOTES) ?></div>
-        <div class="seo-kpi-hint">Busiest check-in window</div>
+        <div class="seo-kpi-hint">Peak check-in window today</div>
       </article>
     </div>
 
@@ -147,6 +189,7 @@ $registered = (int)($kpi['totalRegistered'] ?? 0);
     </section>
 
     <div class="seo-layout">
+      <div class="seo-main-col">
       <section class="seo-panel">
         <div class="seo-panel-head">
           <div>
@@ -167,7 +210,7 @@ $registered = (int)($kpi['totalRegistered'] ?? 0);
                 <th>Guest</th>
                 <th>Agency</th>
                 <th>Status</th>
-                <th>Time in</th>
+                <th>Signed in at</th>
               </tr>
             </thead>
             <tbody id="vipTableBody">
@@ -194,6 +237,71 @@ $registered = (int)($kpi['totalRegistered'] ?? 0);
           </table>
         </div>
       </section>
+
+      <section class="seo-panel" style="margin-top:1rem">
+        <div class="seo-panel-head">
+          <div>
+            <h2>General attendees</h2>
+            <p>
+              Non-VIP registered guests
+              <span id="guestCountSummary" class="seo-inline-counts">
+                · <?= (int)($guestCounts['total'] ?? 0) ?> total
+                · <?= (int)($guestCounts['present'] ?? 0) ?> present
+                · <?= (int)($guestCounts['in_vicinity'] ?? 0) ?> vicinity
+                · <?= (int)($guestCounts['absent'] ?? 0) ?> absent
+              </span>
+            </p>
+          </div>
+          <div class="seo-filters" id="guestFilters" role="tablist" aria-label="Filter attendee status">
+            <button type="button" class="seo-chip is-active" data-filter="all">All</button>
+            <button type="button" class="seo-chip" data-filter="present">Present</button>
+            <button type="button" class="seo-chip" data-filter="in_vicinity">In vicinity</button>
+            <button type="button" class="seo-chip" data-filter="absent">Absent</button>
+          </div>
+        </div>
+        <?php if (!empty($guestCounts['truncated'])): ?>
+          <div class="seo-search-meta mb-2" id="guestTruncNote">
+            Showing first <?= (int)($guestCounts['listed'] ?? count($guests)) ?> of <?= (int)($guestCounts['total'] ?? 0) ?>.
+            Use <strong>Find a guest</strong> above to look up anyone not listed.
+          </div>
+        <?php else: ?>
+          <div class="seo-search-meta mb-2" id="guestTruncNote" hidden></div>
+        <?php endif; ?>
+        <div class="seo-table-wrap">
+          <table class="seo-table">
+            <thead>
+              <tr>
+                <th>Guest</th>
+                <th>Agency</th>
+                <th>Status</th>
+                <th>Signed in at</th>
+              </tr>
+            </thead>
+            <tbody id="guestTableBody">
+            <?php if (!$guests): ?>
+              <tr><td colspan="4"><div class="seo-empty">No non-VIP attendees registered yet.</div></td></tr>
+            <?php else: ?>
+              <?php foreach ($guests as $guest):
+                $status = (string)$guest['guest_status'];
+              ?>
+              <tr data-status="<?= htmlspecialchars($status, ENT_QUOTES) ?>">
+                <td>
+                  <span class="seo-name"><?= htmlspecialchars((string)$guest['name'], ENT_QUOTES) ?></span>
+                  <?php if (trim((string)($guest['designation'] ?? '')) !== ''): ?>
+                    <span class="seo-sub"><?= htmlspecialchars((string)$guest['designation'], ENT_QUOTES) ?></span>
+                  <?php endif; ?>
+                </td>
+                <td><?= htmlspecialchars((string)$guest['agency'], ENT_QUOTES) ?></td>
+                <td><span class="seo-status seo-status-<?= $statusClass($status) ?>"><?= htmlspecialchars($statusLabel($status), ENT_QUOTES) ?></span></td>
+                <td><?= htmlspecialchars((string)($guest['time_in'] ?? '—'), ENT_QUOTES) ?></td>
+              </tr>
+              <?php endforeach; ?>
+            <?php endif; ?>
+            </tbody>
+          </table>
+        </div>
+      </section>
+      </div>
 
       <aside>
         <section class="seo-panel">
