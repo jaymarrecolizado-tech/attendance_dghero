@@ -1,0 +1,20 @@
+# Do NOT upload these to production (or delete immediately after first use)
+
+diagnose.php
+create_admin.php
+TODODEPLOYMENT/          # optional: upload only set_permissions.sh + post_deploy.sh then delete pack
+TODOMORE/
+TODORBAC/
+TODOUI/
+graphify-out/
+.claude/
+.git/
+tests/   (if present)
+
+# Never expose / never leave world-readable
+.env
+TODODEPLOYMENT/.env.production
+
+# Permission reminder after upload
+#   bash set_permissions.sh
+#   dirs=755  files=644  .env=600  (never 777)

@@ -16,9 +16,33 @@ class ReportController
     public function form(): void
     {
         if (!$this->requireAdmin()) return;
-        $pdfAvailable = class_exists('TCPDF');
+        $pdfAvailable = class_exists('TCPDF') || class_exists('\\TCPDF');
+        if (!$pdfAvailable && is_file(dirname(__DIR__, 2) . DIRECTORY_SEPARATOR . 'vendor' . DIRECTORY_SEPARATOR . 'autoload.php')) {
+            require_once dirname(__DIR__, 2) . DIRECTORY_SEPARATOR . 'vendor' . DIRECTORY_SEPARATOR . 'autoload.php';
+            $pdfAvailable = class_exists('TCPDF') || class_exists('\\TCPDF');
+        }
+
         $pdo = Database::pdo();
-        $tpl = $pdo->query('SELECT id,name FROM report_templates WHERE admin_id='.(int)$_SESSION['admin_id'].' ORDER BY id DESC')->fetchAll();
+        $tpl = [];
+        $reportNotice = null;
+        try {
+            // Ensure templates table exists even when auto-migrate is off.
+            $exists = $pdo->query("SHOW TABLES LIKE 'report_templates'")->fetch();
+            if (!$exists) {
+                $sqlFile = dirname(__DIR__, 2) . DIRECTORY_SEPARATOR . 'migrations' . DIRECTORY_SEPARATOR . '004_report_templates.sql';
+                if (is_file($sqlFile)) {
+                    $pdo->exec((string)file_get_contents($sqlFile));
+                }
+            }
+            $stmt = $pdo->prepare('SELECT id, name FROM report_templates WHERE admin_id = ? ORDER BY id DESC');
+            $stmt->execute([(int)$_SESSION['admin_id']]);
+            $tpl = $stmt->fetchAll() ?: [];
+        } catch (\Throwable $e) {
+            error_log('Report form templates error: ' . $e->getMessage());
+            $reportNotice = 'Report templates are temporarily unavailable. You can still generate reports.';
+            $tpl = [];
+        }
+
         require dirname(__DIR__, 2) . DIRECTORY_SEPARATOR . 'views' . DIRECTORY_SEPARATOR . 'admin_report.php';
     }
 

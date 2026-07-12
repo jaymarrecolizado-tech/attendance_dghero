@@ -1,0 +1,4 @@
+# Ignore rebuilt upload packages / secrets in git if committed
+.env.production
+*.local.env
+uploads/
