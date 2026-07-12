@@ -230,8 +230,14 @@
   "228": "2. Current State Audit",
   "229": "3. Design Direction",
   "230": "1. Executive Summary",
+  "231": ".openHTMLTagHandler",
   "232": "._encrypt_data",
   "233": "guest_footer.php",
   "234": "guest_head.php",
-  "235": "guest_hero.php"
+  "235": "guest_hero.php",
+  "236": "seo-dashboard.js",
+  "237": ".init",
+  "238": ".setFont",
+  "239": ".setColor",
+  "240": "._putpages"
 }

@@ -47,6 +47,7 @@ class AdminAttendanceController
                 p.first_name,
                 p.last_name,
                 p.agency,
+                p.is_vip,
                 a.id,
                 a.attendance_date,
                 a.time_in,
@@ -56,6 +57,7 @@ class AdminAttendanceController
              LEFT JOIN attendance a ON {$joinOn}
              {$sqlWhere}
              ORDER BY
+                CASE WHEN p.is_vip = 1 THEN 0 ELSE 1 END ASC,
                 CASE
                     WHEN a.status = 'absent' THEN 3
                     WHEN a.id IS NOT NULL AND COALESCE(a.signature_path, '') <> '' THEN 1
@@ -243,7 +245,7 @@ class AdminAttendanceController
         }
 
         $pdo = Database::pdo();
-        $stmt = $pdo->prepare("SELECT id, uuid, first_name, last_name, middle_name, agency, email FROM participants WHERE first_name LIKE ? OR last_name LIKE ? OR email LIKE ? OR CONCAT(first_name, ' ', last_name) LIKE ? ORDER BY last_name, first_name LIMIT 20");
+        $stmt = $pdo->prepare("SELECT id, uuid, first_name, last_name, middle_name, agency, email, is_vip FROM participants WHERE first_name LIKE ? OR last_name LIKE ? OR email LIKE ? OR CONCAT(first_name, ' ', last_name) LIKE ? ORDER BY is_vip DESC, last_name, first_name LIMIT 20");
         $searchTerm = "%{$query}%";
         $stmt->execute([$searchTerm, $searchTerm, $searchTerm, $searchTerm]);
         $results = $stmt->fetchAll();

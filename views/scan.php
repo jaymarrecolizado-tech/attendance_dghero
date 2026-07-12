@@ -59,6 +59,10 @@ $token = function_exists('csrf_token') ? csrf_token() : '';
       <div class="card mb-3" id="participantCard" style="display:none">
         <div class="card-body">
           <div id="pinfo" class="mb-3 fw-semibold"></div>
+          <div id="pvip" class="mb-2" style="display:none">
+            <span class="badge text-bg-warning">VIP</span>
+            <span class="small text-muted ms-1">Priority guest — protocol care</span>
+          </div>
           <canvas id="sigCanvas"></canvas>
           <div class="mt-3 d-flex flex-wrap gap-2">
             <button id="calibrateBtn" class="btn btn-outline-secondary flex-fill">Calibrate</button>
@@ -310,6 +314,10 @@ function onScanSuccess(decodedText, decodedResult) {
           document.getElementById('participantCard').style.display = 'block';
           const p = j.participant;
           document.getElementById('pinfo').innerText = `${p.first_name} ${p.last_name}${p.agency ? ' (' + p.agency + ')' : ''}`;
+          const vipEl = document.getElementById('pvip');
+          if (vipEl) {
+            vipEl.style.display = Number(p.is_vip) === 1 ? 'block' : 'none';
+          }
           const canvas = document.getElementById('sigCanvas');
           if (sigPad) {
             sigPad.clear();

@@ -237,7 +237,7 @@
       "label": "load()",
       "file_type": "code",
       "source_file": "assets/seo-dashboard.js",
-      "source_location": "L170",
+      "source_location": "L172",
       "_origin": "ast",
       "id": "assets_seo_dashboard_load",
       "community": 236,
@@ -847,7 +847,7 @@
       "label": ".kpiJson()",
       "file_type": "code",
       "source_file": "src/Controllers/AdminAttendanceController.php",
-      "source_location": "L96",
+      "source_location": "L98",
       "_origin": "ast",
       "id": "src_controllers_adminattendancecontroller_adminattendancecontroller_kpijson",
       "community": 69,
@@ -857,7 +857,7 @@
       "label": ".kpiStream()",
       "file_type": "code",
       "source_file": "src/Controllers/AdminAttendanceController.php",
-      "source_location": "L105",
+      "source_location": "L107",
       "_origin": "ast",
       "id": "src_controllers_adminattendancecontroller_adminattendancecontroller_kpistream",
       "community": 69,
@@ -867,7 +867,7 @@
       "label": ".getActiveEventId()",
       "file_type": "code",
       "source_file": "src/Controllers/AdminAttendanceController.php",
-      "source_location": "L117",
+      "source_location": "L119",
       "_origin": "ast",
       "id": "src_controllers_adminattendancecontroller_adminattendancecontroller_getactiveeventid",
       "community": 69,
@@ -887,7 +887,7 @@
       "label": ".resolveGuestStatus()",
       "file_type": "code",
       "source_file": "src/Controllers/AdminAttendanceController.php",
-      "source_location": "L126",
+      "source_location": "L128",
       "_origin": "ast",
       "id": "src_controllers_adminattendancecontroller_adminattendancecontroller_resolvegueststatus",
       "community": 69,
@@ -897,7 +897,7 @@
       "label": ".presentAttendanceScope()",
       "file_type": "code",
       "source_file": "src/Controllers/AdminAttendanceController.php",
-      "source_location": "L141",
+      "source_location": "L143",
       "_origin": "ast",
       "id": "src_controllers_adminattendancecontroller_adminattendancecontroller_presentattendancescope",
       "community": 69,
@@ -907,7 +907,7 @@
       "label": ".getGuestStatusForDate()",
       "file_type": "code",
       "source_file": "src/Controllers/AdminAttendanceController.php",
-      "source_location": "L153",
+      "source_location": "L155",
       "_origin": "ast",
       "id": "src_controllers_adminattendancecontroller_adminattendancecontroller_getgueststatusfordate",
       "community": 69,
@@ -917,7 +917,7 @@
       "label": ".computeKpis()",
       "file_type": "code",
       "source_file": "src/Controllers/AdminAttendanceController.php",
-      "source_location": "L176",
+      "source_location": "L178",
       "_origin": "ast",
       "id": "src_controllers_adminattendancecontroller_adminattendancecontroller_computekpis",
       "community": 69,
@@ -927,7 +927,7 @@
       "label": ".searchParticipants()",
       "file_type": "code",
       "source_file": "src/Controllers/AdminAttendanceController.php",
-      "source_location": "L234",
+      "source_location": "L236",
       "_origin": "ast",
       "id": "src_controllers_adminattendancecontroller_adminattendancecontroller_searchparticipants",
       "community": 69,
@@ -937,7 +937,7 @@
       "label": ".markAbsent()",
       "file_type": "code",
       "source_file": "src/Controllers/AdminAttendanceController.php",
-      "source_location": "L264",
+      "source_location": "L266",
       "_origin": "ast",
       "id": "src_controllers_adminattendancecontroller_adminattendancecontroller_markabsent",
       "community": 69,
@@ -947,7 +947,7 @@
       "label": ".clearAbsent()",
       "file_type": "code",
       "source_file": "src/Controllers/AdminAttendanceController.php",
-      "source_location": "L319",
+      "source_location": "L321",
       "_origin": "ast",
       "id": "src_controllers_adminattendancecontroller_adminattendancecontroller_clearabsent",
       "community": 69,
@@ -957,7 +957,7 @@
       "label": ".findAttendanceRow()",
       "file_type": "code",
       "source_file": "src/Controllers/AdminAttendanceController.php",
-      "source_location": "L360",
+      "source_location": "L362",
       "_origin": "ast",
       "id": "src_controllers_adminattendancecontroller_adminattendancecontroller_findattendancerow",
       "community": 69,
@@ -967,7 +967,7 @@
       "label": ".manualAttendance()",
       "file_type": "code",
       "source_file": "src/Controllers/AdminAttendanceController.php",
-      "source_location": "L374",
+      "source_location": "L376",
       "_origin": "ast",
       "id": "src_controllers_adminattendancecontroller_adminattendancecontroller_manualattendance",
       "community": 69,
@@ -1347,17 +1347,17 @@
       "label": ".toggleVip()",
       "file_type": "code",
       "source_file": "src/Controllers/AdminRegistrantsController.php",
-      "source_location": "L51",
+      "source_location": "L55",
       "_origin": "ast",
       "id": "src_controllers_adminregistrantscontroller_adminregistrantscontroller_togglevip",
-      "community": 4,
+      "community": 8,
       "norm_label": ".togglevip()"
     },
     {
       "label": ".generateQrBatch()",
       "file_type": "code",
       "source_file": "src/Controllers/AdminRegistrantsController.php",
-      "source_location": "L88",
+      "source_location": "L92",
       "_origin": "ast",
       "id": "src_controllers_adminregistrantscontroller_adminregistrantscontroller_generateqrbatch",
       "community": 6,
@@ -1367,7 +1367,7 @@
       "label": ".sendQrEmail()",
       "file_type": "code",
       "source_file": "src/Controllers/AdminRegistrantsController.php",
-      "source_location": "L122",
+      "source_location": "L126",
       "_origin": "ast",
       "id": "src_controllers_adminregistrantscontroller_adminregistrantscontroller_sendqremail",
       "community": 6,
@@ -1377,7 +1377,7 @@
       "label": ".qrPreview()",
       "file_type": "code",
       "source_file": "src/Controllers/AdminRegistrantsController.php",
-      "source_location": "L162",
+      "source_location": "L166",
       "_origin": "ast",
       "id": "src_controllers_adminregistrantscontroller_adminregistrantscontroller_qrpreview",
       "community": 6,
@@ -1387,7 +1387,7 @@
       "label": ".ensureQrPath()",
       "file_type": "code",
       "source_file": "src/Controllers/AdminRegistrantsController.php",
-      "source_location": "L191",
+      "source_location": "L195",
       "_origin": "ast",
       "id": "src_controllers_adminregistrantscontroller_adminregistrantscontroller_ensureqrpath",
       "community": 6,
@@ -1590,7 +1590,7 @@
       "source_location": "L10",
       "_origin": "ast",
       "id": "src_controllers_adminuserscontroller_adminuserscontroller",
-      "community": 84,
+      "community": 8,
       "norm_label": "adminuserscontroller"
     },
     {
@@ -1600,7 +1600,7 @@
       "source_location": "L14",
       "_origin": "ast",
       "id": "src_controllers_adminuserscontroller_adminuserscontroller_list",
-      "community": 84,
+      "community": 8,
       "norm_label": ".list()"
     },
     {
@@ -1610,7 +1610,7 @@
       "source_location": "L35",
       "_origin": "ast",
       "id": "src_controllers_adminuserscontroller_adminuserscontroller_create",
-      "community": 84,
+      "community": 8,
       "norm_label": ".create()"
     },
     {
@@ -1620,7 +1620,7 @@
       "source_location": "L98",
       "_origin": "ast",
       "id": "src_controllers_adminuserscontroller_adminuserscontroller_update",
-      "community": 84,
+      "community": 8,
       "norm_label": ".update()"
     },
     {
@@ -1630,7 +1630,7 @@
       "source_location": "L228",
       "_origin": "ast",
       "id": "src_controllers_adminuserscontroller_adminuserscontroller_csrfok",
-      "community": 84,
+      "community": 8,
       "norm_label": ".csrfok()"
     },
     {
@@ -1640,7 +1640,7 @@
       "source_location": "L238",
       "_origin": "ast",
       "id": "src_controllers_adminuserscontroller_adminuserscontroller_validrole",
-      "community": 84,
+      "community": 8,
       "norm_label": ".validrole()"
     },
     {
@@ -1650,7 +1650,7 @@
       "source_location": "L247",
       "_origin": "ast",
       "id": "src_controllers_adminuserscontroller_adminuserscontroller_activeadmincount",
-      "community": 84,
+      "community": 8,
       "norm_label": ".activeadmincount()"
     },
     {
@@ -1660,7 +1660,7 @@
       "source_location": "",
       "_origin": "ast",
       "id": "src_controllers_adminuserscontroller_php_pdo",
-      "community": 84,
+      "community": 8,
       "norm_label": "pdo"
     },
     {
@@ -1670,7 +1670,7 @@
       "source_location": "L254",
       "_origin": "ast",
       "id": "src_controllers_adminuserscontroller_adminuserscontroller_isweakpassword",
-      "community": 84,
+      "community": 8,
       "norm_label": ".isweakpassword()"
     },
     {
@@ -1680,7 +1680,7 @@
       "source_location": "L260",
       "_origin": "ast",
       "id": "src_controllers_adminuserscontroller_adminuserscontroller_flash",
-      "community": 84,
+      "community": 8,
       "norm_label": ".flash()"
     },
     {
@@ -1690,7 +1690,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "src_controllers_advancedexportcontroller",
-      "community": 3,
+      "community": 12,
       "norm_label": "advancedexportcontroller.php"
     },
     {
@@ -1700,7 +1700,7 @@
       "source_location": "L8",
       "_origin": "ast",
       "id": "src_controllers_advancedexportcontroller_advancedexportcontroller",
-      "community": 3,
+      "community": 12,
       "norm_label": "advancedexportcontroller"
     },
     {
@@ -1710,7 +1710,7 @@
       "source_location": "L10",
       "_origin": "ast",
       "id": "src_controllers_advancedexportcontroller_advancedexportcontroller_requireadmin",
-      "community": 3,
+      "community": 12,
       "norm_label": ".requireadmin()"
     },
     {
@@ -1720,7 +1720,7 @@
       "source_location": "L16",
       "_origin": "ast",
       "id": "src_controllers_advancedexportcontroller_advancedexportcontroller_registrantsxlsx",
-      "community": 3,
+      "community": 12,
       "norm_label": ".registrantsxlsx()"
     },
     {
@@ -1730,7 +1730,7 @@
       "source_location": "L48",
       "_origin": "ast",
       "id": "src_controllers_advancedexportcontroller_advancedexportcontroller_attendancexlsx",
-      "community": 3,
+      "community": 12,
       "norm_label": ".attendancexlsx()"
     },
     {
@@ -1740,7 +1740,7 @@
       "source_location": "L78",
       "_origin": "ast",
       "id": "src_controllers_advancedexportcontroller_advancedexportcontroller_attendancepdf",
-      "community": 3,
+      "community": 12,
       "norm_label": ".attendancepdf()"
     },
     {
@@ -1990,7 +1990,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "src_controllers_reportcontroller",
-      "community": 8,
+      "community": 3,
       "norm_label": "reportcontroller.php"
     },
     {
@@ -2000,7 +2000,7 @@
       "source_location": "L8",
       "_origin": "ast",
       "id": "src_controllers_reportcontroller_reportcontroller",
-      "community": 8,
+      "community": 3,
       "norm_label": "reportcontroller"
     },
     {
@@ -2010,7 +2010,7 @@
       "source_location": "L10",
       "_origin": "ast",
       "id": "src_controllers_reportcontroller_reportcontroller_requireadmin",
-      "community": 8,
+      "community": 3,
       "norm_label": ".requireadmin()"
     },
     {
@@ -2020,7 +2020,7 @@
       "source_location": "L16",
       "_origin": "ast",
       "id": "src_controllers_reportcontroller_reportcontroller_form",
-      "community": 8,
+      "community": 3,
       "norm_label": ".form()"
     },
     {
@@ -2030,7 +2030,7 @@
       "source_location": "L25",
       "_origin": "ast",
       "id": "src_controllers_reportcontroller_reportcontroller_generate",
-      "community": 8,
+      "community": 3,
       "norm_label": ".generate()"
     },
     {
@@ -2040,7 +2040,7 @@
       "source_location": "L191",
       "_origin": "ast",
       "id": "src_controllers_reportcontroller_reportcontroller_fieldmap",
-      "community": 8,
+      "community": 3,
       "norm_label": ".fieldmap()"
     },
     {
@@ -2050,7 +2050,7 @@
       "source_location": "L205",
       "_origin": "ast",
       "id": "src_controllers_reportcontroller_reportcontroller_val",
-      "community": 8,
+      "community": 3,
       "norm_label": ".val()"
     },
     {
@@ -2060,7 +2060,7 @@
       "source_location": "L225",
       "_origin": "ast",
       "id": "src_controllers_reportcontroller_reportcontroller_extof",
-      "community": 8,
+      "community": 3,
       "norm_label": ".extof()"
     },
     {
@@ -2070,7 +2070,7 @@
       "source_location": "L230",
       "_origin": "ast",
       "id": "src_controllers_reportcontroller_reportcontroller_savetemplate",
-      "community": 8,
+      "community": 3,
       "norm_label": ".savetemplate()"
     },
     {
@@ -2080,7 +2080,7 @@
       "source_location": "L250",
       "_origin": "ast",
       "id": "src_controllers_reportcontroller_reportcontroller_loadtemplate",
-      "community": 8,
+      "community": 3,
       "norm_label": ".loadtemplate()"
     },
     {
@@ -2190,7 +2190,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "src_core_router",
-      "community": 9,
+      "community": 0,
       "norm_label": "router.php"
     },
     {
@@ -2400,7 +2400,7 @@
       "source_location": "L134",
       "_origin": "ast",
       "id": "src_services_authservice_authservice_deny",
-      "community": 12,
+      "community": 84,
       "norm_label": ".deny()"
     },
     {
@@ -2420,7 +2420,7 @@
       "source_location": "L169",
       "_origin": "ast",
       "id": "src_services_authservice_authservice_hydratefromdatabase",
-      "community": 3,
+      "community": 84,
       "norm_label": ".hydratefromdatabase()"
     },
     {
@@ -2560,7 +2560,7 @@
       "source_location": "L8",
       "_origin": "ast",
       "id": "src_services_logger_logger",
-      "community": 4,
+      "community": 8,
       "norm_label": "logger"
     },
     {
@@ -2570,7 +2570,7 @@
       "source_location": "L10",
       "_origin": "ast",
       "id": "src_services_logger_logger_log",
-      "community": 81,
+      "community": 8,
       "norm_label": ".log()"
     },
     {
@@ -4920,7 +4920,7 @@
       "source_location": "L833",
       "_origin": "ast",
       "id": "vendor_tecnickcom_tcpdf_include_barcodes_qrcode_qrcode_init",
-      "community": 237,
+      "community": 63,
       "norm_label": ".init()"
     },
     {
@@ -4940,7 +4940,7 @@
       "source_location": "L916",
       "_origin": "ast",
       "id": "vendor_tecnickcom_tcpdf_include_barcodes_qrcode_qrcode_writeformatinformation",
-      "community": 63,
+      "community": 60,
       "norm_label": ".writeformatinformation()"
     },
     {
@@ -5030,7 +5030,7 @@
       "source_location": "L1039",
       "_origin": "ast",
       "id": "vendor_tecnickcom_tcpdf_include_barcodes_qrcode_qrcode_generatemaskno",
-      "community": 63,
+      "community": 60,
       "norm_label": ".generatemaskno()"
     },
     {
@@ -5040,7 +5040,7 @@
       "source_location": "L1063",
       "_origin": "ast",
       "id": "vendor_tecnickcom_tcpdf_include_barcodes_qrcode_qrcode_makemaskno",
-      "community": 63,
+      "community": 60,
       "norm_label": ".makemaskno()"
     },
     {
@@ -5050,7 +5050,7 @@
       "source_location": "L1090",
       "_origin": "ast",
       "id": "vendor_tecnickcom_tcpdf_include_barcodes_qrcode_qrcode_makemask",
-      "community": 63,
+      "community": 60,
       "norm_label": ".makemask()"
     },
     {
@@ -5060,7 +5060,7 @@
       "source_location": "L1102",
       "_origin": "ast",
       "id": "vendor_tecnickcom_tcpdf_include_barcodes_qrcode_qrcode_calcn1n3",
-      "community": 63,
+      "community": 60,
       "norm_label": ".calcn1n3()"
     },
     {
@@ -5070,7 +5070,7 @@
       "source_location": "L1133",
       "_origin": "ast",
       "id": "vendor_tecnickcom_tcpdf_include_barcodes_qrcode_qrcode_evaluatesymbol",
-      "community": 63,
+      "community": 60,
       "norm_label": ".evaluatesymbol()"
     },
     {
@@ -5080,7 +5080,7 @@
       "source_location": "L1195",
       "_origin": "ast",
       "id": "vendor_tecnickcom_tcpdf_include_barcodes_qrcode_qrcode_mask",
-      "community": 63,
+      "community": 60,
       "norm_label": ".mask()"
     },
     {
@@ -5380,7 +5380,7 @@
       "source_location": "L1911",
       "_origin": "ast",
       "id": "vendor_tecnickcom_tcpdf_include_barcodes_qrcode_qrcode_estimateversion",
-      "community": 63,
+      "community": 90,
       "norm_label": ".estimateversion()"
     },
     {
@@ -5400,7 +5400,7 @@
       "source_location": "L1987",
       "_origin": "ast",
       "id": "vendor_tecnickcom_tcpdf_include_barcodes_qrcode_qrcode_createbitstream",
-      "community": 63,
+      "community": 90,
       "norm_label": ".createbitstream()"
     },
     {
@@ -5410,7 +5410,7 @@
       "source_location": "L2002",
       "_origin": "ast",
       "id": "vendor_tecnickcom_tcpdf_include_barcodes_qrcode_qrcode_convertdata",
-      "community": 63,
+      "community": 90,
       "norm_label": ".convertdata()"
     },
     {
@@ -5430,7 +5430,7 @@
       "source_location": "L2064",
       "_origin": "ast",
       "id": "vendor_tecnickcom_tcpdf_include_barcodes_qrcode_qrcode_mergebitstream",
-      "community": 63,
+      "community": 71,
       "norm_label": ".mergebitstream()"
     },
     {
@@ -5440,7 +5440,7 @@
       "source_location": "L2081",
       "_origin": "ast",
       "id": "vendor_tecnickcom_tcpdf_include_barcodes_qrcode_qrcode_getbitstream",
-      "community": 63,
+      "community": 71,
       "norm_label": ".getbitstream()"
     },
     {
@@ -5580,7 +5580,7 @@
       "source_location": "L2298",
       "_origin": "ast",
       "id": "vendor_tecnickcom_tcpdf_include_barcodes_qrcode_qrcode_getminimumversion",
-      "community": 63,
+      "community": 90,
       "norm_label": ".getminimumversion()"
     },
     {
@@ -5650,7 +5650,7 @@
       "source_location": "L2468",
       "_origin": "ast",
       "id": "vendor_tecnickcom_tcpdf_include_barcodes_qrcode_qrcode_getformatinfo",
-      "community": 63,
+      "community": 60,
       "norm_label": ".getformatinfo()"
     },
     {
@@ -5700,7 +5700,7 @@
       "source_location": "L2598",
       "_origin": "ast",
       "id": "vendor_tecnickcom_tcpdf_include_barcodes_qrcode_qrcode_rsblocknum1",
-      "community": 237,
+      "community": 63,
       "norm_label": ".rsblocknum1()"
     },
     {
@@ -5710,7 +5710,7 @@
       "source_location": "L2607",
       "_origin": "ast",
       "id": "vendor_tecnickcom_tcpdf_include_barcodes_qrcode_qrcode_rsdatacodes1",
-      "community": 237,
+      "community": 63,
       "norm_label": ".rsdatacodes1()"
     },
     {
@@ -5720,7 +5720,7 @@
       "source_location": "L2616",
       "_origin": "ast",
       "id": "vendor_tecnickcom_tcpdf_include_barcodes_qrcode_qrcode_rsecccodes1",
-      "community": 237,
+      "community": 63,
       "norm_label": ".rsecccodes1()"
     },
     {
@@ -5730,7 +5730,7 @@
       "source_location": "L2625",
       "_origin": "ast",
       "id": "vendor_tecnickcom_tcpdf_include_barcodes_qrcode_qrcode_rsblocknum2",
-      "community": 237,
+      "community": 63,
       "norm_label": ".rsblocknum2()"
     },
     {
@@ -5740,7 +5740,7 @@
       "source_location": "L2634",
       "_origin": "ast",
       "id": "vendor_tecnickcom_tcpdf_include_barcodes_qrcode_qrcode_rsdatacodes2",
-      "community": 237,
+      "community": 63,
       "norm_label": ".rsdatacodes2()"
     },
     {
@@ -5750,7 +5750,7 @@
       "source_location": "L2643",
       "_origin": "ast",
       "id": "vendor_tecnickcom_tcpdf_include_barcodes_qrcode_qrcode_rsecccodes2",
-      "community": 237,
+      "community": 63,
       "norm_label": ".rsecccodes2()"
     },
     {
@@ -5780,7 +5780,7 @@
       "source_location": "L2679",
       "_origin": "ast",
       "id": "vendor_tecnickcom_tcpdf_include_barcodes_qrcode_qrcode_init_rs",
-      "community": 237,
+      "community": 63,
       "norm_label": ".init_rs()"
     },
     {
@@ -5790,7 +5790,7 @@
       "source_location": "L2702",
       "_origin": "ast",
       "id": "vendor_tecnickcom_tcpdf_include_barcodes_qrcode_qrcode_modnn",
-      "community": 237,
+      "community": 63,
       "norm_label": ".modnn()"
     },
     {
@@ -5800,7 +5800,7 @@
       "source_location": "L2720",
       "_origin": "ast",
       "id": "vendor_tecnickcom_tcpdf_include_barcodes_qrcode_qrcode_init_rs_char",
-      "community": 237,
+      "community": 63,
       "norm_label": ".init_rs_char()"
     },
     {
@@ -5810,7 +5810,7 @@
       "source_location": "L2804",
       "_origin": "ast",
       "id": "vendor_tecnickcom_tcpdf_include_barcodes_qrcode_qrcode_encode_rs_char",
-      "community": 237,
+      "community": 63,
       "norm_label": ".encode_rs_char()"
     },
     {
@@ -5820,7 +5820,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "vendor_tecnickcom_tcpdf_include_tcpdf_colors",
-      "community": 94,
+      "community": 239,
       "norm_label": "tcpdf_colors.php"
     },
     {
@@ -5830,7 +5830,7 @@
       "source_location": "L48",
       "_origin": "ast",
       "id": "vendor_tecnickcom_tcpdf_include_tcpdf_colors_tcpdf_colors",
-      "community": 94,
+      "community": 239,
       "norm_label": "tcpdf_colors"
     },
     {
@@ -5840,7 +5840,7 @@
       "source_location": "L249",
       "_origin": "ast",
       "id": "vendor_tecnickcom_tcpdf_include_tcpdf_colors_tcpdf_colors_getspotcolor",
-      "community": 94,
+      "community": 239,
       "norm_label": ".getspotcolor()"
     },
     {
@@ -5850,7 +5850,7 @@
       "source_location": "L273",
       "_origin": "ast",
       "id": "vendor_tecnickcom_tcpdf_include_tcpdf_colors_tcpdf_colors_converthtmlcolortodec",
-      "community": 94,
+      "community": 239,
       "norm_label": ".converthtmlcolortodec()"
     },
     {
@@ -5860,7 +5860,7 @@
       "source_location": "L435",
       "_origin": "ast",
       "id": "vendor_tecnickcom_tcpdf_include_tcpdf_colors_tcpdf_colors_getcolorstringfromarray",
-      "community": 94,
+      "community": 239,
       "norm_label": ".getcolorstringfromarray()"
     },
     {
@@ -5870,7 +5870,7 @@
       "source_location": "L466",
       "_origin": "ast",
       "id": "vendor_tecnickcom_tcpdf_include_tcpdf_colors_tcpdf_colors_jscolor",
-      "community": 94,
+      "community": 239,
       "norm_label": "._jscolor()"
     },
     {
@@ -6100,7 +6100,7 @@
       "source_location": "L954",
       "_origin": "ast",
       "id": "vendor_tecnickcom_tcpdf_include_tcpdf_fonts_tcpdf_fonts_gettruetypefontsubset",
-      "community": 81,
+      "community": 8,
       "norm_label": "._gettruetypefontsubset()"
     },
     {
@@ -6670,7 +6670,7 @@
       "source_location": "L659",
       "_origin": "ast",
       "id": "vendor_tecnickcom_tcpdf_include_tcpdf_static_tcpdf_static_getannotoptfromjsprop",
-      "community": 94,
+      "community": 239,
       "norm_label": ".getannotoptfromjsprop()"
     },
     {
@@ -7050,7 +7050,7 @@
       "source_location": "L2050",
       "_origin": "ast",
       "id": "vendor_tecnickcom_tcpdf_tcpdf_tcpdf_destruct",
-      "community": 90,
+      "community": 58,
       "norm_label": ".__destruct()"
     },
     {
@@ -7100,7 +7100,7 @@
       "source_location": "L2398",
       "_origin": "ast",
       "id": "vendor_tecnickcom_tcpdf_tcpdf_tcpdf_setrtl",
-      "community": 231,
+      "community": 53,
       "norm_label": ".setrtl()"
     },
     {
@@ -7120,7 +7120,7 @@
       "source_location": "L2424",
       "_origin": "ast",
       "id": "vendor_tecnickcom_tcpdf_tcpdf_tcpdf_settemprtl",
-      "community": 231,
+      "community": 97,
       "norm_label": ".settemprtl()"
     },
     {
@@ -7230,7 +7230,7 @@
       "source_location": "L2584",
       "_origin": "ast",
       "id": "vendor_tecnickcom_tcpdf_tcpdf_tcpdf_getbreakmargin",
-      "community": 11,
+      "community": 97,
       "norm_label": ".getbreakmargin()"
     },
     {
@@ -7350,7 +7350,7 @@
       "source_location": "L2868",
       "_origin": "ast",
       "id": "vendor_tecnickcom_tcpdf_tcpdf_tcpdf_setautopagebreak",
-      "community": 11,
+      "community": 79,
       "norm_label": ".setautopagebreak()"
     },
     {
@@ -7470,7 +7470,7 @@
       "source_location": "L3014",
       "_origin": "ast",
       "id": "vendor_tecnickcom_tcpdf_tcpdf_tcpdf_error",
-      "community": 90,
+      "community": 58,
       "norm_label": ".error()"
     },
     {
@@ -7500,7 +7500,7 @@
       "source_location": "L3089",
       "_origin": "ast",
       "id": "vendor_tecnickcom_tcpdf_tcpdf_tcpdf_setpage",
-      "community": 108,
+      "community": 109,
       "norm_label": ".setpage()"
     },
     {
@@ -7510,7 +7510,7 @@
       "source_location": "L3136",
       "_origin": "ast",
       "id": "vendor_tecnickcom_tcpdf_tcpdf_tcpdf_lastpage",
-      "community": 108,
+      "community": 109,
       "norm_label": ".lastpage()"
     },
     {
@@ -7520,7 +7520,7 @@
       "source_location": "L3147",
       "_origin": "ast",
       "id": "vendor_tecnickcom_tcpdf_tcpdf_tcpdf_getpage",
-      "community": 108,
+      "community": 109,
       "norm_label": ".getpage()"
     },
     {
@@ -7530,7 +7530,7 @@
       "source_location": "L3158",
       "_origin": "ast",
       "id": "vendor_tecnickcom_tcpdf_tcpdf_tcpdf_getnumpages",
-      "community": 108,
+      "community": 109,
       "norm_label": ".getnumpages()"
     },
     {
@@ -7540,7 +7540,7 @@
       "source_location": "L3171",
       "_origin": "ast",
       "id": "vendor_tecnickcom_tcpdf_tcpdf_tcpdf_addtocpage",
-      "community": 108,
+      "community": 11,
       "norm_label": ".addtocpage()"
     },
     {
@@ -7550,7 +7550,7 @@
       "source_location": "L3181",
       "_origin": "ast",
       "id": "vendor_tecnickcom_tcpdf_tcpdf_tcpdf_endtocpage",
-      "community": 108,
+      "community": 11,
       "norm_label": ".endtocpage()"
     },
     {
@@ -7560,7 +7560,7 @@
       "source_location": "L3196",
       "_origin": "ast",
       "id": "vendor_tecnickcom_tcpdf_tcpdf_tcpdf_addpage",
-      "community": 108,
+      "community": 11,
       "norm_label": ".addpage()"
     },
     {
@@ -7570,7 +7570,7 @@
       "source_location": "L3220",
       "_origin": "ast",
       "id": "vendor_tecnickcom_tcpdf_tcpdf_tcpdf_endpage",
-      "community": 108,
+      "community": 11,
       "norm_label": ".endpage()"
     },
     {
@@ -7590,7 +7590,7 @@
       "source_location": "L3317",
       "_origin": "ast",
       "id": "vendor_tecnickcom_tcpdf_tcpdf_tcpdf_setpagemark",
-      "community": 109,
+      "community": 11,
       "norm_label": ".setpagemark()"
     },
     {
@@ -7600,7 +7600,7 @@
       "source_location": "L3330",
       "_origin": "ast",
       "id": "vendor_tecnickcom_tcpdf_tcpdf_tcpdf_setcontentmark",
-      "community": 109,
+      "community": 11,
       "norm_label": ".setcontentmark()"
     },
     {
@@ -7800,7 +7800,7 @@
       "source_location": "L3783",
       "_origin": "ast",
       "id": "vendor_tecnickcom_tcpdf_tcpdf_tcpdf_pageno",
-      "community": 108,
+      "community": 109,
       "norm_label": ".pageno()"
     },
     {
@@ -7820,7 +7820,7 @@
       "source_location": "L3810",
       "_origin": "ast",
       "id": "vendor_tecnickcom_tcpdf_tcpdf_tcpdf_addspotcolor",
-      "community": 239,
+      "community": 58,
       "norm_label": ".addspotcolor()"
     },
     {
@@ -7870,7 +7870,7 @@
       "source_location": "L3911",
       "_origin": "ast",
       "id": "vendor_tecnickcom_tcpdf_tcpdf_tcpdf_setcolorarray",
-      "community": 11,
+      "community": 97,
       "norm_label": ".setcolorarray()"
     },
     {
@@ -7880,7 +7880,7 @@
       "source_location": "L3942",
       "_origin": "ast",
       "id": "vendor_tecnickcom_tcpdf_tcpdf_tcpdf_setdrawcolorarray",
-      "community": 11,
+      "community": 97,
       "norm_label": ".setdrawcolorarray()"
     },
     {
@@ -7890,7 +7890,7 @@
       "source_location": "L3956",
       "_origin": "ast",
       "id": "vendor_tecnickcom_tcpdf_tcpdf_tcpdf_setfillcolorarray",
-      "community": 60,
+      "community": 109,
       "norm_label": ".setfillcolorarray()"
     },
     {
@@ -7900,7 +7900,7 @@
       "source_location": "L3969",
       "_origin": "ast",
       "id": "vendor_tecnickcom_tcpdf_tcpdf_tcpdf_settextcolorarray",
-      "community": 11,
+      "community": 97,
       "norm_label": ".settextcolorarray()"
     },
     {
@@ -7910,7 +7910,7 @@
       "source_location": "L3986",
       "_origin": "ast",
       "id": "vendor_tecnickcom_tcpdf_tcpdf_tcpdf_setcolor",
-      "community": 239,
+      "community": 58,
       "norm_label": ".setcolor()"
     },
     {
@@ -7920,7 +7920,7 @@
       "source_location": "L4076",
       "_origin": "ast",
       "id": "vendor_tecnickcom_tcpdf_tcpdf_tcpdf_setdrawcolor",
-      "community": 239,
+      "community": 58,
       "norm_label": ".setdrawcolor()"
     },
     {
@@ -7930,7 +7930,7 @@
       "source_location": "L4093",
       "_origin": "ast",
       "id": "vendor_tecnickcom_tcpdf_tcpdf_tcpdf_setfillcolor",
-      "community": 239,
+      "community": 58,
       "norm_label": ".setfillcolor()"
     },
     {
@@ -7940,7 +7940,7 @@
       "source_location": "L4110",
       "_origin": "ast",
       "id": "vendor_tecnickcom_tcpdf_tcpdf_tcpdf_settextcolor",
-      "community": 239,
+      "community": 58,
       "norm_label": ".settextcolor()"
     },
     {
@@ -8010,7 +8010,7 @@
       "source_location": "L4267",
       "_origin": "ast",
       "id": "vendor_tecnickcom_tcpdf_tcpdf_tcpdf_addfont",
-      "community": 238,
+      "community": 81,
       "norm_label": ".addfont()"
     },
     {
@@ -8020,7 +8020,7 @@
       "source_location": "L4539",
       "_origin": "ast",
       "id": "vendor_tecnickcom_tcpdf_tcpdf_tcpdf_setfont",
-      "community": 238,
+      "community": 11,
       "norm_label": ".setfont()"
     },
     {
@@ -8030,7 +8030,7 @@
       "source_location": "L4567",
       "_origin": "ast",
       "id": "vendor_tecnickcom_tcpdf_tcpdf_tcpdf_setfontsize",
-      "community": 238,
+      "community": 11,
       "norm_label": ".setfontsize()"
     },
     {
@@ -8070,7 +8070,7 @@
       "source_location": "L4680",
       "_origin": "ast",
       "id": "vendor_tecnickcom_tcpdf_tcpdf_tcpdf_getfontdescent",
-      "community": 238,
+      "community": 81,
       "norm_label": ".getfontdescent()"
     },
     {
@@ -8080,7 +8080,7 @@
       "source_location": "L4701",
       "_origin": "ast",
       "id": "vendor_tecnickcom_tcpdf_tcpdf_tcpdf_getfontascent",
-      "community": 238,
+      "community": 81,
       "norm_label": ".getfontascent()"
     },
     {
@@ -8090,7 +8090,7 @@
       "source_location": "L4721",
       "_origin": "ast",
       "id": "vendor_tecnickcom_tcpdf_tcpdf_tcpdf_ischardefined",
-      "community": 238,
+      "community": 81,
       "norm_label": ".ischardefined()"
     },
     {
@@ -8100,7 +8100,7 @@
       "source_location": "L4748",
       "_origin": "ast",
       "id": "vendor_tecnickcom_tcpdf_tcpdf_tcpdf_replacemissingchars",
-      "community": 238,
+      "community": 81,
       "norm_label": ".replacemissingchars()"
     },
     {
@@ -8120,7 +8120,7 @@
       "source_location": "L4796",
       "_origin": "ast",
       "id": "vendor_tecnickcom_tcpdf_tcpdf_tcpdf_addlink",
-      "community": 231,
+      "community": 97,
       "norm_label": ".addlink()"
     },
     {
@@ -8130,7 +8130,7 @@
       "source_location": "L4812",
       "_origin": "ast",
       "id": "vendor_tecnickcom_tcpdf_tcpdf_tcpdf_setlink",
-      "community": 231,
+      "community": 97,
       "norm_label": ".setlink()"
     },
     {
@@ -8140,7 +8140,7 @@
       "source_location": "L4841",
       "_origin": "ast",
       "id": "vendor_tecnickcom_tcpdf_tcpdf_tcpdf_link",
-      "community": 11,
+      "community": 97,
       "norm_label": ".link()"
     },
     {
@@ -8180,7 +8180,7 @@
       "source_location": "L4974",
       "_origin": "ast",
       "id": "vendor_tecnickcom_tcpdf_tcpdf_tcpdf_putembeddedfiles",
-      "community": 232,
+      "community": 62,
       "norm_label": "._putembeddedfiles()"
     },
     {
@@ -8200,7 +8200,7 @@
       "source_location": "L5065",
       "_origin": "ast",
       "id": "vendor_tecnickcom_tcpdf_tcpdf_tcpdf_acceptpagebreak",
-      "community": 108,
+      "community": 109,
       "norm_label": ".acceptpagebreak()"
     },
     {
@@ -8210,7 +8210,7 @@
       "source_location": "L5092",
       "_origin": "ast",
       "id": "vendor_tecnickcom_tcpdf_tcpdf_tcpdf_checkpagebreak",
-      "community": 108,
+      "community": 109,
       "norm_label": ".checkpagebreak()"
     },
     {
@@ -8220,7 +8220,7 @@
       "source_location": "L5146",
       "_origin": "ast",
       "id": "vendor_tecnickcom_tcpdf_tcpdf_tcpdf_cell",
-      "community": 11,
+      "community": 97,
       "norm_label": ".cell()"
     },
     {
@@ -8240,7 +8240,7 @@
       "source_location": "L5684",
       "_origin": "ast",
       "id": "vendor_tecnickcom_tcpdf_tcpdf_tcpdf_replacechar",
-      "community": 238,
+      "community": 81,
       "norm_label": ".replacechar()"
     },
     {
@@ -8250,7 +8250,7 @@
       "source_location": "L5707",
       "_origin": "ast",
       "id": "vendor_tecnickcom_tcpdf_tcpdf_tcpdf_getcellborder",
-      "community": 60,
+      "community": 62,
       "norm_label": ".getcellborder()"
     },
     {
@@ -8300,7 +8300,7 @@
       "source_location": "L6860",
       "_origin": "ast",
       "id": "vendor_tecnickcom_tcpdf_tcpdf_tcpdf_getremainingwidth",
-      "community": 109,
+      "community": 97,
       "norm_label": ".getremainingwidth()"
     },
     {
@@ -8310,7 +8310,7 @@
       "source_location": "L6880",
       "_origin": "ast",
       "id": "vendor_tecnickcom_tcpdf_tcpdf_tcpdf_fitblock",
-      "community": 11,
+      "community": 97,
       "norm_label": ".fitblock()"
     },
     {
@@ -8320,7 +8320,7 @@
       "source_location": "L6977",
       "_origin": "ast",
       "id": "vendor_tecnickcom_tcpdf_tcpdf_tcpdf_image",
-      "community": 11,
+      "community": 97,
       "norm_label": ".image()"
     },
     {
@@ -8350,7 +8350,7 @@
       "source_location": "L7500",
       "_origin": "ast",
       "id": "vendor_tecnickcom_tcpdf_tcpdf_tcpdf_ln",
-      "community": 231,
+      "community": 53,
       "norm_label": ".ln()"
     },
     {
@@ -8360,7 +8360,7 @@
       "source_location": "L7534",
       "_origin": "ast",
       "id": "vendor_tecnickcom_tcpdf_tcpdf_tcpdf_getx",
-      "community": 108,
+      "community": 109,
       "norm_label": ".getx()"
     },
     {
@@ -8380,7 +8380,7 @@
       "source_location": "L7561",
       "_origin": "ast",
       "id": "vendor_tecnickcom_tcpdf_tcpdf_tcpdf_gety",
-      "community": 108,
+      "community": 109,
       "norm_label": ".gety()"
     },
     {
@@ -8390,7 +8390,7 @@
       "source_location": "L7574",
       "_origin": "ast",
       "id": "vendor_tecnickcom_tcpdf_tcpdf_tcpdf_setx",
-      "community": 53,
+      "community": 109,
       "norm_label": ".setx()"
     },
     {
@@ -8400,7 +8400,7 @@
       "source_location": "L7607",
       "_origin": "ast",
       "id": "vendor_tecnickcom_tcpdf_tcpdf_tcpdf_sety",
-      "community": 11,
+      "community": 97,
       "norm_label": ".sety()"
     },
     {
@@ -8450,7 +8450,7 @@
       "source_location": "L7691",
       "_origin": "ast",
       "id": "vendor_tecnickcom_tcpdf_tcpdf_tcpdf_output",
-      "community": 58,
+      "community": 4,
       "norm_label": ".output()"
     },
     {
@@ -8460,7 +8460,7 @@
       "source_location": "L7889",
       "_origin": "ast",
       "id": "vendor_tecnickcom_tcpdf_tcpdf_tcpdf_destroy",
-      "community": 90,
+      "community": 58,
       "norm_label": "._destroy()"
     },
     {
@@ -8480,7 +8480,7 @@
       "source_location": "L7957",
       "_origin": "ast",
       "id": "vendor_tecnickcom_tcpdf_tcpdf_tcpdf_getinternalpagenumberaliases",
-      "community": 240,
+      "community": 109,
       "norm_label": ".getinternalpagenumberaliases()"
     },
     {
@@ -8490,7 +8490,7 @@
       "source_location": "L7978",
       "_origin": "ast",
       "id": "vendor_tecnickcom_tcpdf_tcpdf_tcpdf_getallinternalpagenumberaliases",
-      "community": 240,
+      "community": 62,
       "norm_label": ".getallinternalpagenumberaliases()"
     },
     {
@@ -8500,7 +8500,7 @@
       "source_location": "L7996",
       "_origin": "ast",
       "id": "vendor_tecnickcom_tcpdf_tcpdf_tcpdf_replacerightshiftpagenumaliases",
-      "community": 240,
+      "community": 81,
       "norm_label": ".replacerightshiftpagenumaliases()"
     },
     {
@@ -8520,7 +8520,7 @@
       "source_location": "L8044",
       "_origin": "ast",
       "id": "vendor_tecnickcom_tcpdf_tcpdf_tcpdf_putpages",
-      "community": 240,
+      "community": 62,
       "norm_label": "._putpages()"
     },
     {
@@ -8530,7 +8530,7 @@
       "source_location": "L8206",
       "_origin": "ast",
       "id": "vendor_tecnickcom_tcpdf_tcpdf_tcpdf_getannotsrefs",
-      "community": 240,
+      "community": 62,
       "norm_label": "._getannotsrefs()"
     },
     {
@@ -8540,7 +8540,7 @@
       "source_location": "L8250",
       "_origin": "ast",
       "id": "vendor_tecnickcom_tcpdf_tcpdf_tcpdf_putannotsobjs",
-      "community": 232,
+      "community": 62,
       "norm_label": "._putannotsobjs()"
     },
     {
@@ -8550,7 +8550,7 @@
       "source_location": "L8900",
       "_origin": "ast",
       "id": "vendor_tecnickcom_tcpdf_tcpdf_tcpdf_putapxobject",
-      "community": 232,
+      "community": 62,
       "norm_label": "._putapxobject()"
     },
     {
@@ -8570,7 +8570,7 @@
       "source_location": "L9079",
       "_origin": "ast",
       "id": "vendor_tecnickcom_tcpdf_tcpdf_tcpdf_puttruetypeunicode",
-      "community": 232,
+      "community": 62,
       "norm_label": "._puttruetypeunicode()"
     },
     {
@@ -8580,7 +8580,7 @@
       "source_location": "L9183",
       "_origin": "ast",
       "id": "vendor_tecnickcom_tcpdf_tcpdf_tcpdf_putcidfont0",
-      "community": 232,
+      "community": 62,
       "norm_label": "._putcidfont0()"
     },
     {
@@ -8590,7 +8590,7 @@
       "source_location": "L9253",
       "_origin": "ast",
       "id": "vendor_tecnickcom_tcpdf_tcpdf_tcpdf_putimages",
-      "community": 232,
+      "community": 62,
       "norm_label": "._putimages()"
     },
     {
@@ -8760,7 +8760,7 @@
       "source_location": "L10266",
       "_origin": "ast",
       "id": "vendor_tecnickcom_tcpdf_tcpdf_tcpdf_getobj",
-      "community": 232,
+      "community": 62,
       "norm_label": "._getobj()"
     },
     {
@@ -8830,7 +8830,7 @@
       "source_location": "L10360",
       "_origin": "ast",
       "id": "vendor_tecnickcom_tcpdf_tcpdf_tcpdf_datastring",
-      "community": 232,
+      "community": 62,
       "norm_label": "._datastring()"
     },
     {
@@ -8880,7 +8880,7 @@
       "source_location": "L10422",
       "_origin": "ast",
       "id": "vendor_tecnickcom_tcpdf_tcpdf_tcpdf_datestring",
-      "community": 240,
+      "community": 62,
       "norm_label": "._datestring()"
     },
     {
@@ -8900,7 +8900,7 @@
       "source_location": "L10452",
       "_origin": "ast",
       "id": "vendor_tecnickcom_tcpdf_tcpdf_tcpdf_getrawstream",
-      "community": 232,
+      "community": 62,
       "norm_label": "._getrawstream()"
     },
     {
@@ -8980,7 +8980,7 @@
       "source_location": "L10570",
       "_origin": "ast",
       "id": "vendor_tecnickcom_tcpdf_tcpdf_tcpdf_addhtmllink",
-      "community": 231,
+      "community": 97,
       "norm_label": ".addhtmllink()"
     },
     {
@@ -9000,7 +9000,7 @@
       "source_location": "L10623",
       "_origin": "ast",
       "id": "vendor_tecnickcom_tcpdf_tcpdf_tcpdf_unhtmlentities",
-      "community": 81,
+      "community": 62,
       "norm_label": ".unhtmlentities()"
     },
     {
@@ -9110,7 +9110,7 @@
       "source_location": "L11141",
       "_origin": "ast",
       "id": "vendor_tecnickcom_tcpdf_tcpdf_tcpdf_starttransform",
-      "community": 97,
+      "community": 94,
       "norm_label": ".starttransform()"
     },
     {
@@ -9120,7 +9120,7 @@
       "source_location": "L11164",
       "_origin": "ast",
       "id": "vendor_tecnickcom_tcpdf_tcpdf_tcpdf_stoptransform",
-      "community": 11,
+      "community": 94,
       "norm_label": ".stoptransform()"
     },
     {
@@ -9290,7 +9290,7 @@
       "source_location": "L11475",
       "_origin": "ast",
       "id": "vendor_tecnickcom_tcpdf_tcpdf_tcpdf_setlinewidth",
-      "community": 231,
+      "community": 62,
       "norm_label": ".setlinewidth()"
     },
     {
@@ -9300,7 +9300,7 @@
       "source_location": "L11491",
       "_origin": "ast",
       "id": "vendor_tecnickcom_tcpdf_tcpdf_tcpdf_getlinewidth",
-      "community": 231,
+      "community": 97,
       "norm_label": ".getlinewidth()"
     },
     {
@@ -9310,7 +9310,7 @@
       "source_location": "L11518",
       "_origin": "ast",
       "id": "vendor_tecnickcom_tcpdf_tcpdf_tcpdf_setlinestyle",
-      "community": 60,
+      "community": 62,
       "norm_label": ".setlinestyle()"
     },
     {
@@ -9320,7 +9320,7 @@
       "source_location": "L11580",
       "_origin": "ast",
       "id": "vendor_tecnickcom_tcpdf_tcpdf_tcpdf_outpoint",
-      "community": 60,
+      "community": 62,
       "norm_label": "._outpoint()"
     },
     {
@@ -9330,7 +9330,7 @@
       "source_location": "L11594",
       "_origin": "ast",
       "id": "vendor_tecnickcom_tcpdf_tcpdf_tcpdf_outline",
-      "community": 60,
+      "community": 62,
       "norm_label": "._outline()"
     },
     {
@@ -9340,7 +9340,7 @@
       "source_location": "L11610",
       "_origin": "ast",
       "id": "vendor_tecnickcom_tcpdf_tcpdf_tcpdf_outrect",
-      "community": 60,
+      "community": 62,
       "norm_label": "._outrect()"
     },
     {
@@ -9350,7 +9350,7 @@
       "source_location": "L11628",
       "_origin": "ast",
       "id": "vendor_tecnickcom_tcpdf_tcpdf_tcpdf_outcurve",
-      "community": 60,
+      "community": 62,
       "norm_label": "._outcurve()"
     },
     {
@@ -9380,7 +9380,7 @@
       "source_location": "L11677",
       "_origin": "ast",
       "id": "vendor_tecnickcom_tcpdf_tcpdf_tcpdf_line",
-      "community": 60,
+      "community": 62,
       "norm_label": ".line()"
     },
     {
@@ -9390,7 +9390,7 @@
       "source_location": "L11707",
       "_origin": "ast",
       "id": "vendor_tecnickcom_tcpdf_tcpdf_tcpdf_rect",
-      "community": 60,
+      "community": 62,
       "norm_label": ".rect()"
     },
     {
@@ -9400,7 +9400,7 @@
       "source_location": "L11778",
       "_origin": "ast",
       "id": "vendor_tecnickcom_tcpdf_tcpdf_tcpdf_curve",
-      "community": 60,
+      "community": 62,
       "norm_label": ".curve()"
     },
     {
@@ -9410,7 +9410,7 @@
       "source_location": "L11808",
       "_origin": "ast",
       "id": "vendor_tecnickcom_tcpdf_tcpdf_tcpdf_polycurve",
-      "community": 60,
+      "community": 62,
       "norm_label": ".polycurve()"
     },
     {
@@ -9420,7 +9420,7 @@
       "source_location": "L11848",
       "_origin": "ast",
       "id": "vendor_tecnickcom_tcpdf_tcpdf_tcpdf_ellipse",
-      "community": 60,
+      "community": 62,
       "norm_label": ".ellipse()"
     },
     {
@@ -9430,7 +9430,7 @@
       "source_location": "L11889",
       "_origin": "ast",
       "id": "vendor_tecnickcom_tcpdf_tcpdf_tcpdf_outellipticalarc",
-      "community": 60,
+      "community": 62,
       "norm_label": "._outellipticalarc()"
     },
     {
@@ -9440,7 +9440,7 @@
       "source_location": "L12020",
       "_origin": "ast",
       "id": "vendor_tecnickcom_tcpdf_tcpdf_tcpdf_circle",
-      "community": 60,
+      "community": 62,
       "norm_label": ".circle()"
     },
     {
@@ -9450,7 +9450,7 @@
       "source_location": "L12038",
       "_origin": "ast",
       "id": "vendor_tecnickcom_tcpdf_tcpdf_tcpdf_polyline",
-      "community": 60,
+      "community": 62,
       "norm_label": ".polyline()"
     },
     {
@@ -9460,7 +9460,7 @@
       "source_location": "L12057",
       "_origin": "ast",
       "id": "vendor_tecnickcom_tcpdf_tcpdf_tcpdf_polygon",
-      "community": 60,
+      "community": 62,
       "norm_label": ".polygon()"
     },
     {
@@ -9470,7 +9470,7 @@
       "source_location": "L12158",
       "_origin": "ast",
       "id": "vendor_tecnickcom_tcpdf_tcpdf_tcpdf_regularpolygon",
-      "community": 60,
+      "community": 62,
       "norm_label": ".regularpolygon()"
     },
     {
@@ -9480,7 +9480,7 @@
       "source_location": "L12206",
       "_origin": "ast",
       "id": "vendor_tecnickcom_tcpdf_tcpdf_tcpdf_starpolygon",
-      "community": 60,
+      "community": 62,
       "norm_label": ".starpolygon()"
     },
     {
@@ -9490,7 +9490,7 @@
       "source_location": "L12248",
       "_origin": "ast",
       "id": "vendor_tecnickcom_tcpdf_tcpdf_tcpdf_roundedrect",
-      "community": 60,
+      "community": 62,
       "norm_label": ".roundedrect()"
     },
     {
@@ -9500,7 +9500,7 @@
       "source_location": "L12267",
       "_origin": "ast",
       "id": "vendor_tecnickcom_tcpdf_tcpdf_tcpdf_roundedrectxy",
-      "community": 60,
+      "community": 62,
       "norm_label": ".roundedrectxy()"
     },
     {
@@ -9510,7 +9510,7 @@
       "source_location": "L12337",
       "_origin": "ast",
       "id": "vendor_tecnickcom_tcpdf_tcpdf_tcpdf_arrow",
-      "community": 60,
+      "community": 62,
       "norm_label": ".arrow()"
     },
     {
@@ -9520,7 +9520,7 @@
       "source_location": "L12402",
       "_origin": "ast",
       "id": "vendor_tecnickcom_tcpdf_tcpdf_tcpdf_setdestination",
-      "community": 108,
+      "community": 109,
       "norm_label": ".setdestination()"
     },
     {
@@ -9550,7 +9550,7 @@
       "source_location": "L12481",
       "_origin": "ast",
       "id": "vendor_tecnickcom_tcpdf_tcpdf_tcpdf_setbookmark",
-      "community": 108,
+      "community": 109,
       "norm_label": ".setbookmark()"
     },
     {
@@ -9560,7 +9560,7 @@
       "source_location": "L12498",
       "_origin": "ast",
       "id": "vendor_tecnickcom_tcpdf_tcpdf_tcpdf_bookmark",
-      "community": 108,
+      "community": 109,
       "norm_label": ".bookmark()"
     },
     {
@@ -9780,7 +9780,7 @@
       "source_location": "L13742",
       "_origin": "ast",
       "id": "vendor_tecnickcom_tcpdf_tcpdf_tcpdf_applytsa",
-      "community": 58,
+      "community": 4,
       "norm_label": ".applytsa()"
     },
     {
@@ -9860,7 +9860,7 @@
       "source_location": "L13865",
       "_origin": "ast",
       "id": "vendor_tecnickcom_tcpdf_tcpdf_tcpdf_getgrouppageno",
-      "community": 58,
+      "community": 111,
       "norm_label": ".getgrouppageno()"
     },
     {
@@ -9870,7 +9870,7 @@
       "source_location": "L13875",
       "_origin": "ast",
       "id": "vendor_tecnickcom_tcpdf_tcpdf_tcpdf_getgrouppagenoformatted",
-      "community": 58,
+      "community": 111,
       "norm_label": ".getgrouppagenoformatted()"
     },
     {
@@ -9880,7 +9880,7 @@
       "source_location": "L13885",
       "_origin": "ast",
       "id": "vendor_tecnickcom_tcpdf_tcpdf_tcpdf_pagenoformatted",
-      "community": 108,
+      "community": 59,
       "norm_label": ".pagenoformatted()"
     },
     {
@@ -10060,7 +10060,7 @@
       "source_location": "L14229",
       "_origin": "ast",
       "id": "vendor_tecnickcom_tcpdf_tcpdf_tcpdf_colorregistrationbar",
-      "community": 226,
+      "community": 62,
       "norm_label": ".colorregistrationbar()"
     },
     {
@@ -10070,7 +10070,7 @@
       "source_location": "L14369",
       "_origin": "ast",
       "id": "vendor_tecnickcom_tcpdf_tcpdf_tcpdf_cropmark",
-      "community": 60,
+      "community": 62,
       "norm_label": ".cropmark()"
     },
     {
@@ -10080,7 +10080,7 @@
       "source_location": "L14440",
       "_origin": "ast",
       "id": "vendor_tecnickcom_tcpdf_tcpdf_tcpdf_registrationmark",
-      "community": 60,
+      "community": 62,
       "norm_label": ".registrationmark()"
     },
     {
@@ -10090,7 +10090,7 @@
       "source_location": "L14467",
       "_origin": "ast",
       "id": "vendor_tecnickcom_tcpdf_tcpdf_tcpdf_registrationmarkcmyk",
-      "community": 60,
+      "community": 62,
       "norm_label": ".registrationmarkcmyk()"
     },
     {
@@ -10100,7 +10100,7 @@
       "source_location": "L14511",
       "_origin": "ast",
       "id": "vendor_tecnickcom_tcpdf_tcpdf_tcpdf_lineargradient",
-      "community": 226,
+      "community": 62,
       "norm_label": ".lineargradient()"
     },
     {
@@ -10110,7 +10110,7 @@
       "source_location": "L14529",
       "_origin": "ast",
       "id": "vendor_tecnickcom_tcpdf_tcpdf_tcpdf_radialgradient",
-      "community": 226,
+      "community": 62,
       "norm_label": ".radialgradient()"
     },
     {
@@ -10120,7 +10120,7 @@
       "source_location": "L14552",
       "_origin": "ast",
       "id": "vendor_tecnickcom_tcpdf_tcpdf_tcpdf_coonspatchmesh",
-      "community": 226,
+      "community": 62,
       "norm_label": ".coonspatchmesh()"
     },
     {
@@ -10130,7 +10130,7 @@
       "source_location": "L14644",
       "_origin": "ast",
       "id": "vendor_tecnickcom_tcpdf_tcpdf_tcpdf_clip",
-      "community": 226,
+      "community": 62,
       "norm_label": ".clip()"
     },
     {
@@ -10140,7 +10140,7 @@
       "source_location": "L14671",
       "_origin": "ast",
       "id": "vendor_tecnickcom_tcpdf_tcpdf_tcpdf_gradient",
-      "community": 226,
+      "community": 62,
       "norm_label": ".gradient()"
     },
     {
@@ -10160,7 +10160,7 @@
       "source_location": "L14970",
       "_origin": "ast",
       "id": "vendor_tecnickcom_tcpdf_tcpdf_tcpdf_piesector",
-      "community": 60,
+      "community": 62,
       "norm_label": ".piesector()"
     },
     {
@@ -10170,7 +10170,7 @@
       "source_location": "L14991",
       "_origin": "ast",
       "id": "vendor_tecnickcom_tcpdf_tcpdf_tcpdf_piesectorxy",
-      "community": 60,
+      "community": 62,
       "norm_label": ".piesectorxy()"
     },
     {
@@ -10180,7 +10180,7 @@
       "source_location": "L15035",
       "_origin": "ast",
       "id": "vendor_tecnickcom_tcpdf_tcpdf_tcpdf_imageeps",
-      "community": 11,
+      "community": 97,
       "norm_label": ".imageeps()"
     },
     {
@@ -10210,7 +10210,7 @@
       "source_location": "L15396",
       "_origin": "ast",
       "id": "vendor_tecnickcom_tcpdf_tcpdf_tcpdf_write1dbarcode",
-      "community": 11,
+      "community": 97,
       "norm_label": ".write1dbarcode()"
     },
     {
@@ -10220,7 +10220,7 @@
       "source_location": "L15714",
       "_origin": "ast",
       "id": "vendor_tecnickcom_tcpdf_tcpdf_tcpdf_write2dbarcode",
-      "community": 11,
+      "community": 97,
       "norm_label": ".write2dbarcode()"
     },
     {
@@ -10440,7 +10440,7 @@
       "source_location": "L17330",
       "_origin": "ast",
       "id": "vendor_tecnickcom_tcpdf_tcpdf_tcpdf_allowedtcpdftag",
-      "community": 231,
+      "community": 97,
       "norm_label": ".allowedtcpdftag()"
     },
     {
@@ -10470,7 +10470,7 @@
       "source_location": "L18936",
       "_origin": "ast",
       "id": "vendor_tecnickcom_tcpdf_tcpdf_tcpdf_isrelativepath",
-      "community": 231,
+      "community": 94,
       "norm_label": ".isrelativepath()"
     },
     {
@@ -10480,7 +10480,7 @@
       "source_location": "L18947",
       "_origin": "ast",
       "id": "vendor_tecnickcom_tcpdf_tcpdf_tcpdf_hasextforbiddenprotocol",
-      "community": 231,
+      "community": 94,
       "norm_label": ".hasextforbiddenprotocol()"
     },
     {
@@ -10490,7 +10490,7 @@
       "source_location": "L18960",
       "_origin": "ast",
       "id": "vendor_tecnickcom_tcpdf_tcpdf_tcpdf_openhtmltaghandler",
-      "community": 231,
+      "community": 97,
       "norm_label": ".openhtmltaghandler()"
     },
     {
@@ -10500,7 +10500,7 @@
       "source_location": "L19689",
       "_origin": "ast",
       "id": "vendor_tecnickcom_tcpdf_tcpdf_tcpdf_closehtmltaghandler",
-      "community": 108,
+      "community": 109,
       "norm_label": ".closehtmltaghandler()"
     },
     {
@@ -10510,7 +10510,7 @@
       "source_location": "L20236",
       "_origin": "ast",
       "id": "vendor_tecnickcom_tcpdf_tcpdf_tcpdf_addhtmlvertspace",
-      "community": 231,
+      "community": 53,
       "norm_label": ".addhtmlvertspace()"
     },
     {
@@ -10520,7 +10520,7 @@
       "source_location": "L20262",
       "_origin": "ast",
       "id": "vendor_tecnickcom_tcpdf_tcpdf_tcpdf_getborderstartposition",
-      "community": 231,
+      "community": 97,
       "norm_label": ".getborderstartposition()"
     },
     {
@@ -10530,7 +10530,7 @@
       "source_location": "L20278",
       "_origin": "ast",
       "id": "vendor_tecnickcom_tcpdf_tcpdf_tcpdf_drawhtmltagborder",
-      "community": 108,
+      "community": 109,
       "norm_label": ".drawhtmltagborder()"
     },
     {
@@ -10690,7 +10690,7 @@
       "source_location": "L21040",
       "_origin": "ast",
       "id": "vendor_tecnickcom_tcpdf_tcpdf_tcpdf_getbuffer",
-      "community": 58,
+      "community": 4,
       "norm_label": ".getbuffer()"
     },
     {
@@ -10700,7 +10700,7 @@
       "source_location": "L21052",
       "_origin": "ast",
       "id": "vendor_tecnickcom_tcpdf_tcpdf_tcpdf_setpagebuffer",
-      "community": 108,
+      "community": 109,
       "norm_label": ".setpagebuffer()"
     },
     {
@@ -10710,7 +10710,7 @@
       "source_location": "L21072",
       "_origin": "ast",
       "id": "vendor_tecnickcom_tcpdf_tcpdf_tcpdf_getpagebuffer",
-      "community": 108,
+      "community": 109,
       "norm_label": ".getpagebuffer()"
     },
     {
@@ -10740,7 +10740,7 @@
       "source_location": "L21119",
       "_origin": "ast",
       "id": "vendor_tecnickcom_tcpdf_tcpdf_tcpdf_getimagebuffer",
-      "community": 232,
+      "community": 62,
       "norm_label": ".getimagebuffer()"
     },
     {
@@ -10750,7 +10750,7 @@
       "source_location": "L21133",
       "_origin": "ast",
       "id": "vendor_tecnickcom_tcpdf_tcpdf_tcpdf_setfontbuffer",
-      "community": 238,
+      "community": 81,
       "norm_label": ".setfontbuffer()"
     },
     {
@@ -10760,7 +10760,7 @@
       "source_location": "L21152",
       "_origin": "ast",
       "id": "vendor_tecnickcom_tcpdf_tcpdf_tcpdf_setfontsubbuffer",
-      "community": 238,
+      "community": 81,
       "norm_label": ".setfontsubbuffer()"
     },
     {
@@ -10770,7 +10770,7 @@
       "source_location": "L21166",
       "_origin": "ast",
       "id": "vendor_tecnickcom_tcpdf_tcpdf_tcpdf_getfontbuffer",
-      "community": 238,
+      "community": 81,
       "norm_label": ".getfontbuffer()"
     },
     {
@@ -10780,7 +10780,7 @@
       "source_location": "L21181",
       "_origin": "ast",
       "id": "vendor_tecnickcom_tcpdf_tcpdf_tcpdf_movepage",
-      "community": 108,
+      "community": 109,
       "norm_label": ".movepage()"
     },
     {
@@ -10790,7 +10790,7 @@
       "source_location": "L21352",
       "_origin": "ast",
       "id": "vendor_tecnickcom_tcpdf_tcpdf_tcpdf_deletepage",
-      "community": 108,
+      "community": 109,
       "norm_label": ".deletepage()"
     },
     {
@@ -10800,7 +10800,7 @@
       "source_location": "L21542",
       "_origin": "ast",
       "id": "vendor_tecnickcom_tcpdf_tcpdf_tcpdf_copypage",
-      "community": 108,
+      "community": 109,
       "norm_label": ".copypage()"
     },
     {
@@ -10810,7 +10810,7 @@
       "source_location": "L21619",
       "_origin": "ast",
       "id": "vendor_tecnickcom_tcpdf_tcpdf_tcpdf_addtoc",
-      "community": 108,
+      "community": 109,
       "norm_label": ".addtoc()"
     },
     {
@@ -10820,7 +10820,7 @@
       "source_location": "L21829",
       "_origin": "ast",
       "id": "vendor_tecnickcom_tcpdf_tcpdf_tcpdf_addhtmltoc",
-      "community": 108,
+      "community": 109,
       "norm_label": ".addhtmltoc()"
     },
     {
@@ -10830,7 +10830,7 @@
       "source_location": "L21962",
       "_origin": "ast",
       "id": "vendor_tecnickcom_tcpdf_tcpdf_tcpdf_starttransaction",
-      "community": 90,
+      "community": 58,
       "norm_label": ".starttransaction()"
     },
     {
@@ -10840,7 +10840,7 @@
       "source_location": "L21979",
       "_origin": "ast",
       "id": "vendor_tecnickcom_tcpdf_tcpdf_tcpdf_committransaction",
-      "community": 90,
+      "community": 58,
       "norm_label": ".committransaction()"
     },
     {
@@ -10850,7 +10850,7 @@
       "source_location": "L21995",
       "_origin": "ast",
       "id": "vendor_tecnickcom_tcpdf_tcpdf_tcpdf_rollbacktransaction",
-      "community": 90,
+      "community": 58,
       "norm_label": ".rollbacktransaction()"
     },
     {
@@ -10860,7 +10860,7 @@
       "source_location": "L22025",
       "_origin": "ast",
       "id": "vendor_tecnickcom_tcpdf_tcpdf_tcpdf_setequalcolumns",
-      "community": 108,
+      "community": 11,
       "norm_label": ".setequalcolumns()"
     },
     {
@@ -10870,7 +10870,7 @@
       "source_location": "L22057",
       "_origin": "ast",
       "id": "vendor_tecnickcom_tcpdf_tcpdf_tcpdf_resetcolumns",
-      "community": 108,
+      "community": 11,
       "norm_label": ".resetcolumns()"
     },
     {
@@ -10880,7 +10880,7 @@
       "source_location": "L22070",
       "_origin": "ast",
       "id": "vendor_tecnickcom_tcpdf_tcpdf_tcpdf_setcolumnsarray",
-      "community": 108,
+      "community": 109,
       "norm_label": ".setcolumnsarray()"
     },
     {
@@ -10890,7 +10890,7 @@
       "source_location": "L22084",
       "_origin": "ast",
       "id": "vendor_tecnickcom_tcpdf_tcpdf_tcpdf_selectcolumn",
-      "community": 108,
+      "community": 109,
       "norm_label": ".selectcolumn()"
     },
     {
@@ -11170,7 +11170,7 @@
       "source_location": "L23025",
       "_origin": "ast",
       "id": "vendor_tecnickcom_tcpdf_tcpdf_tcpdf_imagesvg",
-      "community": 11,
+      "community": 97,
       "norm_label": ".imagesvg()"
     },
     {
@@ -11180,7 +11180,7 @@
       "source_location": "L23348",
       "_origin": "ast",
       "id": "vendor_tecnickcom_tcpdf_tcpdf_tcpdf_convertsvgtmatrix",
-      "community": 103,
+      "community": 94,
       "norm_label": ".convertsvgtmatrix()"
     },
     {
@@ -11190,7 +11190,7 @@
       "source_location": "L23368",
       "_origin": "ast",
       "id": "vendor_tecnickcom_tcpdf_tcpdf_tcpdf_svgtransform",
-      "community": 103,
+      "community": 94,
       "norm_label": ".svgtransform()"
     },
     {
@@ -11210,7 +11210,7 @@
       "source_location": "L23684",
       "_origin": "ast",
       "id": "vendor_tecnickcom_tcpdf_tcpdf_tcpdf_svgpath",
-      "community": 60,
+      "community": 62,
       "norm_label": ".svgpath()"
     },
     {
@@ -11220,7 +11220,7 @@
       "source_location": "L24047",
       "_origin": "ast",
       "id": "vendor_tecnickcom_tcpdf_tcpdf_tcpdf_removetagnamespace",
-      "community": 60,
+      "community": 94,
       "norm_label": ".removetagnamespace()"
     },
     {
@@ -11230,7 +11230,7 @@
       "source_location": "L24065",
       "_origin": "ast",
       "id": "vendor_tecnickcom_tcpdf_tcpdf_tcpdf_startsvgelementhandler",
-      "community": 60,
+      "community": 94,
       "norm_label": ".startsvgelementhandler()"
     },
     {
@@ -11240,7 +11240,7 @@
       "source_location": "L24738",
       "_origin": "ast",
       "id": "vendor_tecnickcom_tcpdf_tcpdf_tcpdf_endsvgelementhandler",
-      "community": 11,
+      "community": 94,
       "norm_label": ".endsvgelementhandler()"
     },
     {
@@ -11260,7 +11260,7 @@
       "source_location": "L24856",
       "_origin": "ast",
       "id": "vendor_tecnickcom_tcpdf_tcpdf_tcpdf_getcachedfilecontents",
-      "community": 11,
+      "community": 97,
       "norm_label": ".getcachedfilecontents()"
     },
     {
@@ -11270,7 +11270,7 @@
       "source_location": "L24869",
       "_origin": "ast",
       "id": "vendor_tecnickcom_tcpdf_tcpdf_tcpdf_fileexists",
-      "community": 232,
+      "community": 59,
       "norm_label": ".fileexists()"
     },
     {
@@ -11280,7 +11280,7 @@
       "source_location": "L24883",
       "_origin": "ast",
       "id": "vendor_tecnickcom_tcpdf_tcpdf_tcpdf_unlink",
-      "community": 90,
+      "community": 58,
       "norm_label": "._unlink()"
     },
     {
@@ -11890,7 +11890,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "views_admin_seo_dashboard",
-      "community": 111,
+      "community": 0,
       "norm_label": "admin_seo_dashboard.php"
     },
     {
@@ -13830,7 +13830,7 @@
       "source_location": "L240",
       "_origin": "ast",
       "id": "todoui_guest_registration_ui_spec_7_visual_design_tokens",
-      "community": 92,
+      "community": 108,
       "norm_label": "7. visual design tokens"
     },
     {
@@ -13840,7 +13840,7 @@
       "source_location": "L259",
       "_origin": "ast",
       "id": "todoui_guest_registration_ui_spec_typography_scale",
-      "community": 92,
+      "community": 108,
       "norm_label": "typography scale"
     },
     {
@@ -13850,7 +13850,7 @@
       "source_location": "L267",
       "_origin": "ast",
       "id": "todoui_guest_registration_ui_spec_color_usage",
-      "community": 92,
+      "community": 108,
       "norm_label": "color usage"
     },
     {
@@ -14784,7 +14784,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "assets/seo-dashboard.js",
-      "source_location": "L170",
+      "source_location": "L172",
       "weight": 1.0,
       "source": "assets_seo_dashboard",
       "target": "assets_seo_dashboard_load",
@@ -14922,7 +14922,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "assets/seo-dashboard.js",
-      "source_location": "L164",
+      "source_location": "L166",
       "weight": 1.0,
       "source": "assets_seo_dashboard_render",
       "target": "assets_seo_dashboard_renderviprows",
@@ -14933,7 +14933,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "assets/seo-dashboard.js",
-      "source_location": "L165",
+      "source_location": "L167",
       "weight": 1.0,
       "source": "assets_seo_dashboard_render",
       "target": "assets_seo_dashboard_renderfeed",
@@ -14944,7 +14944,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "assets/seo-dashboard.js",
-      "source_location": "L167",
+      "source_location": "L169",
       "weight": 1.0,
       "source": "assets_seo_dashboard_render",
       "target": "assets_seo_dashboard_renderagencies",
@@ -14955,7 +14955,7 @@
       "context": "argument",
       "confidence": "INFERRED",
       "source_file": "assets/seo-dashboard.js",
-      "source_location": "L176",
+      "source_location": "L178",
       "weight": 1.0,
       "source": "assets_seo_dashboard_load",
       "target": "assets_seo_dashboard_render",
@@ -15087,7 +15087,7 @@
       "confidence": "INFERRED",
       "confidence_score": 0.8,
       "source_file": "src/Controllers/AdminAttendanceController.php",
-      "source_location": "L325",
+      "source_location": "L327",
       "weight": 1.0,
       "source": "src_controllers_adminattendancecontroller_adminattendancecontroller_clearabsent",
       "target": "config_bootstrap_csrf_check"
@@ -15098,7 +15098,7 @@
       "confidence": "INFERRED",
       "confidence_score": 0.8,
       "source_file": "src/Controllers/AdminAttendanceController.php",
-      "source_location": "L380",
+      "source_location": "L382",
       "weight": 1.0,
       "source": "src_controllers_adminattendancecontroller_adminattendancecontroller_manualattendance",
       "target": "config_bootstrap_csrf_check"
@@ -15109,7 +15109,7 @@
       "confidence": "INFERRED",
       "confidence_score": 0.8,
       "source_file": "src/Controllers/AdminAttendanceController.php",
-      "source_location": "L270",
+      "source_location": "L272",
       "weight": 1.0,
       "source": "src_controllers_adminattendancecontroller_adminattendancecontroller_markabsent",
       "target": "config_bootstrap_csrf_check"
@@ -15164,7 +15164,7 @@
       "confidence": "INFERRED",
       "confidence_score": 0.8,
       "source_file": "src/Controllers/AdminRegistrantsController.php",
-      "source_location": "L91",
+      "source_location": "L95",
       "weight": 1.0,
       "source": "src_controllers_adminregistrantscontroller_adminregistrantscontroller_generateqrbatch",
       "target": "config_bootstrap_csrf_check"
@@ -15175,7 +15175,7 @@
       "confidence": "INFERRED",
       "confidence_score": 0.8,
       "source_file": "src/Controllers/AdminRegistrantsController.php",
-      "source_location": "L125",
+      "source_location": "L129",
       "weight": 1.0,
       "source": "src_controllers_adminregistrantscontroller_adminregistrantscontroller_sendqremail",
       "target": "config_bootstrap_csrf_check"
@@ -15186,7 +15186,7 @@
       "confidence": "INFERRED",
       "confidence_score": 0.8,
       "source_file": "src/Controllers/AdminRegistrantsController.php",
-      "source_location": "L57",
+      "source_location": "L61",
       "weight": 1.0,
       "source": "src_controllers_adminregistrantscontroller_adminregistrantscontroller_togglevip",
       "target": "config_bootstrap_csrf_check"
@@ -15646,7 +15646,7 @@
       "confidence": "INFERRED",
       "confidence_score": 0.8,
       "source_file": "src/Controllers/AdminAttendanceController.php",
-      "source_location": "L331",
+      "source_location": "L333",
       "weight": 1.0,
       "source": "src_controllers_adminattendancecontroller_adminattendancecontroller_clearabsent",
       "target": "scripts_test_api_attendance_file_get_contents"
@@ -15657,7 +15657,7 @@
       "confidence": "INFERRED",
       "confidence_score": 0.8,
       "source_file": "src/Controllers/AdminAttendanceController.php",
-      "source_location": "L386",
+      "source_location": "L388",
       "weight": 1.0,
       "source": "src_controllers_adminattendancecontroller_adminattendancecontroller_manualattendance",
       "target": "scripts_test_api_attendance_file_get_contents"
@@ -15668,7 +15668,7 @@
       "confidence": "INFERRED",
       "confidence_score": 0.8,
       "source_file": "src/Controllers/AdminAttendanceController.php",
-      "source_location": "L276",
+      "source_location": "L278",
       "weight": 1.0,
       "source": "src_controllers_adminattendancecontroller_adminattendancecontroller_markabsent",
       "target": "scripts_test_api_attendance_file_get_contents"
@@ -16046,7 +16046,7 @@
       "relation": "method",
       "confidence": "EXTRACTED",
       "source_file": "src/Controllers/AdminAttendanceController.php",
-      "source_location": "L319",
+      "source_location": "L321",
       "weight": 1.0,
       "source": "src_controllers_adminattendancecontroller_adminattendancecontroller",
       "target": "src_controllers_adminattendancecontroller_adminattendancecontroller_clearabsent",
@@ -16056,7 +16056,7 @@
       "relation": "method",
       "confidence": "EXTRACTED",
       "source_file": "src/Controllers/AdminAttendanceController.php",
-      "source_location": "L176",
+      "source_location": "L178",
       "weight": 1.0,
       "source": "src_controllers_adminattendancecontroller_adminattendancecontroller",
       "target": "src_controllers_adminattendancecontroller_adminattendancecontroller_computekpis",
@@ -16066,7 +16066,7 @@
       "relation": "method",
       "confidence": "EXTRACTED",
       "source_file": "src/Controllers/AdminAttendanceController.php",
-      "source_location": "L360",
+      "source_location": "L362",
       "weight": 1.0,
       "source": "src_controllers_adminattendancecontroller_adminattendancecontroller",
       "target": "src_controllers_adminattendancecontroller_adminattendancecontroller_findattendancerow",
@@ -16076,7 +16076,7 @@
       "relation": "method",
       "confidence": "EXTRACTED",
       "source_file": "src/Controllers/AdminAttendanceController.php",
-      "source_location": "L117",
+      "source_location": "L119",
       "weight": 1.0,
       "source": "src_controllers_adminattendancecontroller_adminattendancecontroller",
       "target": "src_controllers_adminattendancecontroller_adminattendancecontroller_getactiveeventid",
@@ -16086,7 +16086,7 @@
       "relation": "method",
       "confidence": "EXTRACTED",
       "source_file": "src/Controllers/AdminAttendanceController.php",
-      "source_location": "L153",
+      "source_location": "L155",
       "weight": 1.0,
       "source": "src_controllers_adminattendancecontroller_adminattendancecontroller",
       "target": "src_controllers_adminattendancecontroller_adminattendancecontroller_getgueststatusfordate",
@@ -16096,7 +16096,7 @@
       "relation": "method",
       "confidence": "EXTRACTED",
       "source_file": "src/Controllers/AdminAttendanceController.php",
-      "source_location": "L96",
+      "source_location": "L98",
       "weight": 1.0,
       "source": "src_controllers_adminattendancecontroller_adminattendancecontroller",
       "target": "src_controllers_adminattendancecontroller_adminattendancecontroller_kpijson",
@@ -16106,7 +16106,7 @@
       "relation": "method",
       "confidence": "EXTRACTED",
       "source_file": "src/Controllers/AdminAttendanceController.php",
-      "source_location": "L105",
+      "source_location": "L107",
       "weight": 1.0,
       "source": "src_controllers_adminattendancecontroller_adminattendancecontroller",
       "target": "src_controllers_adminattendancecontroller_adminattendancecontroller_kpistream",
@@ -16126,7 +16126,7 @@
       "relation": "method",
       "confidence": "EXTRACTED",
       "source_file": "src/Controllers/AdminAttendanceController.php",
-      "source_location": "L374",
+      "source_location": "L376",
       "weight": 1.0,
       "source": "src_controllers_adminattendancecontroller_adminattendancecontroller",
       "target": "src_controllers_adminattendancecontroller_adminattendancecontroller_manualattendance",
@@ -16136,7 +16136,7 @@
       "relation": "method",
       "confidence": "EXTRACTED",
       "source_file": "src/Controllers/AdminAttendanceController.php",
-      "source_location": "L264",
+      "source_location": "L266",
       "weight": 1.0,
       "source": "src_controllers_adminattendancecontroller_adminattendancecontroller",
       "target": "src_controllers_adminattendancecontroller_adminattendancecontroller_markabsent",
@@ -16146,7 +16146,7 @@
       "relation": "method",
       "confidence": "EXTRACTED",
       "source_file": "src/Controllers/AdminAttendanceController.php",
-      "source_location": "L141",
+      "source_location": "L143",
       "weight": 1.0,
       "source": "src_controllers_adminattendancecontroller_adminattendancecontroller",
       "target": "src_controllers_adminattendancecontroller_adminattendancecontroller_presentattendancescope",
@@ -16166,7 +16166,7 @@
       "relation": "method",
       "confidence": "EXTRACTED",
       "source_file": "src/Controllers/AdminAttendanceController.php",
-      "source_location": "L126",
+      "source_location": "L128",
       "weight": 1.0,
       "source": "src_controllers_adminattendancecontroller_adminattendancecontroller",
       "target": "src_controllers_adminattendancecontroller_adminattendancecontroller_resolvegueststatus",
@@ -16176,7 +16176,7 @@
       "relation": "method",
       "confidence": "EXTRACTED",
       "source_file": "src/Controllers/AdminAttendanceController.php",
-      "source_location": "L234",
+      "source_location": "L236",
       "weight": 1.0,
       "source": "src_controllers_adminattendancecontroller_adminattendancecontroller",
       "target": "src_controllers_adminattendancecontroller_adminattendancecontroller_searchparticipants",
@@ -16187,7 +16187,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "src/Controllers/AdminAttendanceController.php",
-      "source_location": "L321",
+      "source_location": "L323",
       "weight": 1.0,
       "source": "src_controllers_adminattendancecontroller_adminattendancecontroller_clearabsent",
       "target": "src_controllers_adminattendancecontroller_adminattendancecontroller_requireadmin",
@@ -16198,7 +16198,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "src/Controllers/AdminAttendanceController.php",
-      "source_location": "L98",
+      "source_location": "L100",
       "weight": 1.0,
       "source": "src_controllers_adminattendancecontroller_adminattendancecontroller_kpijson",
       "target": "src_controllers_adminattendancecontroller_adminattendancecontroller_requireadmin",
@@ -16209,7 +16209,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "src/Controllers/AdminAttendanceController.php",
-      "source_location": "L109",
+      "source_location": "L111",
       "weight": 1.0,
       "source": "src_controllers_adminattendancecontroller_adminattendancecontroller_kpistream",
       "target": "src_controllers_adminattendancecontroller_adminattendancecontroller_requireadmin",
@@ -16231,7 +16231,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "src/Controllers/AdminAttendanceController.php",
-      "source_location": "L376",
+      "source_location": "L378",
       "weight": 1.0,
       "source": "src_controllers_adminattendancecontroller_adminattendancecontroller_manualattendance",
       "target": "src_controllers_adminattendancecontroller_adminattendancecontroller_requireadmin",
@@ -16242,7 +16242,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "src/Controllers/AdminAttendanceController.php",
-      "source_location": "L266",
+      "source_location": "L268",
       "weight": 1.0,
       "source": "src_controllers_adminattendancecontroller_adminattendancecontroller_markabsent",
       "target": "src_controllers_adminattendancecontroller_adminattendancecontroller_requireadmin",
@@ -16264,7 +16264,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "src/Controllers/AdminAttendanceController.php",
-      "source_location": "L236",
+      "source_location": "L238",
       "weight": 1.0,
       "source": "src_controllers_adminattendancecontroller_adminattendancecontroller_searchparticipants",
       "target": "src_controllers_adminattendancecontroller_adminattendancecontroller_requireadmin",
@@ -16275,7 +16275,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "src/Controllers/AdminAttendanceController.php",
-      "source_location": "L78",
+      "source_location": "L80",
       "weight": 1.0,
       "source": "src_controllers_adminattendancecontroller_adminattendancecontroller_list",
       "target": "src_controllers_adminattendancecontroller_adminattendancecontroller_computekpis",
@@ -16297,7 +16297,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "src/Controllers/AdminAttendanceController.php",
-      "source_location": "L71",
+      "source_location": "L73",
       "weight": 1.0,
       "source": "src_controllers_adminattendancecontroller_adminattendancecontroller_list",
       "target": "src_controllers_adminattendancecontroller_adminattendancecontroller_resolvegueststatus",
@@ -16319,7 +16319,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "src/Controllers/AdminAttendanceController.php",
-      "source_location": "L102",
+      "source_location": "L104",
       "weight": 1.0,
       "source": "src_controllers_adminattendancecontroller_adminattendancecontroller_kpijson",
       "target": "src_controllers_adminattendancecontroller_adminattendancecontroller_computekpis",
@@ -16331,7 +16331,7 @@
       "confidence": "INFERRED",
       "confidence_score": 0.8,
       "source_file": "src/Controllers/AdminAttendanceController.php",
-      "source_location": "L100",
+      "source_location": "L102",
       "weight": 1.0,
       "source": "src_controllers_adminattendancecontroller_adminattendancecontroller_kpijson",
       "target": "src_services_database_database"
@@ -16342,7 +16342,7 @@
       "confidence": "INFERRED",
       "confidence_score": 0.8,
       "source_file": "src/Controllers/AdminAttendanceController.php",
-      "source_location": "L99",
+      "source_location": "L101",
       "weight": 1.0,
       "source": "src_controllers_adminattendancecontroller_adminattendancecontroller_kpijson",
       "target": "vendor_tecnickcom_tcpdf_tcpdf_tcpdf_header"
@@ -16352,11 +16352,22 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "src/Controllers/AdminAttendanceController.php",
-      "source_location": "L114",
+      "source_location": "L116",
       "weight": 1.0,
       "source": "src_controllers_adminattendancecontroller_adminattendancecontroller_kpistream",
       "target": "src_controllers_adminattendancecontroller_adminattendancecontroller_computekpis",
       "confidence_score": 1.0
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "INFERRED",
+      "confidence_score": 0.8,
+      "source_file": "src/Controllers/AdminAttendanceController.php",
+      "source_location": "L114",
+      "weight": 1.0,
+      "source": "src_controllers_adminattendancecontroller_adminattendancecontroller_kpistream",
+      "target": "src_services_database_database"
     },
     {
       "relation": "calls",
@@ -16367,17 +16378,6 @@
       "source_location": "L112",
       "weight": 1.0,
       "source": "src_controllers_adminattendancecontroller_adminattendancecontroller_kpistream",
-      "target": "src_services_database_database"
-    },
-    {
-      "relation": "calls",
-      "context": "call",
-      "confidence": "INFERRED",
-      "confidence_score": 0.8,
-      "source_file": "src/Controllers/AdminAttendanceController.php",
-      "source_location": "L110",
-      "weight": 1.0,
-      "source": "src_controllers_adminattendancecontroller_adminattendancecontroller_kpistream",
       "target": "vendor_tecnickcom_tcpdf_tcpdf_tcpdf_header"
     },
     {
@@ -16385,7 +16385,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "src/Controllers/AdminAttendanceController.php",
-      "source_location": "L347",
+      "source_location": "L349",
       "weight": 1.0,
       "source": "src_controllers_adminattendancecontroller_adminattendancecontroller_clearabsent",
       "target": "src_controllers_adminattendancecontroller_adminattendancecontroller_getactiveeventid",
@@ -16396,7 +16396,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "src/Controllers/AdminAttendanceController.php",
-      "source_location": "L188",
+      "source_location": "L190",
       "weight": 1.0,
       "source": "src_controllers_adminattendancecontroller_adminattendancecontroller_computekpis",
       "target": "src_controllers_adminattendancecontroller_adminattendancecontroller_getactiveeventid",
@@ -16406,7 +16406,7 @@
       "relation": "references",
       "confidence": "EXTRACTED",
       "source_file": "src/Controllers/AdminAttendanceController.php",
-      "source_location": "L117",
+      "source_location": "L119",
       "weight": 1.0,
       "context": "parameter_type",
       "source": "src_controllers_adminattendancecontroller_adminattendancecontroller_getactiveeventid",
@@ -16418,7 +16418,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "src/Controllers/AdminAttendanceController.php",
-      "source_location": "L155",
+      "source_location": "L157",
       "weight": 1.0,
       "source": "src_controllers_adminattendancecontroller_adminattendancecontroller_getgueststatusfordate",
       "target": "src_controllers_adminattendancecontroller_adminattendancecontroller_getactiveeventid",
@@ -16429,7 +16429,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "src/Controllers/AdminAttendanceController.php",
-      "source_location": "L301",
+      "source_location": "L303",
       "weight": 1.0,
       "source": "src_controllers_adminattendancecontroller_adminattendancecontroller_markabsent",
       "target": "src_controllers_adminattendancecontroller_adminattendancecontroller_getactiveeventid",
@@ -16440,7 +16440,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "src/Controllers/AdminAttendanceController.php",
-      "source_location": "L145",
+      "source_location": "L147",
       "weight": 1.0,
       "source": "src_controllers_adminattendancecontroller_adminattendancecontroller_presentattendancescope",
       "target": "src_controllers_adminattendancecontroller_adminattendancecontroller_getactiveeventid",
@@ -16450,7 +16450,7 @@
       "relation": "references",
       "confidence": "EXTRACTED",
       "source_file": "src/Controllers/AdminAttendanceController.php",
-      "source_location": "L176",
+      "source_location": "L178",
       "weight": 1.0,
       "context": "parameter_type",
       "source": "src_controllers_adminattendancecontroller_adminattendancecontroller_computekpis",
@@ -16461,7 +16461,7 @@
       "relation": "references",
       "confidence": "EXTRACTED",
       "source_file": "src/Controllers/AdminAttendanceController.php",
-      "source_location": "L360",
+      "source_location": "L362",
       "weight": 1.0,
       "context": "parameter_type",
       "source": "src_controllers_adminattendancecontroller_adminattendancecontroller_findattendancerow",
@@ -16472,7 +16472,7 @@
       "relation": "references",
       "confidence": "EXTRACTED",
       "source_file": "src/Controllers/AdminAttendanceController.php",
-      "source_location": "L153",
+      "source_location": "L155",
       "weight": 1.0,
       "context": "parameter_type",
       "source": "src_controllers_adminattendancecontroller_adminattendancecontroller_getgueststatusfordate",
@@ -16483,7 +16483,7 @@
       "relation": "references",
       "confidence": "EXTRACTED",
       "source_file": "src/Controllers/AdminAttendanceController.php",
-      "source_location": "L141",
+      "source_location": "L143",
       "weight": 1.0,
       "context": "parameter_type",
       "source": "src_controllers_adminattendancecontroller_adminattendancecontroller_presentattendancescope",
@@ -16495,7 +16495,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "src/Controllers/AdminAttendanceController.php",
-      "source_location": "L169",
+      "source_location": "L171",
       "weight": 1.0,
       "source": "src_controllers_adminattendancecontroller_adminattendancecontroller_getgueststatusfordate",
       "target": "src_controllers_adminattendancecontroller_adminattendancecontroller_resolvegueststatus",
@@ -16506,7 +16506,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "src/Controllers/AdminAttendanceController.php",
-      "source_location": "L178",
+      "source_location": "L180",
       "weight": 1.0,
       "source": "src_controllers_adminattendancecontroller_adminattendancecontroller_computekpis",
       "target": "src_controllers_adminattendancecontroller_adminattendancecontroller_presentattendancescope",
@@ -16517,7 +16517,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "src/Controllers/AdminAttendanceController.php",
-      "source_location": "L256",
+      "source_location": "L258",
       "weight": 1.0,
       "source": "src_controllers_adminattendancecontroller_adminattendancecontroller_searchparticipants",
       "target": "src_controllers_adminattendancecontroller_adminattendancecontroller_getgueststatusfordate",
@@ -16529,7 +16529,7 @@
       "confidence": "INFERRED",
       "confidence_score": 0.8,
       "source_file": "src/Controllers/AdminAttendanceController.php",
-      "source_location": "L245",
+      "source_location": "L247",
       "weight": 1.0,
       "source": "src_controllers_adminattendancecontroller_adminattendancecontroller_searchparticipants",
       "target": "src_services_database_database"
@@ -16540,7 +16540,7 @@
       "confidence": "INFERRED",
       "confidence_score": 0.8,
       "source_file": "src/Controllers/AdminAttendanceController.php",
-      "source_location": "L237",
+      "source_location": "L239",
       "weight": 1.0,
       "source": "src_controllers_adminattendancecontroller_adminattendancecontroller_searchparticipants",
       "target": "vendor_tecnickcom_tcpdf_tcpdf_tcpdf_header"
@@ -16550,7 +16550,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "src/Controllers/AdminAttendanceController.php",
-      "source_location": "L302",
+      "source_location": "L304",
       "weight": 1.0,
       "source": "src_controllers_adminattendancecontroller_adminattendancecontroller_markabsent",
       "target": "src_controllers_adminattendancecontroller_adminattendancecontroller_findattendancerow",
@@ -16562,7 +16562,7 @@
       "confidence": "INFERRED",
       "confidence_score": 0.8,
       "source_file": "src/Controllers/AdminAttendanceController.php",
-      "source_location": "L291",
+      "source_location": "L293",
       "weight": 1.0,
       "source": "src_controllers_adminattendancecontroller_adminattendancecontroller_markabsent",
       "target": "src_services_database_database"
@@ -16573,7 +16573,7 @@
       "confidence": "INFERRED",
       "confidence_score": 0.8,
       "source_file": "src/Controllers/AdminAttendanceController.php",
-      "source_location": "L267",
+      "source_location": "L269",
       "weight": 1.0,
       "source": "src_controllers_adminattendancecontroller_adminattendancecontroller_markabsent",
       "target": "vendor_tecnickcom_tcpdf_tcpdf_tcpdf_header"
@@ -16582,22 +16582,22 @@
       "relation": "calls",
       "context": "call",
       "confidence": "EXTRACTED",
+      "source_file": "src/Controllers/AdminAttendanceController.php",
+      "source_location": "L350",
+      "weight": 1.0,
+      "source": "src_controllers_adminattendancecontroller_adminattendancecontroller_clearabsent",
+      "target": "src_controllers_adminattendancecontroller_adminattendancecontroller_findattendancerow",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "INFERRED",
+      "confidence_score": 0.8,
       "source_file": "src/Controllers/AdminAttendanceController.php",
       "source_location": "L348",
       "weight": 1.0,
       "source": "src_controllers_adminattendancecontroller_adminattendancecontroller_clearabsent",
-      "target": "src_controllers_adminattendancecontroller_adminattendancecontroller_findattendancerow",
-      "confidence_score": 1.0
-    },
-    {
-      "relation": "calls",
-      "context": "call",
-      "confidence": "INFERRED",
-      "confidence_score": 0.8,
-      "source_file": "src/Controllers/AdminAttendanceController.php",
-      "source_location": "L346",
-      "weight": 1.0,
-      "source": "src_controllers_adminattendancecontroller_adminattendancecontroller_clearabsent",
       "target": "src_services_database_database"
     },
     {
@@ -16606,7 +16606,7 @@
       "confidence": "INFERRED",
       "confidence_score": 0.8,
       "source_file": "src/Controllers/AdminAttendanceController.php",
-      "source_location": "L322",
+      "source_location": "L324",
       "weight": 1.0,
       "source": "src_controllers_adminattendancecontroller_adminattendancecontroller_clearabsent",
       "target": "vendor_tecnickcom_tcpdf_tcpdf_tcpdf_header"
@@ -16616,7 +16616,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "src/Controllers/AdminAttendanceController.php",
-      "source_location": "L423",
+      "source_location": "L425",
       "weight": 1.0,
       "source": "src_controllers_adminattendancecontroller_adminattendancecontroller_manualattendance",
       "target": "src_controllers_adminattendancecontroller_adminattendancecontroller_findattendancerow",
@@ -16628,7 +16628,7 @@
       "confidence": "INFERRED",
       "confidence_score": 0.8,
       "source_file": "src/Controllers/AdminAttendanceController.php",
-      "source_location": "L404",
+      "source_location": "L406",
       "weight": 1.0,
       "source": "src_controllers_adminattendancecontroller_adminattendancecontroller_manualattendance",
       "target": "src_services_database_database"
@@ -16639,7 +16639,7 @@
       "confidence": "INFERRED",
       "confidence_score": 0.8,
       "source_file": "src/Controllers/AdminAttendanceController.php",
-      "source_location": "L431",
+      "source_location": "L433",
       "weight": 1.0,
       "source": "src_controllers_adminattendancecontroller_adminattendancecontroller_manualattendance",
       "target": "src_services_signatureservice_signatureservice"
@@ -16650,7 +16650,7 @@
       "confidence": "INFERRED",
       "confidence_score": 0.8,
       "source_file": "src/Controllers/AdminAttendanceController.php",
-      "source_location": "L377",
+      "source_location": "L379",
       "weight": 1.0,
       "source": "src_controllers_adminattendancecontroller_adminattendancecontroller_manualattendance",
       "target": "vendor_tecnickcom_tcpdf_tcpdf_tcpdf_header"
@@ -17478,7 +17478,7 @@
       "relation": "method",
       "confidence": "EXTRACTED",
       "source_file": "src/Controllers/AdminRegistrantsController.php",
-      "source_location": "L191",
+      "source_location": "L195",
       "weight": 1.0,
       "source": "src_controllers_adminregistrantscontroller_adminregistrantscontroller",
       "target": "src_controllers_adminregistrantscontroller_adminregistrantscontroller_ensureqrpath",
@@ -17488,7 +17488,7 @@
       "relation": "method",
       "confidence": "EXTRACTED",
       "source_file": "src/Controllers/AdminRegistrantsController.php",
-      "source_location": "L88",
+      "source_location": "L92",
       "weight": 1.0,
       "source": "src_controllers_adminregistrantscontroller_adminregistrantscontroller",
       "target": "src_controllers_adminregistrantscontroller_adminregistrantscontroller_generateqrbatch",
@@ -17508,7 +17508,7 @@
       "relation": "method",
       "confidence": "EXTRACTED",
       "source_file": "src/Controllers/AdminRegistrantsController.php",
-      "source_location": "L162",
+      "source_location": "L166",
       "weight": 1.0,
       "source": "src_controllers_adminregistrantscontroller_adminregistrantscontroller",
       "target": "src_controllers_adminregistrantscontroller_adminregistrantscontroller_qrpreview",
@@ -17528,7 +17528,7 @@
       "relation": "method",
       "confidence": "EXTRACTED",
       "source_file": "src/Controllers/AdminRegistrantsController.php",
-      "source_location": "L122",
+      "source_location": "L126",
       "weight": 1.0,
       "source": "src_controllers_adminregistrantscontroller_adminregistrantscontroller",
       "target": "src_controllers_adminregistrantscontroller_adminregistrantscontroller_sendqremail",
@@ -17538,7 +17538,7 @@
       "relation": "method",
       "confidence": "EXTRACTED",
       "source_file": "src/Controllers/AdminRegistrantsController.php",
-      "source_location": "L51",
+      "source_location": "L55",
       "weight": 1.0,
       "source": "src_controllers_adminregistrantscontroller_adminregistrantscontroller",
       "target": "src_controllers_adminregistrantscontroller_adminregistrantscontroller_togglevip",
@@ -17549,7 +17549,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "src/Controllers/AdminRegistrantsController.php",
-      "source_location": "L90",
+      "source_location": "L94",
       "weight": 1.0,
       "source": "src_controllers_adminregistrantscontroller_adminregistrantscontroller_generateqrbatch",
       "target": "src_controllers_adminregistrantscontroller_adminregistrantscontroller_requireadmin",
@@ -17571,7 +17571,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "src/Controllers/AdminRegistrantsController.php",
-      "source_location": "L164",
+      "source_location": "L168",
       "weight": 1.0,
       "source": "src_controllers_adminregistrantscontroller_adminregistrantscontroller_qrpreview",
       "target": "src_controllers_adminregistrantscontroller_adminregistrantscontroller_requireadmin",
@@ -17593,7 +17593,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "src/Controllers/AdminRegistrantsController.php",
-      "source_location": "L124",
+      "source_location": "L128",
       "weight": 1.0,
       "source": "src_controllers_adminregistrantscontroller_adminregistrantscontroller_sendqremail",
       "target": "src_controllers_adminregistrantscontroller_adminregistrantscontroller_requireadmin",
@@ -17605,7 +17605,7 @@
       "confidence": "INFERRED",
       "confidence_score": 0.8,
       "source_file": "src/Controllers/AdminRegistrantsController.php",
-      "source_location": "L46",
+      "source_location": "L49",
       "weight": 1.0,
       "source": "src_controllers_adminregistrantscontroller_adminregistrantscontroller_list",
       "target": "src_services_authservice_authservice"
@@ -17627,7 +17627,7 @@
       "confidence": "INFERRED",
       "confidence_score": 0.8,
       "source_file": "src/Controllers/AdminRegistrantsController.php",
-      "source_location": "L53",
+      "source_location": "L57",
       "weight": 1.0,
       "source": "src_controllers_adminregistrantscontroller_adminregistrantscontroller_togglevip",
       "target": "src_services_authservice_authservice"
@@ -17638,7 +17638,7 @@
       "confidence": "INFERRED",
       "confidence_score": 0.8,
       "source_file": "src/Controllers/AdminRegistrantsController.php",
-      "source_location": "L69",
+      "source_location": "L73",
       "weight": 1.0,
       "source": "src_controllers_adminregistrantscontroller_adminregistrantscontroller_togglevip",
       "target": "src_services_database_database"
@@ -17649,7 +17649,7 @@
       "confidence": "INFERRED",
       "confidence_score": 0.8,
       "source_file": "src/Controllers/AdminRegistrantsController.php",
-      "source_location": "L72",
+      "source_location": "L76",
       "weight": 1.0,
       "source": "src_controllers_adminregistrantscontroller_adminregistrantscontroller_togglevip",
       "target": "src_services_logger_logger"
@@ -17660,7 +17660,7 @@
       "confidence": "INFERRED",
       "confidence_score": 0.8,
       "source_file": "src/Controllers/AdminRegistrantsController.php",
-      "source_location": "L66",
+      "source_location": "L70",
       "weight": 1.0,
       "source": "src_controllers_adminregistrantscontroller_adminregistrantscontroller_togglevip",
       "target": "vendor_tecnickcom_tcpdf_tcpdf_tcpdf_header"
@@ -17671,7 +17671,7 @@
       "confidence": "INFERRED",
       "confidence_score": 0.8,
       "source_file": "src/Controllers/AdminRegistrantsController.php",
-      "source_location": "L97",
+      "source_location": "L101",
       "weight": 1.0,
       "source": "src_controllers_adminregistrantscontroller_adminregistrantscontroller_generateqrbatch",
       "target": "src_services_database_database"
@@ -17682,7 +17682,7 @@
       "confidence": "INFERRED",
       "confidence_score": 0.8,
       "source_file": "src/Controllers/AdminRegistrantsController.php",
-      "source_location": "L109",
+      "source_location": "L113",
       "weight": 1.0,
       "source": "src_controllers_adminregistrantscontroller_adminregistrantscontroller_generateqrbatch",
       "target": "src_services_qrservice_qrservice"
@@ -17693,7 +17693,7 @@
       "confidence": "INFERRED",
       "confidence_score": 0.8,
       "source_file": "src/Controllers/AdminRegistrantsController.php",
-      "source_location": "L101",
+      "source_location": "L105",
       "weight": 1.0,
       "source": "src_controllers_adminregistrantscontroller_adminregistrantscontroller_generateqrbatch",
       "target": "vendor_tecnickcom_tcpdf_tcpdf_tcpdf_header"
@@ -17703,7 +17703,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "src/Controllers/AdminRegistrantsController.php",
-      "source_location": "L152",
+      "source_location": "L156",
       "weight": 1.0,
       "source": "src_controllers_adminregistrantscontroller_adminregistrantscontroller_sendqremail",
       "target": "src_controllers_adminregistrantscontroller_adminregistrantscontroller_ensureqrpath",
@@ -17715,7 +17715,7 @@
       "confidence": "INFERRED",
       "confidence_score": 0.8,
       "source_file": "src/Controllers/AdminRegistrantsController.php",
-      "source_location": "L137",
+      "source_location": "L141",
       "weight": 1.0,
       "source": "src_controllers_adminregistrantscontroller_adminregistrantscontroller_sendqremail",
       "target": "src_services_database_database"
@@ -17726,7 +17726,7 @@
       "confidence": "INFERRED",
       "confidence_score": 0.8,
       "source_file": "src/Controllers/AdminRegistrantsController.php",
-      "source_location": "L157",
+      "source_location": "L161",
       "weight": 1.0,
       "source": "src_controllers_adminregistrantscontroller_adminregistrantscontroller_sendqremail",
       "target": "src_services_mailer_mailer"
@@ -17737,7 +17737,7 @@
       "confidence": "INFERRED",
       "confidence_score": 0.8,
       "source_file": "src/Controllers/AdminRegistrantsController.php",
-      "source_location": "L134",
+      "source_location": "L138",
       "weight": 1.0,
       "source": "src_controllers_adminregistrantscontroller_adminregistrantscontroller_sendqremail",
       "target": "vendor_tecnickcom_tcpdf_tcpdf_tcpdf_header"
@@ -17747,7 +17747,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "src/Controllers/AdminRegistrantsController.php",
-      "source_location": "L180",
+      "source_location": "L184",
       "weight": 1.0,
       "source": "src_controllers_adminregistrantscontroller_adminregistrantscontroller_qrpreview",
       "target": "src_controllers_adminregistrantscontroller_adminregistrantscontroller_ensureqrpath",
@@ -17759,7 +17759,7 @@
       "confidence": "INFERRED",
       "confidence_score": 0.8,
       "source_file": "src/Controllers/AdminRegistrantsController.php",
-      "source_location": "L171",
+      "source_location": "L175",
       "weight": 1.0,
       "source": "src_controllers_adminregistrantscontroller_adminregistrantscontroller_qrpreview",
       "target": "src_services_database_database"
@@ -17770,7 +17770,7 @@
       "confidence": "INFERRED",
       "confidence_score": 0.8,
       "source_file": "src/Controllers/AdminRegistrantsController.php",
-      "source_location": "L186",
+      "source_location": "L190",
       "weight": 1.0,
       "source": "src_controllers_adminregistrantscontroller_adminregistrantscontroller_qrpreview",
       "target": "vendor_tecnickcom_tcpdf_tcpdf_tcpdf_header"
@@ -17779,7 +17779,7 @@
       "relation": "references",
       "confidence": "EXTRACTED",
       "source_file": "src/Controllers/AdminRegistrantsController.php",
-      "source_location": "L191",
+      "source_location": "L195",
       "weight": 1.0,
       "context": "parameter_type",
       "source": "src_controllers_adminregistrantscontroller_adminregistrantscontroller_ensureqrpath",
@@ -17792,7 +17792,7 @@
       "confidence": "INFERRED",
       "confidence_score": 0.8,
       "source_file": "src/Controllers/AdminRegistrantsController.php",
-      "source_location": "L197",
+      "source_location": "L201",
       "weight": 1.0,
       "source": "src_controllers_adminregistrantscontroller_adminregistrantscontroller_ensureqrpath",
       "target": "src_services_qrservice_qrservice"
@@ -19992,6 +19992,17 @@
       "weight": 1.0,
       "source": "src_services_authservice",
       "target": "src_services_authservice_authservice",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "views/admin_seo_dashboard.php",
+      "source_location": "L4",
+      "weight": 1.0,
+      "source": "views_admin_seo_dashboard",
+      "target": "src_services_authservice",
       "confidence_score": 1.0
     },
     {
@@ -44241,5 +44252,5 @@
     }
   ],
   "hyperedges": [],
-  "built_at_commit": "eceeb2e55db9f8037cdeedf5f363fa8702232cc5"
+  "built_at_commit": "c5d4f9b0b7399fb99c961414901a793c40ad27a3"
 }

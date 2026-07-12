@@ -5675,8 +5675,8 @@
     "semantic_hash": ""
   },
   "views/admin_seo_dashboard.php": {
-    "mtime": 1783821602.8412561,
-    "ast_hash": "f791aa23b965cd4cc0c46420644b3608",
+    "mtime": 1783822538.920045,
+    "ast_hash": "0fd8042f33acac560c9565f6a7781e61",
     "semantic_hash": ""
   },
   "views/admin_users.php": {
@@ -5762,6 +5762,11 @@
   "storage/signatures/2026/c3ae1fe0-d8a7-402e-8b7f-3ad1951df8e0_1783818688.png": {
     "mtime": 1783818688.0104167,
     "ast_hash": "c5371198101515c35cd4e65afb0d893c",
+    "semantic_hash": ""
+  },
+  "assets/seo-dashboard.js": {
+    "mtime": 1783822540.1440806,
+    "ast_hash": "a9351fd6dfbff550f1bb4396f3bfe20d",
     "semantic_hash": ""
   }
 }

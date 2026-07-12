@@ -47,7 +47,8 @@ class AdminRegistrantsController
         $sectorsList = $pdo->query("SELECT DISTINCT sector FROM participants WHERE sector IS NOT NULL AND sector <> '' ORDER BY sector ASC LIMIT 500")->fetchAll();
         $vipCount = (int)$pdo->query('SELECT COUNT(*) FROM participants WHERE is_vip = 1')->fetchColumn();
         $canManageVip = AuthService::isAdmin();
-        $data = compact('rows','page','pages','q','agency','sector','total','agenciesList','sectorsList','canManageVip','vipOnly','vipCount');
+        $canViewVip = AuthService::hasRole(AuthService::ROLE_ADMIN, AuthService::ROLE_CHECKER);
+        $data = compact('rows','page','pages','q','agency','sector','total','agenciesList','sectorsList','canManageVip','canViewVip','vipOnly','vipCount');
         require dirname(__DIR__, 2) . DIRECTORY_SEPARATOR . 'views' . DIRECTORY_SEPARATOR . 'admin_registrants.php';
     }
 

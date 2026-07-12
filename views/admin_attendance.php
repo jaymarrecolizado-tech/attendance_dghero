@@ -191,6 +191,7 @@ $token = function_exists('csrf_token') ? csrf_token() : '';
             $guestStatus = (string)($r['guest_status'] ?? 'in_vicinity');
             $isPresent = $guestStatus === 'present';
             $isAbsent = $guestStatus === 'absent';
+            $isVip = (int)($r['is_vip'] ?? 0) === 1;
           ?>
           <tr class="<?= $isAbsent ? 'table-warning' : ($isPresent ? '' : 'table-light') ?>">
             <td><?= ($i+1) + (($page-1)*20) ?></td>
@@ -205,7 +206,10 @@ $token = function_exists('csrf_token') ? csrf_token() : '';
             </td>
             <td><?= htmlspecialchars($isPresent || $isAbsent ? (string)($r['attendance_date'] ?? ($selectedDate ?? $date ?? date('Y-m-d'))) : (string)($selectedDate ?? $date ?? date('Y-m-d')), ENT_QUOTES) ?></td>
             <td><?= $isPresent ? htmlspecialchars((string)$r['time_in'], ENT_QUOTES) : '—' ?></td>
-            <td><?= htmlspecialchars(trim(($r['first_name'] ?? '') . ' ' . ($r['last_name'] ?? '')), ENT_QUOTES) ?></td>
+            <td>
+              <?= htmlspecialchars(trim(($r['first_name'] ?? '') . ' ' . ($r['last_name'] ?? '')), ENT_QUOTES) ?>
+              <?php if ($isVip): ?><span class="badge text-bg-warning ms-1">VIP</span><?php endif; ?>
+            </td>
             <td><?= htmlspecialchars($r['agency']??'', ENT_QUOTES) ?></td>
             <td><code><?= htmlspecialchars($r['uuid'], ENT_QUOTES) ?></code></td>
             <td>
@@ -585,11 +589,13 @@ $token = function_exists('csrf_token') ? csrf_token() : '';
       const agency = participant.agency || 'N/A';
       const email = participant.email || '';
       const guestStatus = participant.guest_status || (participant.already_marked ? 'present' : 'in_vicinity');
+      const isVip = Number(participant.is_vip) === 1;
       const statusBadge = guestStatus === 'present'
         ? '<span class="badge bg-success">Present</span>'
         : (guestStatus === 'absent'
           ? '<span class="badge bg-danger">Absent</span>'
           : '<span class="badge bg-info text-dark">In Vicinity</span>');
+      const vipBadge = isVip ? ' <span class="badge text-bg-warning">VIP</span>' : '';
       const actions = guestStatus === 'present'
         ? ''
         : `<br><button type="button" class="btn btn-sm btn-primary mt-2" data-participant-id="${participant.id}" data-participant-name="${escapeHtml(fullName)}">Mark Attendance</button>`;
@@ -599,7 +605,7 @@ $token = function_exists('csrf_token') ? csrf_token() : '';
       item.innerHTML = `
         <div class="d-flex w-100 justify-content-between align-items-center">
           <div>
-            <h6 class="mb-1">${escapeHtml(fullName)}</h6>
+            <h6 class="mb-1">${escapeHtml(fullName)}${vipBadge}</h6>
             <small class="text-muted">${escapeHtml(agency)}</small>
             ${email ? `<br><small class="text-muted">${escapeHtml(email)}</small>` : ''}
           </div>

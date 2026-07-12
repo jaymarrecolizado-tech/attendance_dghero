@@ -35,13 +35,17 @@ $defaultMessage = 'Thank you for joining and registering for the event. Please k
   <?php if ($flash): ?>
     <div class="alert alert-<?= htmlspecialchars($flash['type'] ?? 'info', ENT_QUOTES) ?>"><?= htmlspecialchars($flash['message'] ?? '', ENT_QUOTES) ?></div>
   <?php endif; ?>
-  <?php if (!empty($canManageVip)): ?>
+  <?php if (!empty($canViewVip)): ?>
     <div class="alert alert-info border-0 shadow-sm">
-      <strong>VIP guests:</strong> Use <em>Mark VIP</em> on a registrant to add them to the SEO Viewer dashboard watchlist.
+      <?php if (!empty($canManageVip)): ?>
+        <strong>VIP guests:</strong> Use <em>Mark VIP</em> on a registrant to flag priority guests for checkers and the SEO dashboard.
+      <?php else: ?>
+        <strong>VIP guests:</strong> Yellow <em>VIP</em> badges mark priority guests — treat them with protocol care at check-in.
+      <?php endif; ?>
       <?php if (($vipCount ?? 0) > 0): ?>
         <span class="badge text-bg-warning ms-1"><?= (int)$vipCount ?> VIP<?= (int)$vipCount === 1 ? '' : 's' ?> flagged</span>
       <?php else: ?>
-        <span class="text-muted ms-1">No VIPs flagged yet — the SEO dashboard will stay empty until you mark some.</span>
+        <span class="text-muted ms-1">No VIPs flagged yet.</span>
       <?php endif; ?>
     </div>
   <?php endif; ?>
@@ -74,7 +78,7 @@ $defaultMessage = 'Thank you for joining and registering for the event. Please k
           Search
         </button>
       </div>
-      <?php if (!empty($canManageVip)): ?>
+      <?php if (!empty($canViewVip)): ?>
       <div class="col-12 col-md-3">
         <div class="form-check mt-2">
           <input class="form-check-input" type="checkbox" name="vip" value="1" id="vipOnly" <?= !empty($vipOnly) ? 'checked' : '' ?>>
