@@ -8,6 +8,7 @@ final class AuthService
     public const ROLE_ADMIN = 'admin';
     public const ROLE_CHECKER = 'checker';
     public const ROLE_SEO = 'seo_viewer';
+    public const ROLE_EVENT_ADMIN = 'event_admin';
 
     private const IDLE_TIMEOUT_SEC = 7200; // 2 hours
     private const ABSOLUTE_TIMEOUT_SEC = 28800; // 8 hours
@@ -65,6 +66,12 @@ final class AuthService
         return self::hasRole(self::ROLE_ADMIN);
     }
 
+    /** All Father: global admin over every event. */
+    public static function isAllFather(): bool
+    {
+        return self::isAdmin();
+    }
+
     public static function isChecker(): bool
     {
         return self::hasRole(self::ROLE_CHECKER);
@@ -80,6 +87,7 @@ final class AuthService
         $role = $role ?? self::role();
         return match ($role) {
             self::ROLE_ADMIN => 'Admin',
+            self::ROLE_EVENT_ADMIN => 'Event Admin',
             self::ROLE_CHECKER => 'Attendance Checker',
             self::ROLE_SEO => 'SEO Viewer',
             default => 'Staff',
@@ -127,7 +135,8 @@ final class AuthService
             $_SESSION['admin_username'],
             $_SESSION['admin_display_name'],
             $_SESSION['auth_issued_at'],
-            $_SESSION['auth_last_activity']
+            $_SESSION['auth_last_activity'],
+            $_SESSION['current_event_id']
         );
     }
 

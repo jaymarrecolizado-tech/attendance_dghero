@@ -3,7 +3,9 @@ declare(strict_types=1);
 
 namespace App\Controllers;
 
+use App\Services\AuthService;
 use App\Services\Database;
+use App\Services\EventContext;
 use App\Services\SignatureService;
 
 class AdminAttendanceController
@@ -14,10 +16,25 @@ class AdminAttendanceController
         return true;
     }
 
+    /** @return array<string,mixed>|null */
+    private function currentEventOrDeny(\PDO $pdo): ?array
+    {
+        $event = EventContext::currentEvent($pdo);
+        if (!$event) { http_response_code(404); echo 'No events'; return null; }
+        $adminId = (int)($_SESSION['admin_id'] ?? 0);
+        if (!EventContext::canAccess($pdo, $adminId, (int)$event['id'], ['event_admin', 'checker']) && !AuthService::isAdmin()) {
+            AuthService::deny($_SERVER['REQUEST_METHOD'] ?? 'GET');
+            return null;
+        }
+        return $event;
+    }
+
     public function list(): void
     {
         if (!$this->requireAdmin()) return;
         $pdo = Database::pdo();
+        $event = $this->currentEventOrDeny($pdo);
+        if (!$event) return;
         $date = trim((string)($_GET['date'] ?? ''));
         $agency = trim((string)($_GET['agency'] ?? ''));
         $name = trim((string)($_GET['name'] ?? ''));
@@ -26,16 +43,17 @@ class AdminAttendanceController
         $offset = ($page - 1) * $per;
 
         $selectedDate = $date !== '' ? $date : date('Y-m-d');
-        $eventId = $this->getActiveEventId($pdo);
+        $eventId = (int)$event['id'];
 
         $joinOn = 'a.participant_id = p.id AND a.attendance_date = ?';
         $bind = [$selectedDate];
-        if ($eventId !== null) {
+        if ($eventId > 0) {
             $joinOn .= ' AND (a.event_id = ? OR a.event_id IS NULL)';
             $bind[] = $eventId;
         }
 
-        $where = [];
+        $where = ['p.event_id = ?'];
+        $bind[] = $eventId;
         if ($agency !== '') { $where[] = 'p.agency LIKE ?'; $bind[] = "%{$agency}%"; }
         if ($name !== '') { $where[] = '(p.first_name LIKE ? OR p.last_name LIKE ?)'; $bind[] = "%{$name}%"; $bind[] = "%{$name}%"; }
         $sqlWhere = $where ? ('WHERE ' . implode(' AND ', $where)) : '';
@@ -98,8 +116,9 @@ class AdminAttendanceController
     public function kpiJson(): void
     {
         if (!$this->requireAdmin()) return;
-        header('Content-Type: application/json');
         $pdo = Database::pdo();
+        if (!$this->currentEventOrDeny($pdo)) return;
+        header('Content-Type: application/json');
         $selectedDate = isset($_GET['date']) && trim($_GET['date']) !== '' ? trim($_GET['date']) : date('Y-m-d');
         echo json_encode($this->computeKpis($pdo, $selectedDate));
     }
@@ -109,17 +128,23 @@ class AdminAttendanceController
         // Long-lived SSE holds PHP session locks and exhausts Apache/WAMP workers.
         // Prefer short JSON polling via kpiJson(); keep this route as a safe no-op redirect.
         if (!$this->requireAdmin()) return;
+        $pdo = Database::pdo();
+        if (!$this->currentEventOrDeny($pdo)) return;
         header('Content-Type: application/json');
         header('Cache-Control: no-store');
-        $pdo = Database::pdo();
         $selectedDate = isset($_GET['date']) && trim($_GET['date']) !== '' ? trim($_GET['date']) : date('Y-m-d');
         echo json_encode($this->computeKpis($pdo, $selectedDate));
     }
 
+    private function currentEventId(\PDO $pdo): ?int
+    {
+        $event = EventContext::currentEvent($pdo);
+        return $event ? (int)$event['id'] : null;
+    }
+
     private function getActiveEventId(\PDO $pdo): ?int
     {
-        $event = $pdo->query('SELECT id FROM events WHERE active=1 ORDER BY id DESC LIMIT 1')->fetch();
-        return $event ? (int)$event['id'] : null;
+        return $this->currentEventId($pdo);
     }
 
     /**
@@ -185,9 +210,10 @@ class AdminAttendanceController
         $stmt->execute(array_merge([$selectedDate], $scopeParams));
         $dateCount = (int)$stmt->fetchColumn();
 
-        $totalRegistered = (int)$pdo->query('SELECT COUNT(*) FROM participants')->fetchColumn();
-
-        $eventId = $this->getActiveEventId($pdo);
+        $eventId = $this->currentEventId($pdo);
+        $totalStmt = $pdo->prepare('SELECT COUNT(*) FROM participants WHERE event_id = ?');
+        $totalStmt->execute([$eventId]);
+        $totalRegistered = (int)$totalStmt->fetchColumn();
         $absentSql = "SELECT COUNT(DISTINCT a.participant_id) FROM attendance a WHERE a.attendance_date = ? AND a.status = 'absent'";
         $absentBind = [$selectedDate];
         if ($eventId !== null) {
@@ -245,9 +271,12 @@ class AdminAttendanceController
         }
 
         $pdo = Database::pdo();
-        $stmt = $pdo->prepare("SELECT id, uuid, first_name, last_name, middle_name, agency, email, is_vip FROM participants WHERE first_name LIKE ? OR last_name LIKE ? OR email LIKE ? OR CONCAT(first_name, ' ', last_name) LIKE ? ORDER BY is_vip DESC, last_name, first_name LIMIT 20");
+        $event = $this->currentEventOrDeny($pdo);
+        if (!$event) return;
+        $eventId = (int)$event['id'];
+        $stmt = $pdo->prepare("SELECT id, uuid, first_name, last_name, middle_name, agency, email, is_vip FROM participants WHERE event_id = ? AND (first_name LIKE ? OR last_name LIKE ? OR email LIKE ? OR CONCAT(first_name, ' ', last_name) LIKE ?) ORDER BY is_vip DESC, last_name, first_name LIMIT 20");
         $searchTerm = "%{$query}%";
-        $stmt->execute([$searchTerm, $searchTerm, $searchTerm, $searchTerm]);
+        $stmt->execute([$eventId, $searchTerm, $searchTerm, $searchTerm, $searchTerm]);
         $results = $stmt->fetchAll();
 
         $attendanceDate = isset($_GET['date']) && trim((string)$_GET['date']) !== ''
@@ -291,8 +320,11 @@ class AdminAttendanceController
         }
 
         $pdo = Database::pdo();
-        $stmt = $pdo->prepare('SELECT id, uuid FROM participants WHERE id = ?');
-        $stmt->execute([$participantId]);
+        $event = $this->currentEventOrDeny($pdo);
+        if (!$event) return;
+        $eventId = (int)$event['id'];
+        $stmt = $pdo->prepare('SELECT id, uuid FROM participants WHERE id = ? AND event_id = ?');
+        $stmt->execute([$participantId, $eventId]);
         $participant = $stmt->fetch();
         if (!$participant) {
             http_response_code(404);
@@ -300,7 +332,6 @@ class AdminAttendanceController
             return;
         }
 
-        $eventId = $this->getActiveEventId($pdo);
         $existing = $this->findAttendanceRow($pdo, $participantId, $attendanceDate, $eventId);
         if ($existing && trim((string)($existing['signature_path'] ?? '')) !== '' && ($existing['status'] ?? 'present') === 'present') {
             echo json_encode(['ok' => false, 'error' => 'already_present']);
@@ -346,7 +377,16 @@ class AdminAttendanceController
         }
 
         $pdo = Database::pdo();
-        $eventId = $this->getActiveEventId($pdo);
+        $event = $this->currentEventOrDeny($pdo);
+        if (!$event) return;
+        $eventId = (int)$event['id'];
+        $chkP = $pdo->prepare('SELECT id FROM participants WHERE id = ? AND event_id = ?');
+        $chkP->execute([$participantId, $eventId]);
+        if (!$chkP->fetch()) {
+            http_response_code(404);
+            echo json_encode(['ok' => false, 'error' => 'not_found']);
+            return;
+        }
         $existing = $this->findAttendanceRow($pdo, $participantId, $attendanceDate, $eventId);
         if ($existing && ($existing['status'] ?? '') === 'absent') {
             $del = $pdo->prepare('DELETE FROM attendance WHERE id = ?');
@@ -405,8 +445,12 @@ class AdminAttendanceController
 
         $pdo = Database::pdo();
 
-        $stmt = $pdo->prepare('SELECT id, uuid FROM participants WHERE id = ?');
-        $stmt->execute([$participantId]);
+        $event = $this->currentEventOrDeny($pdo);
+        if (!$event) return;
+        $eventId = (int)$event['id'];
+        $enforce = (int)($event['enforce_single_time_in'] ?? 1) === 1;
+        $stmt = $pdo->prepare('SELECT id, uuid FROM participants WHERE id = ? AND event_id = ?');
+        $stmt->execute([$participantId, $eventId]);
         $participant = $stmt->fetch();
         if (!$participant) {
             http_response_code(404);
@@ -417,10 +461,6 @@ class AdminAttendanceController
         if ($signature === '') {
             $signature = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg==';
         }
-
-        $event = $pdo->query('SELECT id, enforce_single_time_in FROM events WHERE active=1 ORDER BY id DESC LIMIT 1')->fetch();
-        $eventId = $event ? (int)$event['id'] : null;
-        $enforce = $event ? (int)$event['enforce_single_time_in'] === 1 : false;
 
         $existing = $this->findAttendanceRow($pdo, $participantId, $attendanceDate, $eventId);
         if ($existing && ($existing['status'] ?? 'present') === 'present' && trim((string)($existing['signature_path'] ?? '')) !== '') {

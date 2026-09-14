@@ -2,6 +2,8 @@
 declare(strict_types=1);
 
 $token = function_exists('csrf_token') ? csrf_token() : '';
+$eventSlug = isset($event) && isset($event['slug']) ? (string)$event['slug'] : trim((string)($_GET['e'] ?? ''));
+$eventName = isset($event) ? (string)($event['name'] ?? '') : '';
 ?>
 <!doctype html>
 <html lang="en">
@@ -14,6 +16,7 @@ $token = function_exists('csrf_token') ? csrf_token() : '';
   <script src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/signature_pad@4.0.0/dist/signature_pad.umd.min.js"></script>
   <meta name="csrf" content="<?= htmlspecialchars($token, ENT_QUOTES) ?>">
+  <meta name="event-slug" content="<?= htmlspecialchars($eventSlug, ENT_QUOTES) ?>">
   <style>
     #reader { width: 100%; max-width: 520px; margin: 0 auto; border-radius: 20px; overflow: hidden; }
     #sigCanvas { border: 1px dashed rgba(92,108,242,0.3); border-radius: 16px; width: 100%; height: 260px; touch-action: none; background: rgba(255,255,255,0.9); }
@@ -37,7 +40,7 @@ $token = function_exists('csrf_token') ? csrf_token() : '';
   <div class="row g-4">
     <div class="col-12 col-lg-6">
       <div class="glass-panel h-100">
-        <p class="text-uppercase text-muted mb-2" style="letter-spacing:.2em;font-size:.75rem;">Step 2</p>
+        <p class="text-uppercase text-muted mb-2" style="letter-spacing:.2em;font-size:.75rem;">Step 2<?php if ($eventName !== ''): ?> — <?= htmlspecialchars($eventName, ENT_QUOTES) ?><?php endif; ?></p>
         <h1 class="page-heading h3 mb-3">Scan QR and capture signature</h1>
         <div id="reader" class="mb-4 bg-white position-relative">
           <div id="scanLoading" class="text-center p-4">
@@ -72,7 +75,7 @@ $token = function_exists('csrf_token') ? csrf_token() : '';
           <div id="status" class="mt-3 text-muted small"></div>
         </div>
       </div>
-      <a class="btn btn-outline-secondary" href="?r=register">Back to registration</a>
+          <a class="btn btn-outline-secondary" href="?r=register&amp;e=<?= urlencode($eventSlug) ?>">Back to registration</a>
     </div>
   </div>
 </div>
@@ -87,6 +90,7 @@ $token = function_exists('csrf_token') ? csrf_token() : '';
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 <script>
 const csrf = document.querySelector('meta[name="csrf"]').getAttribute('content');
+const eventSlug = document.querySelector('meta[name="event-slug"]').getAttribute('content') || '';
 let currentUuid = null;
 let sigPad;
 let calibrated = false;
@@ -301,7 +305,7 @@ function onScanSuccess(decodedText, decodedResult) {
         isScanning = false;
       });
     }
-    fetch('?r=api_participant&uuid=' + encodeURIComponent(uuid))
+    fetch('?r=api_participant&uuid=' + encodeURIComponent(uuid) + '&e=' + encodeURIComponent(eventSlug))
       .then(r => {
         if (!r.ok) {
           throw new Error('Participant not found');
@@ -372,10 +376,10 @@ document.getElementById('saveBtn').addEventListener('click', () => {
   const btn = document.getElementById('saveBtn');
   btn.disabled = true;
   btn.textContent = 'Saving...';
-  fetch('?r=attendance_submit', {
+  fetch('?r=attendance_submit&e=' + encodeURIComponent(eventSlug), {
     method: 'POST',
     headers: { 'Content-Type': 'application/json', 'X-CSRF-Token': csrf },
-    body: JSON.stringify({ uuid: currentUuid, signature: data })
+    body: JSON.stringify({ uuid: currentUuid, signature: data, e: eventSlug })
   }).then(r => r.json()).then(j => {
     const el = document.getElementById('saveToast');
     el.className = 'toast align-items-center ' + (j.ok ? 'text-bg-success' : 'text-bg-danger') + ' border-0';

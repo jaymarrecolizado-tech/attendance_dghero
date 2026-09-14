@@ -120,6 +120,28 @@ class Database
         if (self::tableExists($pdo, 'participants') && !self::columnExists($pdo, 'participants', 'is_vip')) {
             self::executeSqlFile($pdo, $base . '008_participant_vip.sql');
         }
+        // 009_multi_event
+        if (self::tableExists($pdo, 'events') && (!self::tableExists($pdo, 'event_assignments') || !self::columnExists($pdo, 'events', 'slug') || !self::columnExists($pdo, 'participants', 'event_id'))) {
+            self::executeSqlFileTolerant($pdo, $base . '009_multi_event.sql');
+        }
+    }
+
+    private static function executeSqlFileTolerant(PDO $pdo, string $path): void
+    {
+        if (!is_file($path)) return;
+        $sql = (string)file_get_contents($path);
+        foreach (array_filter(array_map('trim', preg_split('/;\s*\n/', $sql))) as $stmt) {
+            if ($stmt === '') continue;
+            try {
+                $pdo->exec($stmt);
+            } catch (\PDOException $e) {
+                $msg = strtolower($e->getMessage());
+                if (str_contains($msg, 'duplicate') || str_contains($msg, 'already exists') || str_contains($msg, 'exists')) {
+                    continue;
+                }
+                throw $e;
+            }
+        }
     }
 
     private static function executeSqlFile(PDO $pdo, string $path): void

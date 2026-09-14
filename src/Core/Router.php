@@ -59,11 +59,51 @@ final class Router
             }
 
             if ($guard === 'staff') {
-                $ok = !empty($_SESSION['staff']) || AuthService::hasRole(AuthService::ROLE_ADMIN, AuthService::ROLE_CHECKER);
+                $ok = !empty($_SESSION['staff']) || AuthService::check();
                 if (!$ok) {
                     http_response_code(403);
                     echo 'Forbidden';
                     return false;
+                }
+                continue;
+            }
+
+            if ($guard === 'event' || str_starts_with($guard, 'event:')) {
+                if (!AuthService::check()) {
+                    AuthService::deny($method);
+                    return false;
+                }
+                $allowed = null;
+                if (str_starts_with($guard, 'event:')) {
+                    $allowed = array_values(array_filter(array_map('trim', explode('|', substr($guard, 6)))));
+                }
+                try {
+                    $pdo = \App\Services\Database::pdo();
+                    $event = \App\Services\EventContext::currentEvent($pdo);
+                    if (!$event) {
+                        // All Father with no events yet may proceed (to create events).
+                        if (!AuthService::isAdmin()) {
+                            AuthService::deny($method);
+                            return false;
+                        }
+                        continue;
+                    }
+                    $adminId = (int)($_SESSION['admin_id'] ?? 0);
+                    if (!\App\Services\EventContext::canAccess($pdo, $adminId, (int)$event['id'], $allowed)) {
+                        try {
+                            Logger::log(AuthService::id(), 'role_denied', [
+                                'route' => $routeName,
+                                'role' => AuthService::role(),
+                                'required' => $allowed ?? ['event_access'],
+                            ]);
+                        } catch (\Throwable $e) {
+                            // ignore logging failures
+                        }
+                        AuthService::deny($method);
+                        return false;
+                    }
+                } catch (\Throwable $e) {
+                    // Fail open to controller-level checks when event tables are unavailable.
                 }
                 continue;
             }

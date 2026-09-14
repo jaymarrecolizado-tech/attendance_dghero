@@ -4,6 +4,7 @@ declare(strict_types=1);
 namespace App\Controllers;
 
 use App\Services\Database;
+use App\Services\EventContext;
 use App\Services\Uuid;
 use App\Services\QrService;
 use App\Services\Mailer;
@@ -25,8 +26,19 @@ class RegisterController
     public function show(): void
     {
         $pdo = \App\Services\Database::pdo();
-        $agencies = $pdo->query("SELECT DISTINCT agency FROM participants WHERE agency IS NOT NULL AND agency <> '' ORDER BY agency ASC LIMIT 500")->fetchAll();
-        $designations = $pdo->query("SELECT DISTINCT designation FROM participants WHERE designation IS NOT NULL AND designation <> '' ORDER BY designation ASC LIMIT 500")->fetchAll();
+        $slug = trim((string)($_GET['e'] ?? ''));
+        if ($slug === '') {
+            $events = EventContext::openEvents($pdo);
+            $mode = 'register';
+            require dirname(__DIR__, 2) . DIRECTORY_SEPARATOR . 'views' . DIRECTORY_SEPARATOR . 'public_event_picker.php';
+            return;
+        }
+        $event = EventContext::findBySlug($pdo, $slug);
+        if (!$event) { http_response_code(404); echo 'Event not found'; return; }
+        if (!EventContext::isPublicOpen($event)) { http_response_code(403); echo 'Registration is closed for this event'; return; }
+        $eventId = (int)$event['id'];
+        $agencies = $pdo->query("SELECT DISTINCT agency FROM participants WHERE event_id = {$eventId} AND agency IS NOT NULL AND agency <> '' ORDER BY agency ASC LIMIT 500")->fetchAll();
+        $designations = $pdo->query("SELECT DISTINCT designation FROM participants WHERE event_id = {$eventId} AND designation IS NOT NULL AND designation <> '' ORDER BY designation ASC LIMIT 500")->fetchAll();
         $sexes = self::SEXES;
         $sectors = self::SECTORS;
         require dirname(__DIR__, 2) . DIRECTORY_SEPARATOR . 'views' . DIRECTORY_SEPARATOR . 'register.php';
@@ -37,10 +49,16 @@ class RegisterController
         $uuid = isset($_GET['uuid']) ? (string)$_GET['uuid'] : '';
         if ($uuid === '') { http_response_code(400); echo 'Missing UUID'; return; }
         $pdo = \App\Services\Database::pdo();
-        $stmt = $pdo->prepare('SELECT uuid, first_name, last_name FROM participants WHERE uuid = ?');
+        $stmt = $pdo->prepare('SELECT uuid, first_name, last_name, event_id FROM participants WHERE uuid = ?');
         $stmt->execute([$uuid]);
         $row = $stmt->fetch();
         if (!$row) { http_response_code(404); echo 'Not Found'; return; }
+        $slug = trim((string)($_GET['e'] ?? ''));
+        $event = null;
+        if ($slug !== '') {
+            $event = EventContext::findBySlug($pdo, $slug);
+            if (!$event || (int)$row['event_id'] !== (int)$event['id']) { http_response_code(404); echo 'Not Found'; return; }
+        }
         $participant = [
             'uuid' => $row['uuid'],
             'first_name' => $row['first_name'],
@@ -58,6 +76,13 @@ class RegisterController
             echo 'Invalid CSRF';
             return;
         }
+
+        $pdo = Database::pdo();
+        $slug = trim((string)($_POST['e'] ?? $_GET['e'] ?? ''));
+        $event = $slug !== '' ? EventContext::findBySlug($pdo, $slug) : null;
+        if (!$event) { http_response_code(400); echo 'Missing event'; return; }
+        if (!EventContext::isPublicOpen($event)) { http_response_code(403); echo 'Registration is closed for this event'; return; }
+        $eventId = (int)$event['id'];
 
         $ip = $_SERVER['REMOTE_ADDR'] ?? 'unknown';
         if (!RateLimiter::allow('register:' . $ip, 10, 300)) {
@@ -101,8 +126,8 @@ class RegisterController
         $pdo = Database::pdo();
         try {
             if (!empty($clean['email'])) {
-                $chk = $pdo->prepare('SELECT id FROM participants WHERE email = ?');
-                $chk->execute([$clean['email']]);
+                $chk = $pdo->prepare('SELECT id FROM participants WHERE email = ? AND event_id = ?');
+                $chk->execute([$clean['email'], $eventId]);
                 if ($chk->fetch()) {
                     http_response_code(409);
                     $error = 'Email already registered';
@@ -117,8 +142,9 @@ class RegisterController
             while ($attempts < $max) {
                 $uuid = Uuid::v4();
                 try {
-                    $stmt = $pdo->prepare('INSERT INTO participants (uuid,email,first_name,middle_name,last_name,nickname,sex,sector,agency,designation,office_email,contact_no,qr_path) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?)');
+                    $stmt = $pdo->prepare('INSERT INTO participants (event_id, uuid,email,first_name,middle_name,last_name,nickname,sex,sector,agency,designation,office_email,contact_no,qr_path) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?)');
                     $stmt->execute([
+                        $eventId,
                         $uuid,
                         $clean['email'],
                         $clean['first_name'],
@@ -164,7 +190,7 @@ class RegisterController
         if (function_exists('csrf_rotate')) {
             csrf_rotate();
         }
-        header('Location: ?r=register_success&uuid=' . urlencode($uuid));
+        header('Location: ?r=register_success&uuid=' . urlencode($uuid) . '&e=' . urlencode($slug));
         exit;
     }
 

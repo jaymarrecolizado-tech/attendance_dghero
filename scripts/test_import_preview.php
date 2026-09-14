@@ -4,6 +4,9 @@ declare(strict_types=1);
 require __DIR__ . '/../config/bootstrap.php';
 require __DIR__ . '/../src/Controllers/AdminImportController.php';
 require __DIR__ . '/../src/Services/Database.php';
+require __DIR__ . '/../src/Services/EventContext.php';
+require __DIR__ . '/../src/Services/AuthService.php';
+require __DIR__ . '/../src/Services/RateLimiter.php';
 
 $_SESSION['admin_id'] = 1;
 $_SESSION['csrf'] = bin2hex(random_bytes(32));

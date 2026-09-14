@@ -3,7 +3,9 @@ declare(strict_types=1);
 
 namespace App\Controllers;
 
+use App\Services\AuthService;
 use App\Services\Database;
+use App\Services\EventContext;
 
 class AdminAttendanceGalleryController
 {
@@ -11,13 +13,20 @@ class AdminAttendanceGalleryController
     {
         if (empty($_SESSION['admin_id'])) { header('Location: ?r=admin_login'); return; }
         $pdo = Database::pdo();
+        $event = EventContext::currentEvent($pdo);
+        if (!$event) { http_response_code(404); echo 'No events'; return; }
+        $eventId = (int)$event['id'];
+        if (!EventContext::canAccess($pdo, (int)$_SESSION['admin_id'], $eventId, ['event_admin']) && !AuthService::isAdmin()) {
+            AuthService::deny('GET');
+            return;
+        }
         $date = trim((string)($_GET['date'] ?? ''));
         $agency = trim((string)($_GET['agency'] ?? ''));
-        $where = [];
-        $bind = [];
+        $where = ['a.event_id = ?', 'p.event_id = ?'];
+        $bind = [$eventId, $eventId];
         if ($date !== '') { $where[] = 'a.attendance_date = ?'; $bind[] = $date; }
         if ($agency !== '') { $where[] = 'p.agency LIKE ?'; $bind[] = "%{$agency}%"; }
-        $sqlWhere = $where ? ('WHERE ' . implode(' AND ', $where)) : '';
+        $sqlWhere = 'WHERE ' . implode(' AND ', $where);
         $page = max(1, (int)($_GET['page'] ?? 1));
         $per = 24;
         $offset = ($page - 1) * $per;
@@ -26,7 +35,7 @@ class AdminAttendanceGalleryController
         $items = $stmt->fetchAll();
         $total = (int)$pdo->query('SELECT FOUND_ROWS() AS t')->fetch()['t'];
         $pages = max(1, (int)ceil($total / $per));
-        $data = compact('items','date','agency','page','pages');
+        $data = compact('items','date','agency','page','pages','event');
         require dirname(__DIR__, 2) . DIRECTORY_SEPARATOR . 'views' . DIRECTORY_SEPARATOR . 'admin_attendance_gallery.php';
     }
 }

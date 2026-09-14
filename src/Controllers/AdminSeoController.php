@@ -5,9 +5,23 @@ namespace App\Controllers;
 
 use App\Services\AuthService;
 use App\Services\Database;
+use App\Services\EventContext;
 
 class AdminSeoController
 {
+    /** @return array<string,mixed>|null */
+    private function currentEventOrDeny(\PDO $pdo): ?array
+    {
+        $event = EventContext::currentEvent($pdo);
+        if (!$event) { http_response_code(404); echo 'No events'; return null; }
+        $adminId = (int)($_SESSION['admin_id'] ?? 0);
+        if (!EventContext::canAccess($pdo, $adminId, (int)$event['id'], ['event_admin', 'seo_viewer']) && !AuthService::isAdmin()) {
+            AuthService::deny($_SERVER['REQUEST_METHOD'] ?? 'GET');
+            return null;
+        }
+        return $event;
+    }
+
     public function dashboard(): void
     {
         if (!AuthService::check()) {
@@ -15,11 +29,13 @@ class AdminSeoController
             return;
         }
         $pdo = Database::pdo();
+        $event = $this->currentEventOrDeny($pdo);
+        if (!$event) return;
         $selectedDate = trim((string)($_GET['date'] ?? ''));
         if ($selectedDate === '') {
             $selectedDate = date('Y-m-d');
         }
-        $summary = $this->buildSummary($pdo, $selectedDate);
+        $summary = $this->buildSummary($pdo, $selectedDate, (int)$event['id']);
         extract($summary, EXTR_SKIP);
         require dirname(__DIR__, 2) . DIRECTORY_SEPARATOR . 'views' . DIRECTORY_SEPARATOR . 'admin_seo_dashboard.php';
     }
@@ -32,14 +48,15 @@ class AdminSeoController
             echo json_encode(['error' => 'unauthorized']);
             return;
         }
+        $pdo = Database::pdo();
+        if (!$this->currentEventOrDeny($pdo)) return;
         header('Content-Type: application/json');
         header('Cache-Control: no-store');
-        $pdo = Database::pdo();
         $selectedDate = trim((string)($_GET['date'] ?? ''));
         if ($selectedDate === '') {
             $selectedDate = date('Y-m-d');
         }
-        echo json_encode($this->buildSummary($pdo, $selectedDate));
+        echo json_encode($this->buildSummary($pdo, $selectedDate, (int)EventContext::currentEvent($pdo)['id']));
     }
 
     public function searchJson(): void
@@ -65,21 +82,20 @@ class AdminSeoController
         }
 
         $pdo = Database::pdo();
-        $event = $pdo->query('SELECT id FROM events WHERE active=1 ORDER BY id DESC LIMIT 1')->fetch() ?: null;
-        $eventId = $event ? (int)$event['id'] : null;
+        $event = $this->currentEventOrDeny($pdo);
+        if (!$event) return;
+        $eventId = (int)$event['id'];
 
         $joinOn = 'a.participant_id = p.id AND a.attendance_date = ?';
         $bind = [$selectedDate];
-        if ($eventId !== null) {
-            $joinOn .= ' AND (a.event_id = ? OR a.event_id IS NULL)';
-            $bind[] = $eventId;
-        }
+        $joinOn .= ' AND (a.event_id = ? OR a.event_id IS NULL)';
+        $bind[] = $eventId;
 
         $like = '%' . $q . '%';
-        $where = '(p.first_name LIKE ? OR p.last_name LIKE ? OR p.agency LIKE ? OR p.designation LIKE ?
+        $where = '(p.event_id = ? AND (p.first_name LIKE ? OR p.last_name LIKE ? OR p.agency LIKE ? OR p.designation LIKE ?
                   OR CONCAT(p.first_name, \' \', p.last_name) LIKE ?
-                  OR CONCAT(p.last_name, \' \', p.first_name) LIKE ?)';
-        $bind = array_merge($bind, [$like, $like, $like, $like, $like, $like]);
+                  OR CONCAT(p.last_name, \' \', p.first_name) LIKE ?))';
+        $bind = array_merge($bind, [$eventId, $like, $like, $like, $like, $like, $like]);
         if ($scope === 'vip') {
             $where .= ' AND p.is_vip = 1';
         }
@@ -122,15 +138,18 @@ class AdminSeoController
     /**
      * @return array<string,mixed>
      */
-    private function buildSummary(\PDO $pdo, string $selectedDate): array
+    private function buildSummary(\PDO $pdo, string $selectedDate, ?int $eventId = null): array
     {
-        $event = $pdo->query('SELECT id, name, created_at FROM events WHERE active=1 ORDER BY id DESC LIMIT 1')->fetch() ?: null;
-        $eventId = $event ? (int)$event['id'] : null;
+        if ($eventId === null) {
+            $ev = EventContext::currentEvent($pdo);
+            $eventId = $ev ? (int)$ev['id'] : null;
+        }
+        $event = $eventId ? EventContext::findById($pdo, $eventId) : null;
 
         $kpi = $this->computeKpis($pdo, $selectedDate, $eventId);
         $vips = $this->guestRows($pdo, $selectedDate, $eventId, true);
         $guests = $this->guestRows($pdo, $selectedDate, $eventId, false, 300);
-        $guestTotal = $this->guestTotal($pdo, false);
+        $guestTotal = $this->guestTotal($pdo, false, $eventId);
         $agencyRollup = $this->agencyRollup($vips);
         $recentVip = array_values(array_filter($vips, static fn(array $r): bool => $r['guest_status'] === 'present' && !empty($r['time_in'])));
         usort($recentVip, static function (array $a, array $b): int {
@@ -188,7 +207,13 @@ class AdminSeoController
         $stmt->execute(array_merge([$selectedDate], $scopeParams));
         $dateCount = (int)$stmt->fetchColumn();
 
-        $totalRegistered = (int)$pdo->query('SELECT COUNT(*) FROM participants')->fetchColumn();
+        if ($eventId !== null) {
+            $tStmt = $pdo->prepare('SELECT COUNT(*) FROM participants WHERE event_id = ?');
+            $tStmt->execute([$eventId]);
+            $totalRegistered = (int)$tStmt->fetchColumn();
+        } else {
+            $totalRegistered = (int)$pdo->query('SELECT COUNT(*) FROM participants')->fetchColumn();
+        }
 
         $absentSql = "SELECT COUNT(DISTINCT a.participant_id) FROM attendance a WHERE a.attendance_date = ? AND a.status = 'absent'";
         $absentBind = [$selectedDate];
@@ -247,6 +272,9 @@ class AdminSeoController
         }
 
         $vipSql = $vipOnly ? 'p.is_vip = 1' : 'p.is_vip = 0';
+        if ($eventId !== null) {
+            $vipSql = 'p.event_id = ' . ((int)$eventId) . ' AND ' . $vipSql;
+        }
         $limitSql = $limit !== null ? ' LIMIT ' . max(1, min(500, $limit)) : '';
 
         $stmt = $pdo->prepare(
@@ -285,8 +313,15 @@ class AdminSeoController
         return $out;
     }
 
-    private function guestTotal(\PDO $pdo, bool $vipOnly): int
+    private function guestTotal(\PDO $pdo, bool $vipOnly, ?int $eventId = null): int
     {
+        if ($eventId !== null) {
+            $stmt = $pdo->prepare($vipOnly
+                ? 'SELECT COUNT(*) FROM participants WHERE is_vip = 1 AND event_id = ?'
+                : 'SELECT COUNT(*) FROM participants WHERE is_vip = 0 AND event_id = ?');
+            $stmt->execute([$eventId]);
+            return (int)$stmt->fetchColumn();
+        }
         $sql = $vipOnly
             ? 'SELECT COUNT(*) FROM participants WHERE is_vip = 1'
             : 'SELECT COUNT(*) FROM participants WHERE is_vip = 0';
@@ -321,7 +356,10 @@ class AdminSeoController
     private function statusCountsFromDb(\PDO $pdo, string $selectedDate, ?int $eventId, bool $vipOnly): array
     {
         $vipSql = $vipOnly ? 'p.is_vip = 1' : 'p.is_vip = 0';
-        $total = $this->guestTotal($pdo, $vipOnly);
+        if ($eventId !== null) {
+            $vipSql = 'p.event_id = ' . ((int)$eventId) . ' AND ' . $vipSql;
+        }
+        $total = $this->guestTotal($pdo, $vipOnly, $eventId);
 
         $joinOn = 'a.participant_id = p.id AND a.attendance_date = ?';
         $bind = [$selectedDate];

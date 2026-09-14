@@ -2,6 +2,8 @@
 declare(strict_types=1);
 
 $token = function_exists('csrf_token') ? csrf_token() : '';
+$eventSlug = isset($event) && isset($event['slug']) ? (string)$event['slug'] : trim((string)($_GET['e'] ?? ''));
+$eventName = isset($event) ? (string)($event['name'] ?? '') : '';
 $guestTitle = 'Event Registration — GovNet-Launching';
 $guestIncludeRegistrationAssets = true;
 $guestIncludeRegistrationJs = true;
@@ -16,7 +18,7 @@ require __DIR__ . DIRECTORY_SEPARATOR . 'partials' . DIRECTORY_SEPARATOR . 'gues
       <div class="guest-form-wrap">
         <div class="guest-form-card">
           <h2 class="guest-form-title">Participant Registration</h2>
-          <p class="guest-form-subtitle">Complete all steps to receive your check-in QR code.</p>
+          <p class="guest-form-subtitle">Complete all steps to receive your check-in QR code.<?php if ($eventName !== ''): ?> Event: <strong><?= htmlspecialchars($eventName, ENT_QUOTES) ?></strong><?php endif; ?></p>
 
           <div class="guest-stepper" aria-label="Registration progress">
             <div class="guest-stepper-progress" aria-hidden="true">
@@ -32,8 +34,9 @@ require __DIR__ . DIRECTORY_SEPARATOR . 'partials' . DIRECTORY_SEPARATOR . 'gues
 
           <div id="stepError" class="guest-step-error" role="alert"></div>
 
-          <form method="post" action="?r=register_submit" id="registrationForm" class="needs-validation" novalidate>
+          <form method="post" action="?r=register_submit&amp;e=<?= urlencode($eventSlug) ?>" id="registrationForm" class="needs-validation" novalidate>
             <input type="hidden" name="csrf" value="<?= htmlspecialchars($token, ENT_QUOTES) ?>">
+            <input type="hidden" name="e" value="<?= htmlspecialchars($eventSlug, ENT_QUOTES) ?>">
 
             <!-- Step 1: Personal -->
             <fieldset class="reg-step is-active" data-step="1">

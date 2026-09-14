@@ -3,7 +3,9 @@ declare(strict_types=1);
 
 namespace App\Controllers;
 
+use App\Services\AuthService;
 use App\Services\Database;
+use App\Services\EventContext;
 
 class AdminImportController
 {
@@ -33,15 +35,34 @@ class AdminImportController
         return true;
     }
 
+    /** @return array<string,mixed>|null */
+    private function currentEventOrManage(\PDO $pdo): ?array
+    {
+        $event = EventContext::currentEvent($pdo);
+        if (!$event) { http_response_code(404); echo 'No events'; return null; }
+        $adminId = (int)($_SESSION['admin_id'] ?? 0);
+        if (!EventContext::canAccess($pdo, $adminId, (int)$event['id'], ['event_admin']) && !AuthService::isAdmin()) {
+            AuthService::deny($_SERVER['REQUEST_METHOD'] ?? 'GET');
+            return null;
+        }
+        return $event;
+    }
+
     public function form(): void
     {
         if (!$this->requireAdmin()) return;
+        $pdo = Database::pdo();
+        if (!$this->currentEventOrManage($pdo)) return;
         require dirname(__DIR__, 2) . DIRECTORY_SEPARATOR . 'views' . DIRECTORY_SEPARATOR . 'admin_import.php';
     }
 
     public function preview(): void
     {
         if (!$this->requireAdmin()) return;
+        $pdo = Database::pdo();
+        $event = $this->currentEventOrManage($pdo);
+        if (!$event) return;
+        $eventId = (int)$event['id'];
         $ip = $_SERVER['REMOTE_ADDR'] ?? 'unknown';
         $ok = \App\Services\RateLimiter::allow('import_preview:'.$ip, 10, 60);
         if (!$ok) { http_response_code(429); echo 'Too Many Attempts'; return; }
@@ -66,13 +87,12 @@ class AdminImportController
         $rows = [];
         $errors = [];
         $limit = 200;
-        $pdo = Database::pdo();
         $map = $this->headerMap($header);
         $count = 0;
         while (($data = fgetcsv($fh)) !== false) {
             $count++;
             $row = $this->rowFromMap($map, $data);
-            $status = $this->detectStatus($pdo, $row);
+            $status = $this->detectStatus($pdo, $row, $eventId);
             $rows[] = ['rownum'=>$count, 'row'=>$row, 'status'=>$status];
             if (count($rows) >= $limit) break;
         }
@@ -84,12 +104,21 @@ class AdminImportController
         move_uploaded_file($tmp, $stored);
         $_SESSION['import_file'] = $stored;
         $_SESSION['import_map'] = $map;
+        $_SESSION['import_event_id'] = $eventId;
         $this->renderPreview($rows, $errors);
     }
 
     public function execute(): void
     {
         if (!$this->requireAdmin()) return;
+        $pdo = Database::pdo();
+        $event = $this->currentEventOrManage($pdo);
+        if (!$event) return;
+        $eventId = (int)($_SESSION['import_event_id'] ?? $event['id']);
+        if (!EventContext::canAccess($pdo, (int)$_SESSION['admin_id'], $eventId, ['event_admin']) && !AuthService::isAdmin()) {
+            AuthService::deny('POST');
+            return;
+        }
         $ip = $_SERVER['REMOTE_ADDR'] ?? 'unknown';
         $ok = \App\Services\RateLimiter::allow('import_execute:'.$ip, 5, 60);
         if (!$ok) { http_response_code(429); echo 'Too Many Attempts'; return; }
@@ -122,8 +151,6 @@ class AdminImportController
             // Increase execution time and memory limits for large imports
             set_time_limit(300); // 5 minutes
             ini_set('memory_limit', '256M');
-            
-            $pdo = Database::pdo();
             
             // Use SplFileObject for better CSV handling
             // Don't use SKIP_EMPTY as we want to process all rows including those with empty cells
@@ -219,7 +246,7 @@ class AdminImportController
                         continue;
                     }
                     
-                    $status = $this->detectStatus($pdo, $row);
+                    $status = $this->detectStatus($pdo, $row, $eventId);
                     error_log("Import: Row $rowCount status: $status");
                     
                     if ($status === 'Error') { 
@@ -228,11 +255,11 @@ class AdminImportController
                         continue; 
                     }
                     
-                    $match = $this->findMatch($pdo, $row);
+                    $match = $this->findMatch($pdo, $row, $eventId);
                     if (!$match) {
                         // Process insert immediately
                         try {
-                            $result = $this->processSingleRow($pdo, 'insert', $row, null);
+                            $result = $this->processSingleRow($pdo, 'insert', $row, null, $eventId);
                             if ($result['success']) {
                                 $inserted++;
                                 $processedCount++;
@@ -252,7 +279,7 @@ class AdminImportController
                         if ($strategy === 'override_all' || ($strategy === 'override_duplicates' && ($status === 'Duplicate (email)' || $status === 'Duplicate (name+agency)'))) {
                             // Process update immediately
                             try {
-                                $result = $this->processSingleRow($pdo, 'update', $row, $match);
+                                $result = $this->processSingleRow($pdo, 'update', $row, $match, $eventId);
                                 if ($result['success']) {
                                     $updated++;
                                     $processedCount++;
@@ -300,7 +327,7 @@ class AdminImportController
             $log = $pdo->prepare('INSERT INTO import_logs (admin_id, file_name, action, duplicate_strategy, summary) VALUES (?,?,?,?,?)');
             $log->execute([(int)$_SESSION['admin_id'], basename($file), 'execute', $strategy, $summary]);
 
-            unset($_SESSION['import_file'], $_SESSION['import_map']);
+            unset($_SESSION['import_file'], $_SESSION['import_map'], $_SESSION['import_event_id']);
             header('Location: ?r=admin_import_history');
         } catch (\Exception $e) {
             error_log('Import execute error: ' . $e->getMessage() . ' in ' . $e->getFile() . ':' . $e->getLine());
@@ -537,31 +564,39 @@ class AdminImportController
         ];
     }
 
-    private function detectStatus(\PDO $pdo, array $row): string
+    private function detectStatus(\PDO $pdo, array $row, int $eventId = 0): string
     {
         if ($row['first_name'] === '' || $row['last_name'] === '') return 'Error';
         if ($row['email'] !== '') {
-            $s = $pdo->prepare('SELECT id FROM participants WHERE email = ?');
-            $s->execute([$row['email']]);
+            $s = $eventId > 0
+                ? $pdo->prepare('SELECT id FROM participants WHERE email = ? AND event_id = ?')
+                : $pdo->prepare('SELECT id FROM participants WHERE email = ?');
+            $s->execute($eventId > 0 ? [$row['email'], $eventId] : [$row['email']]);
             if ($s->fetch()) return 'Duplicate (email)';
         } else {
-            $s = $pdo->prepare('SELECT id FROM participants WHERE first_name = ? AND last_name = ? AND agency = ?');
-            $s->execute([$row['first_name'], $row['last_name'], ($row['agency']!==''?$row['agency']:null)]);
+            $s = $eventId > 0
+                ? $pdo->prepare('SELECT id FROM participants WHERE first_name = ? AND last_name = ? AND agency = ? AND event_id = ?')
+                : $pdo->prepare('SELECT id FROM participants WHERE first_name = ? AND last_name = ? AND agency = ?');
+            $s->execute($eventId > 0 ? [$row['first_name'], $row['last_name'], ($row['agency']!==''?$row['agency']:null), $eventId] : [$row['first_name'], $row['last_name'], ($row['agency']!==''?$row['agency']:null)]);
             if ($s->fetch()) return 'Duplicate (name+agency)';
         }
         return 'New';
     }
 
-    private function findMatch(\PDO $pdo, array $row): ?array
+    private function findMatch(\PDO $pdo, array $row, int $eventId = 0): ?array
     {
         if ($row['email'] !== '') {
-            $s = $pdo->prepare('SELECT * FROM participants WHERE email = ?');
-            $s->execute([$row['email']]);
+            $s = $eventId > 0
+                ? $pdo->prepare('SELECT * FROM participants WHERE email = ? AND event_id = ?')
+                : $pdo->prepare('SELECT * FROM participants WHERE email = ?');
+            $s->execute($eventId > 0 ? [$row['email'], $eventId] : [$row['email']]);
             $m = $s->fetch();
             if ($m) return $m;
         }
-        $s = $pdo->prepare('SELECT * FROM participants WHERE first_name = ? AND last_name = ? AND agency = ?');
-        $s->execute([$row['first_name'], $row['last_name'], ($row['agency']!==''?$row['agency']:null)]);
+        $s = $eventId > 0
+            ? $pdo->prepare('SELECT * FROM participants WHERE first_name = ? AND last_name = ? AND agency = ? AND event_id = ?')
+            : $pdo->prepare('SELECT * FROM participants WHERE first_name = ? AND last_name = ? AND agency = ?');
+        $s->execute($eventId > 0 ? [$row['first_name'], $row['last_name'], ($row['agency']!==''?$row['agency']:null), $eventId] : [$row['first_name'], $row['last_name'], ($row['agency']!==''?$row['agency']:null)]);
         $m = $s->fetch();
         return $m ?: null;
     }
@@ -569,15 +604,16 @@ class AdminImportController
     /**
      * Process a single row immediately (insert or update)
      */
-    private function processSingleRow(\PDO $pdo, string $action, array $row, ?array $match): array
+    private function processSingleRow(\PDO $pdo, string $action, array $row, ?array $match, int $eventId = 0): array
     {
         try {
             $pdo->beginTransaction();
-            
+
             if ($action === 'insert') {
                 $uuid = \App\Services\Uuid::v4();
-                $stmt = $pdo->prepare('INSERT INTO participants (uuid,email,first_name,middle_name,last_name,nickname,sex,sector,agency,designation,office_email,contact_no,qr_path,created_by) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?)');
+                $stmt = $pdo->prepare('INSERT INTO participants (event_id, uuid,email,first_name,middle_name,last_name,nickname,sex,sector,agency,designation,office_email,contact_no,qr_path,created_by) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)');
                 $stmt->execute([
+                    $eventId > 0 ? $eventId : null,
                     $uuid,
                     $row['email'] !== '' ? $row['email'] : null,
                     $row['first_name'],

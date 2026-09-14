@@ -7,6 +7,8 @@ $guestIncludeRegistrationAssets = true;
 require __DIR__ . DIRECTORY_SEPARATOR . 'partials' . DIRECTORY_SEPARATOR . 'guest_head.php';
 
 $firstName = htmlspecialchars($participant['first_name'] ?? '', ENT_QUOTES);
+$eventSlug = trim((string)($_GET['e'] ?? ''));
+$registerAnother = $eventSlug !== '' ? '?r=register&e=' . urlencode($eventSlug) : '?r=register';
 $qrUrl = rtrim(dirname($_SERVER['SCRIPT_NAME']), '/') . '/qrcode.php?uuid=' . urlencode($participant['uuid']);
 ?>
 
@@ -34,7 +36,7 @@ $qrUrl = rtrim(dirname($_SERVER['SCRIPT_NAME']), '/') . '/qrcode.php?uuid=' . ur
         <div class="d-flex flex-column flex-sm-row justify-content-center gap-2">
           <a class="btn btn-primary guest-btn guest-btn-lg" href="<?= htmlspecialchars($qrUrl, ENT_QUOTES) ?>" download>Download QR</a>
           <button type="button" class="btn btn-outline-secondary guest-btn guest-btn-lg" disabled title="Coming soon">Add to Wallet</button>
-          <a class="btn btn-outline-secondary guest-btn guest-btn-lg" href="?r=register">Register another</a>
+          <a class="btn btn-outline-secondary guest-btn guest-btn-lg" href="<?= htmlspecialchars($registerAnother, ENT_QUOTES) ?>">Register another</a>
         </div>
       </div>
     </div>

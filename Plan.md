@@ -4,39 +4,176 @@ Turn the current single-active-event app into a multi-event platform: an All Fat
 
 **Implement in OpenCode with Muse Spark 13, enforcing [taste-skill](https://github.com/leonxlnx/taste-skill) and [ponytail](https://github.com/dietrichgebert/ponytail), on remote branch `attendance_accend`.**
 
-## Checklist
-
-- [x] Create and push remote branch `attendance_accend` from `main`
-- [ ] Wire OpenCode (Muse Spark 13) to enforce ponytail + taste-skill (`design-taste-frontend` + `redesign-existing-projects`)
-- [ ] Add `009_multi_event` migration (slug, schedule, status, `participants.event_id`, `event_assignments`) and `EventContext` resolver; backfill existing rows to Event 1
-- [ ] Require `e=slug` on register/scan/QR/attendance; copyable unique links; reject cross-event QR
-- [ ] Event switcher + filter registrants/attendance/import/export/reports/SEO/gallery by current event; replace Set Active
-- [ ] All Father assignment UI; `event_admin` / `checker` / `seo_viewer` scoped to assigned events; tighten `requireAdmin()`
-- [ ] Extend RBAC/event tests: two concurrent events, email uniqueness per event, staff isolation, cross-event scan deny
+**Audit date:** 2026-09-14. Core multi-event draft exists in the **local working tree**. It is **not** a finished implementation. `Plan.md` checkboxes below are the honest status.
 
 ---
 
-## What exists today
+## Agent: start here
 
-The install is one live event at a time.
+You are closing gaps on branch `attendance_accend`. Do not rebuild the multi-event platform. Reuse `EventContext`, `AuthService`, and `?r=` routes.
 
-- [`migrations/003_events.sql`](migrations/003_events.sql) has `events.active`. [`AdminEventsController::setActive()`](src/Controllers/AdminEventsController.php) zeros every row, then sets one `active=1`.
-- Public register/scan URLs have **no event key** (`?r=register`, `?r=scan` in [`config/routes.php`](config/routes.php)). Check-in always stamps the singleton active event.
-- **Participants are global** (`UNIQUE(email)` in [`migrations/001_init.sql`](migrations/001_init.sql)). The same email cannot belong to two events. Attendance has `event_id`, but registrants, import, export, and QR do not.
-- Staff roles in `admins.role` (`admin`, `checker`, `seo_viewer`) are **global**. There is no event assignment. All Father is effectively today's `admin`.
+**Session contract**
 
-```mermaid
-flowchart LR
-  subgraph today [Today]
-    AF[Admin]
-    AE[One active event]
-    P[Global participants]
-    AF --> AE
-    P --> AE
-  end
+1. You are on branch `attendance_accend`.
+2. Load ponytail (`full`) and taste-skill (`design-taste-frontend` + `redesign-existing-projects`) before writing files.
+3. State a one-line design read before any view/CSS change. Public-sector / trust-first. Dials: `DESIGN_VARIANCE: 3-4`, `MOTION_INTENSITY: 2-3`, `VISUAL_DENSITY: 5` (admin), `4` (public register/scan).
+4. No new frontend stack. No extra tables unless a remaining item below requires it.
+5. Do not commit `.env`, `.env.vps`, `storage/` uploads, or graphify cache.
+
+**First commands**
+
+```bash
+git checkout attendance_accend
+git status
+# Confirm local uncommitted multi-event files are present (EventContext.php, migrations/009_multi_event.sql, etc.)
+# If the tree is clean and those files are missing, the draft was never committed. Recover from the machine that audited this plan.
 ```
 
-## Target model
+Then work the **Remaining work** list in order. After each item, tick it here.
+
+---
+
+## Checklist
+
+- [x] Create and push remote branch `attendance_accend` from `main`
+- [ ] Commit and push the local multi-event draft (currently only `Plan.md` is on origin)
+- [ ] Wire OpenCode skills for real (taste-skill files missing; ponytail is only a plugin line)
+- [x] Draft `009_multi_event` + `EventContext` + backfill (local; harden schema leftovers below)
+- [x] Draft unique links `e=slug` + picker + All Father copy buttons (local)
+- [ ] `event_admin` can see/copy unique links (All Father only today)
+- [x] Draft event switcher + scoped lists/import/export/report/gallery/SEO (local)
+- [ ] Enforce schedule (`starts_at` / `ends_at`) on public register/scan
+- [ ] Fix event Save wiping schedule fields
+- [ ] Tighten `requireAdmin()` and stop Router fail-open
+- [ ] Require event slug on participant lookup API
+- [ ] Schema leftovers: NOT NULL `event_id`, attendance unique key, drop `setActive`, stop SEO NULL bleed
+- [ ] Tests that hit controllers (not only SQL / remapped session)
+- [ ] Taste-skill audit-first restyle of register/scan/events/switcher
+- [ ] `/ponytail-review` then commit remaining work to `attendance_accend`
+
+---
+
+## Current draft (already written, local)
+
+These exist in the working tree. Do not rewrite them unless fixing a gap below.
+
+| Area | Where |
+|------|--------|
+| Migration + backfill | [`migrations/009_multi_event.sql`](migrations/009_multi_event.sql), applied via [`Database::migrate()`](src/Services/Database.php) |
+| Event resolver | [`src/Services/EventContext.php`](src/Services/EventContext.php) |
+| Public register/scan/submit | [`RegisterController`](src/Controllers/RegisterController.php), [`ScanController`](src/Controllers/ScanController.php), [`AttendanceController`](src/Controllers/AttendanceController.php), [`views/public_event_picker.php`](views/public_event_picker.php) |
+| Router `event:` guards | [`config/routes.php`](config/routes.php), [`src/Core/Router.php`](src/Core/Router.php) |
+| All Father events + assign | [`AdminEventsController`](src/Controllers/AdminEventsController.php), [`views/admin_events.php`](views/admin_events.php) |
+| Admin switcher | [`views/partials/admin_nav.php`](views/partials/admin_nav.php) `admin_events_switch` |
+| Scoped admin lists | Registrants, attendance, import, export, report, gallery, SEO controllers |
+| Settings / users / logs | Still `role:admin` (All Father only) |
+| Smoke tests | [`scripts/test_rbac_matrix.php`](scripts/test_rbac_matrix.php) last run: **45 passed, 0 failed** (2026-09-14) |
+| OpenCode stub | [`opencode.json`](opencode.json) has `"plugin": ["@dietrichgebert/ponytail"]`; [`AGENTS.md`](AGENTS.md) repeats the contract |
+
+**Remote:** `origin/attendance_accend` still has only commit `Add multi-event All Father plan for OpenCode.` Feature files are uncommitted locally.
+
+---
+
+## Remaining work (close the gap)
+
+Do these in order. Each item is concrete.
+
+### 1. Ship the draft so the other clone can see it
+
+- Stage only app source: migration, `EventContext`, controllers, views, `opencode.json`, `AGENTS.md`, `Plan.md`, test scripts.
+- Do **not** stage `.env`, `.env.vps`, `storage/qrcodes/**`, `storage/signatures/**`, `graphify-out/cache/**`.
+- Commit on `attendance_accend` and `git push origin attendance_accend`.
+- Author: `JE Lite <jaymar.recolizado@dict.gov.ph>` if the environment has no git identity. Do not run `git config`.
+
+### 2. Install skills into this repo
+
+Taste-skill is **not** in the tree (no `skills/` / `.agents/` copies).
+
+```bash
+npx skills add https://github.com/Leonxlnx/taste-skill --skill "design-taste-frontend"
+npx skills add https://github.com/Leonxlnx/taste-skill --skill "redesign-existing-projects"
+```
+
+Confirm ponytail actually loads in OpenCode (`@dietrichgebert/ponytail`). Keep [`AGENTS.md`](AGENTS.md).
+
+### 3. `event_admin` unique links
+
+Plan: All Father **and** `event_admin` see copy buttons for register/scan.
+
+Today: [`admin_events`](config/routes.php) is `role:admin` only. Nav hides Events from `event_admin`.
+
+Minimum: let `event_admin` open a read-only (or links-only) view of **their assigned event** with the same copy buttons from `EventContext::publicLinks($slug)`. They must not create events, assign staff, or see other events.
+
+### 4. Enforce schedule on public pages
+
+[`EventContext::isPublicOpen()`](src/Services/EventContext.php) only checks `status === 'open'`.
+
+Also require:
+
+- `status === 'open'`
+- if `starts_at` is set, now >= starts_at
+- if `ends_at` is set, now <= ends_at
+
+Use this in register show/submit, scan show, attendance submit. Keep timezone consistent with the app (server local / PHP `date()` as used today).
+
+### 5. Event Save must not wipe schedule
+
+[`views/admin_events.php`](views/admin_events.php) row Save posts status only. [`AdminEventsController::update()`](src/Controllers/AdminEventsController.php) writes `starts_at`/`ends_at` from POST, so they become empty.
+
+Fix: include `starts_at` and `ends_at` on the Save form (pre-filled), or omit those columns from UPDATE when not posted.
+
+### 6. Auth tightening
+
+- Replace leftover `requireAdmin()` that only checks `$_SESSION['admin_id']` in registrants/attendance/import/export/report/signature. Use `AuthService::check()` plus `EventContext::canAccess` (already partly duplicated as `currentEventOrDeny`). One helper, not two weak layers.
+- [`Router.php`](src/Core/Router.php) `event:` guard **fails open** on exception (`catch` continues). Fail closed: deny unless All Father and the only goal is creating the first event.
+- Remove or no-op document [`admin_events_set_active`](config/routes.php); [`setActive()`](src/Controllers/AdminEventsController.php) is a leftover singleton switch.
+
+### 7. Participant API must require the event
+
+[`ParticipantController::getByUuidJson()`](src/Controllers/ParticipantController.php) only filters by event when `e` is present. Direct `?r=api_participant&uuid=` returns any event's person.
+
+Require `e` (or session `scan_event_id` from the kiosk). If missing or uuid belongs to another event, 404. Scan JS already sends `e` ([`views/scan.php`](views/scan.php)).
+
+### 8. Schema leftovers (small follow-up migration, e.g. `010`)
+
+[`009_multi_event.sql`](migrations/009_multi_event.sql) is a draft:
+
+- `participants.event_id` is still nullable. After backfill, set NOT NULL (only if no nulls remain).
+- Add `UNIQUE (participant_id, event_id, attendance_date)` if enforce-single is the default (app already checks; unique key is the plan).
+- [`AdminSeoController`](src/Controllers/AdminSeoController.php) still uses `a.event_id = ? OR a.event_id IS NULL`. After backfill, drop the `IS NULL` so old rows do not appear on every event.
+
+Make the follow-up idempotent the same way `009` is (`executeSqlFileTolerant`).
+
+### 9. Tests that match the plan
+
+[`scripts/test_rbac_matrix.php`](scripts/test_rbac_matrix.php) is necessary but not sufficient.
+
+Add (keep it CLI, no new framework):
+
+- `event_admin` assignment in the matrix (create a user, assign `event_admin` on A only).
+- Forced context: staff assigned to A, session `current_event_id` forced to B, router/controller must deny (today `currentEvent()` silently remaps to an assigned event, so isolation tests can pass for the wrong reason).
+- Call `AttendanceController::submitJsonForTest` with Event A uuid + Event B slug; expect `not_found`.
+- Call participant lookup without `e` after item 7; expect missing/404.
+- Open event with future `starts_at`; `isPublicOpen` is false after item 4.
+
+Run: `php scripts/test_rbac_matrix.php`
+
+### 10. Taste-skill restyle (after behavior is correct)
+
+Audit-first on existing views only:
+
+- [`views/register.php`](views/register.php), [`views/scan.php`](views/scan.php), [`views/public_event_picker.php`](views/public_event_picker.php)
+- [`views/admin_events.php`](views/admin_events.php), [`views/partials/admin_nav.php`](views/partials/admin_nav.php)
+
+Keep Bootstrap + [`assets/app.css`](assets/app.css). Institutional, not marketing. No em dashes in UI copy.
+
+### 11. Review and push
+
+`/ponytail-review`, then commit and push to `attendance_accend`.
+
+---
+
+## Target model (unchanged)
 
 All Father can do everything on every event, plus create events and assign staff. Event staff only see their assigned event and role.
 
@@ -65,181 +202,17 @@ flowchart TB
 
 - Same email **may** register on different events (blocked only **inside** one event).
 - Staff accounts are **global logins**, assigned to one or more events (one role per event).
-- Public scan stays a kiosk: opening that event's scan link is enough (same as today), but the link is event-specific.
+- Public scan stays a kiosk: opening that event's scan link is enough, but the link is event-specific.
 - Existing production rows become **Event 1** so current data is not dropped.
-
----
-
-## 0. Branch, OpenCode, and required skills
-
-Implementation happens in **OpenCode** with model **Muse Spark 13** (`muse spark.13`). Do not start feature work on `main`.
-
-### Remote branch (first action)
-
-From a clean checkout of [jaymarrecolizado-tech/attendance_dghero](https://github.com/jaymarrecolizado-tech/attendance_dghero):
-
-```bash
-git checkout main
-git pull origin main
-git checkout -b attendance_accend
-git push -u origin attendance_accend
-```
-
-All commits for this work stay on `attendance_accend`. Branch name is exactly `attendance_accend`.
-
-### Enforce these two skills every OpenCode session
-
-Both are mandatory. Install them into **this repo** so Muse Spark 13 cannot skip them.
-
-**1. Ponytail** — [dietrichgebert/ponytail](https://github.com/dietrichgebert/ponytail)
-
-- OpenCode plugin in project `opencode.json` (create if missing):
-
-```json
-{
-  "plugin": ["@dietrichgebert/ponytail"]
-}
-```
-
-- Default mode `full` (`PONYTAIL_DEFAULT_MODE=full` or ponytail config).
-- Ladder: skip if YAGNI, reuse existing PHP/services/views, no new framework, no extra tables/files unless this plan needs them. Never drop validation, CSRF, auth, or accessibility.
-- After non-trivial diffs, run `/ponytail-review` and delete over-build.
-
-**2. Taste Skill** — [leonxlnx/taste-skill](https://github.com/leonxlnx/taste-skill)
-
-```bash
-npx skills add https://github.com/Leonxlnx/taste-skill --skill "design-taste-frontend"
-npx skills add https://github.com/Leonxlnx/taste-skill --skill "redesign-existing-projects"
-```
-
-- This is an **existing public-sector attendance app**, not a greenfield landing page.
-- **Every UI change is audit-first** (`redesign-existing-projects`): read current register/scan/admin CSS and views, keep working flows, then restyle.
-- **`design-taste-frontend` design read** for this product: public-sector event registration for government attendees; trust-first; no AI-purple / Inter-slate defaults.
-- Dial preset (public-sector / preserve structure): `DESIGN_VARIANCE: 3-4`, `MOTION_INTENSITY: 2-3`, `VISUAL_DENSITY: 5` on admin lists; public register/scan can be slightly airier (`DENSITY: 4`) but stay institutional, not marketing.
-- No em dashes in UI copy. No half-finished views.
-
-**How they split work**
-
-- Ponytail owns PHP, SQL, routing, auth, and "don't invent a new architecture."
-- Taste + redesign own HTML/CSS/admin chrome, event switcher, unique-link page, and public register/scan — still inside existing `views/` + `assets/`, not a new SPA.
-
-**Session contract (paste at the start of every OpenCode / Muse Spark 13 thread)**
-
-1. You are on branch `attendance_accend`.
-2. Load ponytail (`full`) and taste-skill (`design-taste-frontend` + `redesign-existing-projects`) before writing files.
-3. State a one-line design read before any view/CSS change.
-4. Reuse `EventContext`, `AuthService`, and current `?r=` routes; do not add a new frontend stack.
-
-Optional: add a short `AGENTS.md` that repeats this contract so OpenCode auto-loads it.
-
----
-
-## 1. Data model
-
-New migration (e.g. [`migrations/009_multi_event.sql`](migrations/009_multi_event.sql)):
-
-**`events`** — stop using a single `active` switch.
-
-- `slug` unique (used in public links)
-- `status`: `draft` | `open` | `closed`
-- `starts_at`, `ends_at` (nullable; used for schedule and listing)
-- Keep `enforce_single_time_in`
-- Keep `active` only as a backfill flag, then stop writing it
-
-**`participants`** — become event-owned.
-
-- Add `event_id` (required after backfill)
-- Replace `UNIQUE(email)` with `UNIQUE(event_id, email)`
-- Keep global unique `uuid` so QR URLs stay `qrcode.php?uuid=...`
-
-**`attendance`** — require `event_id`, add FK to `events`, unique `(participant_id, event_id, attendance_date)` when enforce-single is on (app already checks this).
-
-**`event_assignments`** — delegation table.
-
-- `admin_id`, `event_id`, `role` (`event_admin` | `checker` | `seo_viewer`)
-- `UNIQUE(admin_id, event_id)`
-
-**`admins`** — keep `role='admin'` as **All Father**. Do not put per-event roles on `admins.role`. Existing `checker` / `seo_viewer` accounts are migrated onto assignments for the current active event.
-
-Backfill: create a slug for the current active event (or first event), set all existing participants + null attendance to that `event_id`, assign existing non-admin staff to it.
-
----
-
-## 2. Event context (replace `WHERE active=1`)
-
-Add one resolver, e.g. [`src/Services/EventContext.php`](src/Services/EventContext.php), and delete the duplicated `SELECT ... WHERE active=1 LIMIT 1` in:
-
-- [`AttendanceController.php`](src/Controllers/AttendanceController.php)
-- [`AdminAttendanceController.php`](src/Controllers/AdminAttendanceController.php)
-- [`AdminSeoController.php`](src/Controllers/AdminSeoController.php)
-- [`AdminSignatureController.php`](src/Controllers/AdminSignatureController.php)
-
-**Public pages:** event comes from `e={slug}` (required). Register/scan/submit refuse a missing, draft, or closed event.
-
-**Admin:** All Father picks an event (session `current_event_id`). Staff with one assignment land on that event; staff with several get a switcher. Every registrant/attendance/import/export/report/gallery/SEO query is filtered by that `event_id`. All Father can switch to any event.
-
----
-
-## 3. Unique public links
-
-Keep the existing `?r=` router (no Apache rewrite required).
-
-| Purpose | Link |
-|---------|------|
-| Register | `/?r=register&e={slug}` |
-| Scan / kiosk | `/?r=scan&e={slug}` |
-
-All Father (and `event_admin`) see copy buttons for both links on the event page. QR payload stays `PART|{uuid}`; lookup becomes **uuid + this event**. A QR from Event A must not check in on Event B.
-
-Default `/?r=register` with no `e` shows an event picker of **open** events (or a short "pick your event" list), so old bookmarks do not silently hit the wrong event.
-
----
-
-## 4. Auth and roles
-
-Reuse [`AuthService`](src/Services/AuthService.php) + router guards; add event checks.
 
 | Who | Can do |
 |-----|--------|
-| **All Father** (`admins.role = admin`) | Create/edit/close events, assign staff, global users, SMTP/settings, and every current capability on **any** event |
-| **event_admin** (assignment) | Current admin ops **on that event only**: registrants, VIP, import/export, reports, gallery, scan — not settings, not users, not other events |
-| **checker** (assignment) | Same as today: registrants + attendance + scan on assigned event |
+| **All Father** (`admins.role = admin`) | Create/edit/close events, assign staff, global users, SMTP/settings, every current capability on **any** event |
+| **event_admin** (assignment) | Ops on **that event only**: registrants, VIP, import/export, reports, gallery, scan, unique links — not settings, not users, not other events |
+| **checker** (assignment) | Registrants + attendance + scan on assigned event |
 | **seo_viewer** (assignment) | SEO dashboard for assigned event only |
 
-New All Father UI:
-
-- Event list with schedule/status, create/edit, unique links
-- Assign / remove people on an event (existing accounts or create staff then assign)
-- Event switcher in [`views/partials/admin_nav.php`](views/partials/admin_nav.php)
-
-Replace "Set Active" in [`views/admin_events.php`](views/admin_events.php) with status + schedule + links + assignments.
-
-Tighten weak `requireAdmin()` (session id only) in event/attendance controllers so All Father vs event staff is actually enforced.
-
----
-
-## 5. Keep current capabilities (per event)
-
-No new product surface except events + assignments. These stay, scoped to the current event:
-
-- Registration, QR generate/email, VIP
-- Scan, signature, present/absent, gallery
-- CSV import/export, reports
-- SEO dashboard
-- Action logs (tag `event_id` when the action is event-scoped)
-
-SMTP and global user CRUD stay All Father only.
-
----
-
-## 6. Implementation order
-
-0. **Branch + OpenCode skills** — create/push `attendance_accend`; add `opencode.json` (ponytail plugin), install taste-skill + redesign-existing-projects, optional `AGENTS.md`. Confirm Muse Spark 13 is the session model.
-1. **Migration + backfill** + `EventContext` so old data still works as one event (ponytail: one resolver, no extra service layer).
-2. **Public unique links** — register/scan/submit/QR require `e=slug`; restyle those views with taste-skill (audit-first).
-3. **Admin scoping** — filter all lists/exports by `current_event_id`; event switcher; drop singleton Set Active.
-4. **Assignments + All Father UI** — create staff, assign roles, hide other events from staff; new event/assignment screens follow the public-sector dials.
-5. **Tests** (PHP, existing style): `scripts/test_rbac_matrix.php` plus new cases for two open events (separate emails, cross-event QR reject, staff cannot open Event B). `/ponytail-review` before merge.
+Public links stay query-string: `/?r=register&e={slug}`, `/?r=scan&e={slug}`.
 
 ---
 
@@ -247,5 +220,6 @@ SMTP and global user CRUD stay All Father only.
 
 - Pretty paths like `/e/slug/register`
 - Shared people directory (one profile, many events)
-- SSO / per-agency tenancy (already out of [`TODORBAC/rbac_security_spec.md`](TODORBAC/rbac_security_spec.md))
+- SSO / per-agency tenancy
 - Deploying this to the VPS
+- Rebuilding EventContext or a new SPA

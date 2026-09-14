@@ -3,7 +3,9 @@ declare(strict_types=1);
 
 namespace App\Controllers;
 
+use App\Services\AuthService;
 use App\Services\Database;
+use App\Services\EventContext;
 
 class ReportController
 {
@@ -13,16 +15,30 @@ class ReportController
         return true;
     }
 
+    /** @return array<string,mixed>|null */
+    private function currentEventOrManage(\PDO $pdo): ?array
+    {
+        $event = EventContext::currentEvent($pdo);
+        if (!$event) { http_response_code(404); echo 'No events'; return null; }
+        $adminId = (int)($_SESSION['admin_id'] ?? 0);
+        if (!EventContext::canAccess($pdo, $adminId, (int)$event['id'], ['event_admin']) && !AuthService::isAdmin()) {
+            AuthService::deny($_SERVER['REQUEST_METHOD'] ?? 'GET');
+            return null;
+        }
+        return $event;
+    }
+
     public function form(): void
     {
         if (!$this->requireAdmin()) return;
+        $pdo = Database::pdo();
+        if (!$this->currentEventOrManage($pdo)) return;
         $pdfAvailable = class_exists('TCPDF') || class_exists('\\TCPDF');
         if (!$pdfAvailable && is_file(dirname(__DIR__, 2) . DIRECTORY_SEPARATOR . 'vendor' . DIRECTORY_SEPARATOR . 'autoload.php')) {
             require_once dirname(__DIR__, 2) . DIRECTORY_SEPARATOR . 'vendor' . DIRECTORY_SEPARATOR . 'autoload.php';
             $pdfAvailable = class_exists('TCPDF') || class_exists('\\TCPDF');
         }
 
-        $pdo = Database::pdo();
         $tpl = [];
         $reportNotice = null;
         try {
@@ -72,7 +88,10 @@ class ReportController
             }
         }
         $pdo = Database::pdo();
-        $where=[];$bind=[];
+        $event = $this->currentEventOrManage($pdo);
+        if (!$event) return;
+        $eventId = (int)$event['id'];
+        $where=['a.event_id = ?','p.event_id = ?'];$bind=[$eventId, $eventId];
         if ($date !== '') { $where[]='a.attendance_date = ?'; $bind[]=$date; }
         if ($start !== '' && $end !== '') { $where[]='a.attendance_date BETWEEN ? AND ?'; $bind[]=$start; $bind[]=$end; }
         $sqlWhere = $where?('WHERE '.implode(' AND ',$where)) : '';

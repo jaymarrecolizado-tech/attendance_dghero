@@ -5,6 +5,7 @@ namespace App\Controllers;
 
 use App\Services\AuthService;
 use App\Services\Database;
+use App\Services\EventContext;
 use App\Services\Logger;
 use App\Services\QrService;
 use App\Services\Mailer;
@@ -17,10 +18,26 @@ class AdminRegistrantsController
         return true;
     }
 
+    /** @return array<string,mixed>|null */
+    private function currentEventOrDeny(\PDO $pdo): ?array
+    {
+        $event = EventContext::currentEvent($pdo);
+        if (!$event) { http_response_code(404); echo 'No events'; return null; }
+        $adminId = (int)($_SESSION['admin_id'] ?? 0);
+        if (!EventContext::canAccess($pdo, $adminId, (int)$event['id'], ['event_admin', 'checker']) && !AuthService::isAdmin()) {
+            AuthService::deny($_SERVER['REQUEST_METHOD'] ?? 'GET');
+            return null;
+        }
+        return $event;
+    }
+
     public function list(): void
     {
         if (!$this->requireAdmin()) return;
         $pdo = Database::pdo();
+        $event = $this->currentEventOrDeny($pdo);
+        if (!$event) return;
+        $eventId = (int)$event['id'];
         $q = trim((string)($_GET['q'] ?? ''));
         $agency = trim((string)($_GET['agency'] ?? ''));
         $sector = trim((string)($_GET['sector'] ?? ''));
@@ -29,13 +46,13 @@ class AdminRegistrantsController
         $per = 20;
         $offset = ($page - 1) * $per;
 
-        $where = [];
-        $bind = [];
+        $where = ['event_id = ?'];
+        $bind = [$eventId];
         if ($q !== '') { $where[] = '(first_name LIKE ? OR last_name LIKE ?)'; $bind[] = "%{$q}%"; $bind[] = "%{$q}%"; }
         if ($agency !== '') { $where[] = 'agency LIKE ?'; $bind[] = "%{$agency}%"; }
         if ($sector !== '') { $where[] = 'sector LIKE ?'; $bind[] = "%{$sector}%"; }
         if ($vipOnly) { $where[] = 'is_vip = 1'; }
-        $sqlWhere = $where ? ('WHERE ' . implode(' AND ', $where)) : '';
+        $sqlWhere = 'WHERE ' . implode(' AND ', $where);
 
         $stmt = $pdo->prepare("SELECT SQL_CALC_FOUND_ROWS id, uuid, first_name, last_name, agency, sector, email, office_email, is_vip FROM participants $sqlWhere ORDER BY id DESC LIMIT $per OFFSET $offset");
         $stmt->execute($bind);
@@ -43,18 +60,27 @@ class AdminRegistrantsController
         $total = (int)$pdo->query('SELECT FOUND_ROWS() AS t')->fetch()['t'];
         $pages = max(1, (int)ceil($total / $per));
 
-        $agenciesList = $pdo->query("SELECT DISTINCT agency FROM participants WHERE agency IS NOT NULL AND agency <> '' ORDER BY agency ASC LIMIT 500")->fetchAll();
-        $sectorsList = $pdo->query("SELECT DISTINCT sector FROM participants WHERE sector IS NOT NULL AND sector <> '' ORDER BY sector ASC LIMIT 500")->fetchAll();
-        $vipCount = (int)$pdo->query('SELECT COUNT(*) FROM participants WHERE is_vip = 1')->fetchColumn();
-        $canManageVip = AuthService::isAdmin();
-        $canViewVip = AuthService::hasRole(AuthService::ROLE_ADMIN, AuthService::ROLE_CHECKER);
-        $data = compact('rows','page','pages','q','agency','sector','total','agenciesList','sectorsList','canManageVip','canViewVip','vipOnly','vipCount');
+        $agenciesList = $pdo->query("SELECT DISTINCT agency FROM participants WHERE event_id = {$eventId} AND agency IS NOT NULL AND agency <> '' ORDER BY agency ASC LIMIT 500")->fetchAll();
+        $sectorsList = $pdo->query("SELECT DISTINCT sector FROM participants WHERE event_id = {$eventId} AND sector IS NOT NULL AND sector <> '' ORDER BY sector ASC LIMIT 500")->fetchAll();
+        $vipStmt = $pdo->prepare('SELECT COUNT(*) FROM participants WHERE event_id = ? AND is_vip = 1');
+        $vipStmt->execute([$eventId]);
+        $vipCount = (int)$vipStmt->fetchColumn();
+        $role = EventContext::effectiveRole($pdo, (int)$_SESSION['admin_id'], $eventId);
+        $canManageVip = $role === AuthService::ROLE_ADMIN || $role === EventContext::ROLE_EVENT_ADMIN;
+        $canViewVip = in_array($role, [AuthService::ROLE_ADMIN, EventContext::ROLE_EVENT_ADMIN, AuthService::ROLE_CHECKER], true);
+        $data = compact('rows','page','pages','q','agency','sector','total','agenciesList','sectorsList','canManageVip','canViewVip','vipOnly','vipCount','event');
         require dirname(__DIR__, 2) . DIRECTORY_SEPARATOR . 'views' . DIRECTORY_SEPARATOR . 'admin_registrants.php';
     }
 
     public function toggleVip(): void
     {
-        if (!AuthService::isAdmin()) {
+        if (!$this->requireAdmin()) return;
+        $pdo = Database::pdo();
+        $event = EventContext::currentEvent($pdo);
+        if (!$event) { http_response_code(404); echo 'No events'; return; }
+        $eventId = (int)$event['id'];
+        $role = EventContext::effectiveRole($pdo, (int)$_SESSION['admin_id'], $eventId);
+        if (!($role === AuthService::ROLE_ADMIN || $role === EventContext::ROLE_EVENT_ADMIN)) {
             AuthService::deny('POST');
             return;
         }
@@ -70,14 +96,20 @@ class AdminRegistrantsController
             header('Location: ?r=admin_registrants');
             return;
         }
-        $pdo = Database::pdo();
-        $stmt = $pdo->prepare('UPDATE participants SET is_vip = ? WHERE id = ?');
-        $stmt->execute([$isVip, $id]);
+        $chk = $pdo->prepare('SELECT id FROM participants WHERE id = ? AND event_id = ?');
+        $chk->execute([$id, $eventId]);
+        if (!$chk->fetch()) {
+            $_SESSION['flash'] = ['type' => 'danger', 'message' => 'Participant not found'];
+            header('Location: ?r=admin_registrants');
+            return;
+        }
+        $stmt = $pdo->prepare('UPDATE participants SET is_vip = ? WHERE id = ? AND event_id = ?');
+        $stmt->execute([$isVip, $id, $eventId]);
         Logger::log(AuthService::id(), 'participant_vip_toggled', [
             'participant_id' => $id,
             'is_vip' => $isVip,
             'role' => AuthService::role(),
-        ]);
+        ], $eventId);
         $_SESSION['flash'] = ['type' => 'success', 'message' => $isVip ? 'Marked as VIP.' : 'VIP flag cleared.'];
         $q = http_build_query(array_filter([
             'r' => 'admin_registrants',
@@ -99,7 +131,12 @@ class AdminRegistrantsController
         }
         $batchSize = max(1, min(200, (int)($_POST['batch'] ?? 50)));
         $pdo = Database::pdo();
-        $rows = $pdo->query('SELECT id, uuid FROM participants WHERE qr_path IS NULL LIMIT ' . $batchSize)->fetchAll();
+        $event = $this->currentEventOrDeny($pdo);
+        if (!$event) return;
+        $eventId = (int)$event['id'];
+        $stmt0 = $pdo->prepare('SELECT id, uuid FROM participants WHERE event_id = ? AND qr_path IS NULL LIMIT ' . $batchSize);
+        $stmt0->execute([$eventId]);
+        $rows = $stmt0->fetchAll();
         if (!$rows) {
             $_SESSION['flash'] = ['type'=>'info','message'=>'No pending QR codes found.'];
             header('Location: ?r=admin_registrants');
@@ -139,8 +176,11 @@ class AdminRegistrantsController
             return;
         }
         $pdo = Database::pdo();
-        $stmt = $pdo->prepare('SELECT id, uuid, first_name, last_name, email, office_email, qr_path FROM participants WHERE id = ?');
-        $stmt->execute([$id]);
+        $event = $this->currentEventOrDeny($pdo);
+        if (!$event) return;
+        $eventId = (int)$event['id'];
+        $stmt = $pdo->prepare('SELECT id, uuid, first_name, last_name, email, office_email, qr_path FROM participants WHERE id = ? AND event_id = ?');
+        $stmt->execute([$id, $eventId]);
         $participant = $stmt->fetch();
         if (!$participant) {
             $_SESSION['flash'] = ['type'=>'danger','message'=>'Participant not found'];
@@ -173,8 +213,11 @@ class AdminRegistrantsController
             return;
         }
         $pdo = Database::pdo();
-        $stmt = $pdo->prepare('SELECT id, uuid, qr_path FROM participants WHERE uuid = ?');
-        $stmt->execute([$uuid]);
+        $event = $this->currentEventOrDeny($pdo);
+        if (!$event) return;
+        $eventId = (int)$event['id'];
+        $stmt = $pdo->prepare('SELECT id, uuid, qr_path FROM participants WHERE uuid = ? AND event_id = ?');
+        $stmt->execute([$uuid, $eventId]);
         $participant = $stmt->fetch();
         if (!$participant) {
             http_response_code(404);

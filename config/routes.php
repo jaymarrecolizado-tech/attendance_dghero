@@ -26,6 +26,12 @@ $rolesAdmin = 'role:admin';
 $rolesOps = 'role:admin|checker';
 $rolesSeoRead = 'role:admin|seo_viewer';
 
+// Event-scoped guards (All Father bypasses; staff need an assignment for the current event).
+$eventOps = 'event:event_admin|checker';
+$eventManage = 'event:event_admin';
+$eventSeo = 'event:event_admin|seo_viewer';
+$eventKpi = 'event:event_admin|checker|seo_viewer';
+
 return [
     'register' => [
         'GET' => [RegisterController::class, 'show'],
@@ -33,7 +39,8 @@ return [
     'register_submit' => [
         'POST' => [RegisterController::class, 'submit'],
         '_fallback' => static function (): void {
-            header('Location: ?r=register');
+            $e = isset($_GET['e']) ? '&e=' . urlencode((string)$_GET['e']) : '';
+            header('Location: ?r=register' . $e);
             exit;
         },
     ],
@@ -61,67 +68,67 @@ return [
     ],
     'admin_registrants' => [
         'GET' => [AdminRegistrantsController::class, 'list'],
-        '_guards' => [$rolesOps],
+        '_guards' => [$eventOps],
     ],
     'admin_generate_qr' => [
         'POST' => [AdminRegistrantsController::class, 'generateQrBatch'],
-        '_guards' => [$rolesOps],
+        '_guards' => [$eventOps],
     ],
     'admin_registrant_email' => [
         'POST' => [AdminRegistrantsController::class, 'sendQrEmail'],
-        '_guards' => [$rolesOps],
+        '_guards' => [$eventOps],
     ],
     'admin_qr' => [
         'GET' => [AdminRegistrantsController::class, 'qrPreview'],
-        '_guards' => [$rolesOps],
+        '_guards' => [$eventOps],
     ],
     'admin_registrant_vip' => [
         'POST' => [AdminRegistrantsController::class, 'toggleVip'],
-        '_guards' => [$rolesAdmin],
+        '_guards' => [$eventManage],
     ],
     'admin_attendance' => [
         'GET' => [AdminAttendanceController::class, 'list'],
-        '_guards' => [$rolesOps],
+        '_guards' => [$eventOps],
     ],
     'admin_attendance_kpi' => [
         'GET' => [AdminAttendanceController::class, 'kpiJson'],
-        '_guards' => ['role:admin|checker|seo_viewer'],
+        '_guards' => [$eventKpi],
     ],
     'admin_attendance_kpi_stream' => [
         'GET' => [AdminAttendanceController::class, 'kpiStream'],
-        '_guards' => ['role:admin|checker|seo_viewer'],
+        '_guards' => [$eventKpi],
     ],
     'admin_attendance_search' => [
         'GET' => [AdminAttendanceController::class, 'searchParticipants'],
-        '_guards' => [$rolesOps],
+        '_guards' => [$eventOps],
     ],
     'admin_attendance_manual' => [
         'POST' => [AdminAttendanceController::class, 'manualAttendance'],
-        '_guards' => [$rolesOps],
+        '_guards' => [$eventOps],
     ],
     'admin_attendance_mark_absent' => [
         'POST' => [AdminAttendanceController::class, 'markAbsent'],
-        '_guards' => [$rolesOps],
+        '_guards' => [$eventOps],
     ],
     'admin_attendance_clear_absent' => [
         'POST' => [AdminAttendanceController::class, 'clearAbsent'],
-        '_guards' => [$rolesOps],
+        '_guards' => [$eventOps],
     ],
     'admin_attendance_gallery' => [
         'GET' => [AdminAttendanceGalleryController::class, 'list'],
-        '_guards' => [$rolesAdmin],
+        '_guards' => [$eventManage],
     ],
     'admin_seo_dashboard' => [
         'GET' => [AdminSeoController::class, 'dashboard'],
-        '_guards' => [$rolesSeoRead],
+        '_guards' => [$eventSeo],
     ],
     'admin_seo_summary' => [
         'GET' => [AdminSeoController::class, 'summaryJson'],
-        '_guards' => [$rolesSeoRead],
+        '_guards' => [$eventSeo],
     ],
     'admin_seo_search' => [
         'GET' => [AdminSeoController::class, 'searchJson'],
-        '_guards' => [$rolesSeoRead],
+        '_guards' => [$eventSeo],
     ],
     'admin_users' => [
         'GET' => [AdminUsersController::class, 'list'],
@@ -145,47 +152,47 @@ return [
     ],
     'admin_import' => [
         'GET' => [AdminImportController::class, 'form'],
-        '_guards' => [$rolesAdmin],
+        '_guards' => [$eventManage],
     ],
     'admin_import_preview' => [
         'POST' => [AdminImportController::class, 'preview'],
-        '_guards' => [$rolesAdmin],
+        '_guards' => [$eventManage],
     ],
     'admin_import_execute' => [
         'POST' => [AdminImportController::class, 'execute'],
-        '_guards' => [$rolesAdmin],
+        '_guards' => [$eventManage],
     ],
     'admin_import_history' => [
         'GET' => [AdminImportController::class, 'history'],
-        '_guards' => [$rolesAdmin],
+        '_guards' => [$eventManage],
     ],
     'admin_export' => [
         'GET' => [AdminExportPageController::class, 'index'],
-        '_guards' => [$rolesAdmin],
+        '_guards' => [$eventManage],
     ],
     'admin_report' => [
         'GET' => [ReportController::class, 'form'],
-        '_guards' => [$rolesAdmin],
+        '_guards' => [$eventManage],
     ],
     'admin_report_generate' => [
         'POST' => [ReportController::class, 'generate'],
-        '_guards' => [$rolesAdmin],
+        '_guards' => [$eventManage],
     ],
     'admin_report_save' => [
         'POST' => [ReportController::class, 'saveTemplate'],
-        '_guards' => [$rolesAdmin],
+        '_guards' => [$eventManage],
     ],
     'admin_report_load' => [
         'GET' => [ReportController::class, 'loadTemplate'],
-        '_guards' => [$rolesAdmin],
+        '_guards' => [$eventManage],
     ],
     'admin_signature_replace' => [
         'POST' => [AdminSignatureController::class, 'replace'],
-        '_guards' => [$rolesOps],
+        '_guards' => [$eventOps],
     ],
     'admin_signature_new' => [
         'POST' => [AdminSignatureController::class, 'addNew'],
-        '_guards' => [$rolesOps],
+        '_guards' => [$eventOps],
     ],
     'admin_logs' => [
         'GET' => [AdminLogsController::class, 'list'],
@@ -203,28 +210,44 @@ return [
         'POST' => [AdminEventsController::class, 'setActive'],
         '_guards' => [$rolesAdmin],
     ],
+    'admin_events_update' => [
+        'POST' => [AdminEventsController::class, 'update'],
+        '_guards' => [$rolesAdmin],
+    ],
+    'admin_events_switch' => [
+        'POST' => [AdminEventsController::class, 'switch'],
+        '_guards' => ['auth'],
+    ],
+    'admin_events_assign' => [
+        'POST' => [AdminEventsController::class, 'assign'],
+        '_guards' => [$rolesAdmin],
+    ],
+    'admin_events_unassign' => [
+        'POST' => [AdminEventsController::class, 'unassign'],
+        '_guards' => [$rolesAdmin],
+    ],
     'export_registrants_csv' => [
         'GET' => [ExportController::class, 'registrantsCsv'],
-        '_guards' => [$rolesAdmin],
+        '_guards' => [$eventManage],
     ],
     'export_attendance_csv' => [
         'GET' => [ExportController::class, 'attendanceCsv'],
-        '_guards' => [$rolesAdmin],
+        '_guards' => [$eventManage],
     ],
     'export_registrants_xlsx' => [
         'GET' => [AdvancedExportController::class, 'registrantsXlsx'],
-        '_guards' => [$rolesAdmin],
+        '_guards' => [$eventManage],
     ],
     'export_attendance_xlsx' => [
         'GET' => [AdvancedExportController::class, 'attendanceXlsx'],
-        '_guards' => [$rolesAdmin],
+        '_guards' => [$eventManage],
     ],
     'export_attendance_pdf' => [
         'GET' => [AdvancedExportController::class, 'attendancePdf'],
-        '_guards' => [$rolesAdmin],
+        '_guards' => [$eventManage],
     ],
     'sample_csv' => [
         'GET' => [SampleCsvController::class, 'download'],
-        '_guards' => [$rolesAdmin],
+        '_guards' => [$eventManage],
     ],
 ];
