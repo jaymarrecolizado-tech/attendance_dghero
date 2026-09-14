@@ -156,6 +156,9 @@ final class EventContext
                 if ($event && self::canAccess($pdo, $adminId, $sessionId, null)) {
                     return $event;
                 }
+                // Forced or stale context the admin cannot access: hard-deny by
+                // resolving to nothing. Never silently remap to another event.
+                return null;
             }
             if (self::isAllFather()) {
                 $event = null;

@@ -3,23 +3,21 @@ declare(strict_types=1);
 
 namespace App\Controllers;
 
+use App\Controllers\Concerns\ResolvesEventContext;
 use App\Services\AuthService;
 use App\Services\Database;
 use App\Services\EventContext;
 
 class AdminAttendanceGalleryController
 {
+    use ResolvesEventContext;
+
     public function list(): void
     {
-        if (!AuthService::check()) { header('Location: ?r=admin_login'); return; }
         $pdo = Database::pdo();
-        $event = EventContext::currentEvent($pdo);
-        if (!$event) { http_response_code(404); echo 'No events'; return; }
+        $event = $this->requireEventContext($pdo, ['event_admin']);
+        if (!$event) return;
         $eventId = (int)$event['id'];
-        if (!EventContext::canAccess($pdo, (int)$_SESSION['admin_id'], $eventId, ['event_admin']) && !AuthService::isAdmin()) {
-            AuthService::deny('GET');
-            return;
-        }
         $date = trim((string)($_GET['date'] ?? ''));
         $agency = trim((string)($_GET['agency'] ?? ''));
         $where = ['a.event_id = ?', 'p.event_id = ?'];

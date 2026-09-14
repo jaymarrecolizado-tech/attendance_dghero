@@ -10,7 +10,7 @@ $guestIncludeRegistrationAssets = $guestIncludeRegistrationAssets ?? false;
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-  <meta name="theme-color" content="#5c6cf2">
+  <meta name="theme-color" content="#162e51">
   <title><?= htmlspecialchars($guestTitle, ENT_QUOTES) ?></title>
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
   <link href="assets/app.css" rel="stylesheet">

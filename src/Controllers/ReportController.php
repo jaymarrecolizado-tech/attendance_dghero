@@ -3,36 +3,19 @@ declare(strict_types=1);
 
 namespace App\Controllers;
 
+use App\Controllers\Concerns\ResolvesEventContext;
 use App\Services\AuthService;
 use App\Services\Database;
 use App\Services\EventContext;
 
 class ReportController
 {
-    private function requireAdmin(): bool
-    {
-        if (!AuthService::check()) { header('Location: ?r=admin_login'); return false; }
-        return true;
-    }
-
-    /** @return array<string,mixed>|null */
-    private function currentEventOrManage(\PDO $pdo): ?array
-    {
-        $event = EventContext::currentEvent($pdo);
-        if (!$event) { http_response_code(404); echo 'No events'; return null; }
-        $adminId = (int)($_SESSION['admin_id'] ?? 0);
-        if (!EventContext::canAccess($pdo, $adminId, (int)$event['id'], ['event_admin']) && !AuthService::isAdmin()) {
-            AuthService::deny($_SERVER['REQUEST_METHOD'] ?? 'GET');
-            return null;
-        }
-        return $event;
-    }
+    use ResolvesEventContext;
 
     public function form(): void
     {
-        if (!$this->requireAdmin()) return;
         $pdo = Database::pdo();
-        if (!$this->currentEventOrManage($pdo)) return;
+        if (!$this->requireEventContext($pdo, ['event_admin'])) return;
         $pdfAvailable = class_exists('TCPDF') || class_exists('\\TCPDF');
         if (!$pdfAvailable && is_file(dirname(__DIR__, 2) . DIRECTORY_SEPARATOR . 'vendor' . DIRECTORY_SEPARATOR . 'autoload.php')) {
             require_once dirname(__DIR__, 2) . DIRECTORY_SEPARATOR . 'vendor' . DIRECTORY_SEPARATOR . 'autoload.php';
@@ -64,7 +47,7 @@ class ReportController
 
     public function generate(): void
     {
-        if (!$this->requireAdmin()) return;
+        if (!$this->requireLogin()) return;
         if (!isset($_POST['csrf']) || !function_exists('csrf_check') || !csrf_check($_POST['csrf'])) { http_response_code(400); echo 'Invalid CSRF'; return; }
         $date = trim((string)($_POST['date'] ?? ''));
         $title = trim((string)($_POST['title'] ?? 'Attendance Report'));
@@ -88,7 +71,7 @@ class ReportController
             }
         }
         $pdo = Database::pdo();
-        $event = $this->currentEventOrManage($pdo);
+        $event = $this->requireEventContext($pdo, ['event_admin']);
         if (!$event) return;
         $eventId = (int)$event['id'];
         $where=['a.event_id = ?','p.event_id = ?'];$bind=[$eventId, $eventId];
@@ -272,7 +255,7 @@ class ReportController
 
     public function saveTemplate(): void
     {
-        if (!$this->requireAdmin()) return;
+        if (!$this->requireLogin()) return;
         if (!isset($_POST['csrf']) || !function_exists('csrf_check') || !csrf_check($_POST['csrf'])) { http_response_code(400); echo 'Invalid CSRF'; return; }
         $name = trim((string)($_POST['tpl_name'] ?? 'Untitled'));
         $config = [
@@ -292,7 +275,7 @@ class ReportController
 
     public function loadTemplate(): void
     {
-        if (!$this->requireAdmin()) return;
+        if (!$this->requireLogin()) return;
         $id = (int)($_GET['tpl_id'] ?? 0);
         $pdo = Database::pdo();
         $tpl = $pdo->prepare('SELECT config FROM report_templates WHERE id=? AND admin_id=?');

@@ -3,6 +3,7 @@ declare(strict_types=1);
 
 namespace App\Controllers;
 
+use App\Controllers\Concerns\ResolvesEventContext;
 use App\Services\AuthService;
 use App\Services\Database;
 use App\Services\EventContext;
@@ -29,38 +30,17 @@ class AdminImportController
 
     private array $requiredFields = ['first_name', 'last_name'];
 
-    private function requireAdmin(): bool
-    {
-        if (!AuthService::check()) { header('Location: ?r=admin_login'); return false; }
-        return true;
-    }
-
-    /** @return array<string,mixed>|null */
-    private function currentEventOrManage(\PDO $pdo): ?array
-    {
-        $event = EventContext::currentEvent($pdo);
-        if (!$event) { http_response_code(404); echo 'No events'; return null; }
-        $adminId = (int)($_SESSION['admin_id'] ?? 0);
-        if (!EventContext::canAccess($pdo, $adminId, (int)$event['id'], ['event_admin']) && !AuthService::isAdmin()) {
-            AuthService::deny($_SERVER['REQUEST_METHOD'] ?? 'GET');
-            return null;
-        }
-        return $event;
-    }
-
     public function form(): void
     {
-        if (!$this->requireAdmin()) return;
         $pdo = Database::pdo();
-        if (!$this->currentEventOrManage($pdo)) return;
+        if (!$this->requireEventContext($pdo, ['event_admin'])) return;
         require dirname(__DIR__, 2) . DIRECTORY_SEPARATOR . 'views' . DIRECTORY_SEPARATOR . 'admin_import.php';
     }
 
     public function preview(): void
     {
-        if (!$this->requireAdmin()) return;
         $pdo = Database::pdo();
-        $event = $this->currentEventOrManage($pdo);
+        $event = $this->requireEventContext($pdo, ['event_admin']);
         if (!$event) return;
         $eventId = (int)$event['id'];
         $ip = $_SERVER['REMOTE_ADDR'] ?? 'unknown';
@@ -110,13 +90,11 @@ class AdminImportController
 
     public function execute(): void
     {
-        if (!$this->requireAdmin()) return;
         $pdo = Database::pdo();
-        $event = $this->currentEventOrManage($pdo);
+        $event = $this->requireEventContext($pdo, ['event_admin']);
         if (!$event) return;
         $eventId = (int)($_SESSION['import_event_id'] ?? $event['id']);
-        if (!EventContext::canAccess($pdo, (int)$_SESSION['admin_id'], $eventId, ['event_admin']) && !AuthService::isAdmin()) {
-            AuthService::deny('POST');
+        if (!$this->requireEventAccess($pdo, $eventId, ['event_admin'])) {
             return;
         }
         $ip = $_SERVER['REMOTE_ADDR'] ?? 'unknown';
@@ -341,7 +319,7 @@ class AdminImportController
 
     public function history(): void
     {
-        if (!$this->requireAdmin()) return;
+        if (!$this->requireLogin()) return;
         $pdo = Database::pdo();
         $rows = $pdo->query('SELECT id, admin_id, file_name, action, duplicate_strategy, created_at FROM import_logs ORDER BY id DESC LIMIT 100')->fetchAll();
         require dirname(__DIR__, 2) . DIRECTORY_SEPARATOR . 'views' . DIRECTORY_SEPARATOR . 'admin_import_history.php';

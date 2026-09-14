@@ -3,33 +3,19 @@ declare(strict_types=1);
 
 namespace App\Controllers;
 
+use App\Controllers\Concerns\ResolvesEventContext;
 use App\Services\AuthService;
 use App\Services\Database;
 use App\Services\EventContext;
 
 class AdminSeoController
 {
-    /** @return array<string,mixed>|null */
-    private function currentEventOrDeny(\PDO $pdo): ?array
-    {
-        $event = EventContext::currentEvent($pdo);
-        if (!$event) { http_response_code(404); echo 'No events'; return null; }
-        $adminId = (int)($_SESSION['admin_id'] ?? 0);
-        if (!EventContext::canAccess($pdo, $adminId, (int)$event['id'], ['event_admin', 'seo_viewer']) && !AuthService::isAdmin()) {
-            AuthService::deny($_SERVER['REQUEST_METHOD'] ?? 'GET');
-            return null;
-        }
-        return $event;
-    }
+    use ResolvesEventContext;
 
     public function dashboard(): void
     {
-        if (!AuthService::check()) {
-            header('Location: ?r=admin_login');
-            return;
-        }
         $pdo = Database::pdo();
-        $event = $this->currentEventOrDeny($pdo);
+        $event = $this->requireEventContext($pdo, ['event_admin', 'seo_viewer']);
         if (!$event) return;
         $selectedDate = trim((string)($_GET['date'] ?? ''));
         if ($selectedDate === '') {
@@ -49,14 +35,15 @@ class AdminSeoController
             return;
         }
         $pdo = Database::pdo();
-        if (!$this->currentEventOrDeny($pdo)) return;
+        $event = $this->requireEventContext($pdo, ['event_admin', 'seo_viewer'], true);
+        if (!$event) return;
         header('Content-Type: application/json');
         header('Cache-Control: no-store');
         $selectedDate = trim((string)($_GET['date'] ?? ''));
         if ($selectedDate === '') {
             $selectedDate = date('Y-m-d');
         }
-        echo json_encode($this->buildSummary($pdo, $selectedDate, (int)EventContext::currentEvent($pdo)['id']));
+        echo json_encode($this->buildSummary($pdo, $selectedDate, (int)$event['id']));
     }
 
     public function searchJson(): void
@@ -82,7 +69,7 @@ class AdminSeoController
         }
 
         $pdo = Database::pdo();
-        $event = $this->currentEventOrDeny($pdo);
+        $event = $this->requireEventContext($pdo, ['event_admin', 'seo_viewer'], true);
         if (!$event) return;
         $eventId = (int)$event['id'];
 

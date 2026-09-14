@@ -18,8 +18,8 @@ $eventName = isset($event) ? (string)($event['name'] ?? '') : '';
   <meta name="csrf" content="<?= htmlspecialchars($token, ENT_QUOTES) ?>">
   <meta name="event-slug" content="<?= htmlspecialchars($eventSlug, ENT_QUOTES) ?>">
   <style>
-    #reader { width: 100%; max-width: 520px; margin: 0 auto; border-radius: 20px; overflow: hidden; }
-    #sigCanvas { border: 1px dashed rgba(92,108,242,0.3); border-radius: 16px; width: 100%; height: 260px; touch-action: none; background: rgba(255,255,255,0.9); }
+    #reader { width: 100%; max-width: 520px; margin: 0 auto; border-radius: 14px; overflow: hidden; }
+    #sigCanvas { border: 1px dashed rgba(26,68,128,0.35); border-radius: 10px; width: 100%; height: 260px; touch-action: none; background: #fbfcfe; }
   </style>
   </head>
 <body>

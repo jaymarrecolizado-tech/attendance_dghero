@@ -3,6 +3,7 @@ declare(strict_types=1);
 
 namespace App\Controllers;
 
+use App\Controllers\Concerns\ResolvesEventContext;
 use App\Services\AuthService;
 use App\Services\Database;
 use App\Services\EventContext;
@@ -10,30 +11,12 @@ use App\Services\SignatureService;
 
 class AdminAttendanceController
 {
-    private function requireAdmin(): bool
-    {
-        if (!AuthService::check()) { header('Location: ?r=admin_login'); return false; }
-        return true;
-    }
-
-    /** @return array<string,mixed>|null */
-    private function currentEventOrDeny(\PDO $pdo): ?array
-    {
-        $event = EventContext::currentEvent($pdo);
-        if (!$event) { http_response_code(404); echo 'No events'; return null; }
-        $adminId = (int)($_SESSION['admin_id'] ?? 0);
-        if (!EventContext::canAccess($pdo, $adminId, (int)$event['id'], ['event_admin', 'checker']) && !AuthService::isAdmin()) {
-            AuthService::deny($_SERVER['REQUEST_METHOD'] ?? 'GET');
-            return null;
-        }
-        return $event;
-    }
+    use ResolvesEventContext;
 
     public function list(): void
     {
-        if (!$this->requireAdmin()) return;
         $pdo = Database::pdo();
-        $event = $this->currentEventOrDeny($pdo);
+        $event = $this->requireEventContext($pdo, ['event_admin', 'checker']);
         if (!$event) return;
         $date = trim((string)($_GET['date'] ?? ''));
         $agency = trim((string)($_GET['agency'] ?? ''));
@@ -48,7 +31,7 @@ class AdminAttendanceController
         $joinOn = 'a.participant_id = p.id AND a.attendance_date = ?';
         $bind = [$selectedDate];
         if ($eventId > 0) {
-            $joinOn .= ' AND (a.event_id = ? OR a.event_id IS NULL)';
+            $joinOn .= ' AND a.event_id = ?';
             $bind[] = $eventId;
         }
 
@@ -115,9 +98,7 @@ class AdminAttendanceController
 
     public function kpiJson(): void
     {
-        if (!$this->requireAdmin()) return;
-        $pdo = Database::pdo();
-        if (!$this->currentEventOrDeny($pdo)) return;
+        if (!$this->requireEventContext($pdo, ['event_admin', 'checker'], true)) return;
         header('Content-Type: application/json');
         $selectedDate = isset($_GET['date']) && trim($_GET['date']) !== '' ? trim($_GET['date']) : date('Y-m-d');
         echo json_encode($this->computeKpis($pdo, $selectedDate));
@@ -127,9 +108,7 @@ class AdminAttendanceController
     {
         // Long-lived SSE holds PHP session locks and exhausts Apache/WAMP workers.
         // Prefer short JSON polling via kpiJson(); keep this route as a safe no-op redirect.
-        if (!$this->requireAdmin()) return;
-        $pdo = Database::pdo();
-        if (!$this->currentEventOrDeny($pdo)) return;
+        if (!$this->requireEventContext($pdo, ['event_admin', 'checker'], true)) return;
         header('Content-Type: application/json');
         header('Cache-Control: no-store');
         $selectedDate = isset($_GET['date']) && trim($_GET['date']) !== '' ? trim($_GET['date']) : date('Y-m-d');
@@ -171,7 +150,7 @@ class AdminAttendanceController
         $params = [];
         $eventId = $this->getActiveEventId($pdo);
         if ($eventId !== null) {
-            $sql .= " AND ({$alias}.event_id = ? OR {$alias}.event_id IS NULL)";
+            $sql .= " AND {$alias}.event_id = ?";
             $params[] = $eventId;
         }
         return [$sql, $params];
@@ -183,7 +162,7 @@ class AdminAttendanceController
         $sql = 'SELECT id, signature_path, status FROM attendance WHERE participant_id = ? AND attendance_date = ?';
         $bind = [$participantId, $date];
         if ($eventId !== null) {
-            $sql .= ' AND (event_id = ? OR event_id IS NULL)';
+            $sql .= ' AND event_id = ?';
             $bind[] = $eventId;
         }
         $sql .= ' ORDER BY id DESC LIMIT 1';
@@ -217,7 +196,7 @@ class AdminAttendanceController
         $absentSql = "SELECT COUNT(DISTINCT a.participant_id) FROM attendance a WHERE a.attendance_date = ? AND a.status = 'absent'";
         $absentBind = [$selectedDate];
         if ($eventId !== null) {
-            $absentSql .= ' AND (a.event_id = ? OR a.event_id IS NULL)';
+            $absentSql .= ' AND a.event_id = ?';
             $absentBind[] = $eventId;
         }
         $absentStmt = $pdo->prepare($absentSql);
@@ -261,7 +240,7 @@ class AdminAttendanceController
 
     public function searchParticipants(): void
     {
-        if (!$this->requireAdmin()) return;
+        if (!$this->requireLogin(true)) return;
         header('Content-Type: application/json');
 
         $query = trim((string)($_GET['q'] ?? ''));
@@ -271,7 +250,7 @@ class AdminAttendanceController
         }
 
         $pdo = Database::pdo();
-        $event = $this->currentEventOrDeny($pdo);
+        $event = $this->requireEventContext($pdo, ['event_admin', 'checker'], true);
         if (!$event) return;
         $eventId = (int)$event['id'];
         $stmt = $pdo->prepare("SELECT id, uuid, first_name, last_name, middle_name, agency, email, is_vip FROM participants WHERE event_id = ? AND (first_name LIKE ? OR last_name LIKE ? OR email LIKE ? OR CONCAT(first_name, ' ', last_name) LIKE ?) ORDER BY is_vip DESC, last_name, first_name LIMIT 20");
@@ -294,7 +273,7 @@ class AdminAttendanceController
 
     public function markAbsent(): void
     {
-        if (!$this->requireAdmin()) return;
+        if (!$this->requireLogin(true)) return;
         header('Content-Type: application/json');
 
         $csrf = $_SERVER['HTTP_X_CSRF_TOKEN'] ?? '';
@@ -320,7 +299,7 @@ class AdminAttendanceController
         }
 
         $pdo = Database::pdo();
-        $event = $this->currentEventOrDeny($pdo);
+        $event = $this->requireEventContext($pdo, ['event_admin', 'checker'], true);
         if (!$event) return;
         $eventId = (int)$event['id'];
         $stmt = $pdo->prepare('SELECT id, uuid FROM participants WHERE id = ? AND event_id = ?');
@@ -351,7 +330,7 @@ class AdminAttendanceController
 
     public function clearAbsent(): void
     {
-        if (!$this->requireAdmin()) return;
+        if (!$this->requireLogin(true)) return;
         header('Content-Type: application/json');
 
         $csrf = $_SERVER['HTTP_X_CSRF_TOKEN'] ?? '';
@@ -377,7 +356,7 @@ class AdminAttendanceController
         }
 
         $pdo = Database::pdo();
-        $event = $this->currentEventOrDeny($pdo);
+        $event = $this->requireEventContext($pdo, ['event_admin', 'checker'], true);
         if (!$event) return;
         $eventId = (int)$event['id'];
         $chkP = $pdo->prepare('SELECT id FROM participants WHERE id = ? AND event_id = ?');
@@ -404,7 +383,7 @@ class AdminAttendanceController
         $sql = 'SELECT id, signature_path, status FROM attendance WHERE participant_id = ? AND attendance_date = ?';
         $bind = [$participantId, $date];
         if ($eventId !== null) {
-            $sql .= ' AND (event_id = ? OR event_id IS NULL)';
+            $sql .= ' AND event_id = ?';
             $bind[] = $eventId;
         }
         $sql .= ' ORDER BY id DESC LIMIT 1';
@@ -415,7 +394,7 @@ class AdminAttendanceController
 
     public function manualAttendance(): void
     {
-        if (!$this->requireAdmin()) return;
+        if (!$this->requireLogin(true)) return;
         header('Content-Type: application/json');
 
         $csrf = $_SERVER['HTTP_X_CSRF_TOKEN'] ?? '';
@@ -445,7 +424,7 @@ class AdminAttendanceController
 
         $pdo = Database::pdo();
 
-        $event = $this->currentEventOrDeny($pdo);
+        $event = $this->requireEventContext($pdo, ['event_admin', 'checker'], true);
         if (!$event) return;
         $eventId = (int)$event['id'];
         $enforce = (int)($event['enforce_single_time_in'] ?? 1) === 1;

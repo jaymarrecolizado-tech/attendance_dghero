@@ -3,35 +3,19 @@ declare(strict_types=1);
 
 namespace App\Controllers;
 
+use App\Controllers\Concerns\ResolvesEventContext;
 use App\Services\AuthService;
 use App\Services\Database;
 use App\Services\EventContext;
 
 class ExportController
 {
-    private function requireAdmin(): bool
-    {
-        if (!AuthService::check()) { http_response_code(403); echo 'Forbidden'; return false; }
-        return true;
-    }
-
-    /** @return array<string,mixed>|null */
-    private function currentEventOrManage(\PDO $pdo): ?array
-    {
-        $event = EventContext::currentEvent($pdo);
-        if (!$event) { http_response_code(404); echo 'No events'; return null; }
-        $adminId = (int)($_SESSION['admin_id'] ?? 0);
-        if (!EventContext::canAccess($pdo, $adminId, (int)$event['id'], ['event_admin']) && !AuthService::isAdmin()) {
-            http_response_code(403); echo 'Forbidden'; return null;
-        }
-        return $event;
-    }
+    use ResolvesEventContext;
 
     public function registrantsCsv(): void
     {
-        if (!$this->requireAdmin()) return;
         $pdo = Database::pdo();
-        $event = $this->currentEventOrManage($pdo);
+        $event = $this->requireEventContext($pdo, ['event_admin']);
         if (!$event) return;
         $eventId = (int)$event['id'];
         $ip = $_SERVER['REMOTE_ADDR'] ?? 'unknown';
@@ -62,9 +46,8 @@ class ExportController
 
     public function attendanceCsv(): void
     {
-        if (!$this->requireAdmin()) return;
         $pdo = Database::pdo();
-        $event = $this->currentEventOrManage($pdo);
+        $event = $this->requireEventContext($pdo, ['event_admin']);
         if (!$event) return;
         $eventId = (int)$event['id'];
         $ip = $_SERVER['REMOTE_ADDR'] ?? 'unknown';

@@ -3,6 +3,7 @@ declare(strict_types=1);
 
 namespace App\Controllers;
 
+use App\Controllers\Concerns\ResolvesEventContext;
 use App\Services\AuthService;
 use App\Services\Database;
 use App\Services\EventContext;
@@ -12,30 +13,12 @@ use App\Services\Mailer;
 
 class AdminRegistrantsController
 {
-    private function requireAdmin(): bool
-    {
-        if (!AuthService::check()) { header('Location: ?r=admin_login'); return false; }
-        return true;
-    }
-
-    /** @return array<string,mixed>|null */
-    private function currentEventOrDeny(\PDO $pdo): ?array
-    {
-        $event = EventContext::currentEvent($pdo);
-        if (!$event) { http_response_code(404); echo 'No events'; return null; }
-        $adminId = (int)($_SESSION['admin_id'] ?? 0);
-        if (!EventContext::canAccess($pdo, $adminId, (int)$event['id'], ['event_admin', 'checker']) && !AuthService::isAdmin()) {
-            AuthService::deny($_SERVER['REQUEST_METHOD'] ?? 'GET');
-            return null;
-        }
-        return $event;
-    }
+    use ResolvesEventContext;
 
     public function list(): void
     {
-        if (!$this->requireAdmin()) return;
         $pdo = Database::pdo();
-        $event = $this->currentEventOrDeny($pdo);
+        $event = $this->requireEventContext($pdo, ['event_admin', 'checker']);
         if (!$event) return;
         $eventId = (int)$event['id'];
         $q = trim((string)($_GET['q'] ?? ''));
@@ -74,16 +57,10 @@ class AdminRegistrantsController
 
     public function toggleVip(): void
     {
-        if (!$this->requireAdmin()) return;
         $pdo = Database::pdo();
-        $event = EventContext::currentEvent($pdo);
-        if (!$event) { http_response_code(404); echo 'No events'; return; }
+        $event = $this->requireEventContext($pdo, ['event_admin']);
+        if (!$event) return;
         $eventId = (int)$event['id'];
-        $role = EventContext::effectiveRole($pdo, (int)$_SESSION['admin_id'], $eventId);
-        if (!($role === AuthService::ROLE_ADMIN || $role === EventContext::ROLE_EVENT_ADMIN)) {
-            AuthService::deny('POST');
-            return;
-        }
         if (!isset($_POST['csrf']) || !function_exists('csrf_check') || !csrf_check($_POST['csrf'])) {
             http_response_code(400);
             echo 'Invalid CSRF';
@@ -123,7 +100,7 @@ class AdminRegistrantsController
 
     public function generateQrBatch(): void
     {
-        if (!$this->requireAdmin()) return;
+        if (!$this->requireLogin()) return;
         if (!isset($_POST['csrf']) || !function_exists('csrf_check') || !csrf_check($_POST['csrf'])) {
             http_response_code(400);
             echo 'Invalid CSRF';
@@ -131,7 +108,7 @@ class AdminRegistrantsController
         }
         $batchSize = max(1, min(200, (int)($_POST['batch'] ?? 50)));
         $pdo = Database::pdo();
-        $event = $this->currentEventOrDeny($pdo);
+        $event = $this->requireEventContext($pdo, ['event_admin', 'checker']);
         if (!$event) return;
         $eventId = (int)$event['id'];
         $stmt0 = $pdo->prepare('SELECT id, uuid FROM participants WHERE event_id = ? AND qr_path IS NULL LIMIT ' . $batchSize);
@@ -162,7 +139,7 @@ class AdminRegistrantsController
 
     public function sendQrEmail(): void
     {
-        if (!$this->requireAdmin()) return;
+        if (!$this->requireLogin()) return;
         if (!isset($_POST['csrf']) || !function_exists('csrf_check') || !csrf_check($_POST['csrf'])) {
             http_response_code(400);
             echo 'Invalid CSRF';
@@ -176,7 +153,7 @@ class AdminRegistrantsController
             return;
         }
         $pdo = Database::pdo();
-        $event = $this->currentEventOrDeny($pdo);
+        $event = $this->requireEventContext($pdo, ['event_admin', 'checker']);
         if (!$event) return;
         $eventId = (int)$event['id'];
         $stmt = $pdo->prepare('SELECT id, uuid, first_name, last_name, email, office_email, qr_path FROM participants WHERE id = ? AND event_id = ?');
@@ -205,7 +182,7 @@ class AdminRegistrantsController
 
     public function qrPreview(): void
     {
-        if (!$this->requireAdmin()) return;
+        if (!$this->requireLogin()) return;
         $uuid = isset($_GET['uuid']) ? (string)$_GET['uuid'] : '';
         if ($uuid === '') {
             http_response_code(400);
@@ -213,7 +190,7 @@ class AdminRegistrantsController
             return;
         }
         $pdo = Database::pdo();
-        $event = $this->currentEventOrDeny($pdo);
+        $event = $this->requireEventContext($pdo, ['event_admin', 'checker']);
         if (!$event) return;
         $eventId = (int)$event['id'];
         $stmt = $pdo->prepare('SELECT id, uuid, qr_path FROM participants WHERE uuid = ? AND event_id = ?');

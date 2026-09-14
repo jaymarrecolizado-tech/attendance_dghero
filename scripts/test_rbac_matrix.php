@@ -231,13 +231,13 @@ assertTrue(guardAllows($router, 'admin_event_links', 'GET', $eventAdmin), 'event
 assertTrue(!guardAllows($router, 'admin_users', 'GET', $eventAdmin), 'event_admin denied global users');
 assertTrue(!guardAllows($router, 'admin_events', 'GET', $eventAdmin), 'event_admin denied event management');
 
-// Forced context: A-only checker with session pinned to B must not reach B data.
-// currentEvent() remaps to the assigned event, so assert the remap target is A
-// and direct B access stays denied.
+// Forced context: A-only checker with session pinned to B is hard-denied.
+// currentEvent() never silently remaps; the guard denies until staff switch
+// back to an assigned event.
 loginAs(['id' => $checkerId, 'username' => '_rbac_checker', 'role' => AuthService::ROLE_CHECKER, 'display_name' => 'C']);
 $_SESSION['current_event_id'] = $eventB;
-$remapped = EventContext::currentEvent($pdo);
-assertTrue($remapped !== null && (int)$remapped['id'] === $eventA, 'forced B context remaps A-only staff to A');
+$forced = EventContext::currentEvent($pdo);
+assertTrue($forced === null, 'forced B context hard-denies A-only staff (no silent remap)');
 assertTrue(!EventContext::canAccess($pdo, $checkerId, $eventB, null), 'forced B context still denies B access');
 ob_start();
 $refRouter = new ReflectionClass($router);
@@ -246,7 +246,10 @@ $guardMethod->setAccessible(true);
 $regDef = (require dirname(__DIR__) . '/config/routes.php')['admin_registrants'];
 $guardOk = $guardMethod->invoke($router, $regDef, 'GET', 'admin_registrants');
 ob_end_clean();
-assertTrue($guardOk && (int)$_SESSION['current_event_id'] === $eventA, 'guard serves assigned event, never forced B');
+assertTrue(!$guardOk, 'guard denies while session event is unassigned');
+$_SESSION['current_event_id'] = $eventA;
+$recovered = EventContext::currentEvent($pdo);
+assertTrue($recovered !== null && (int)$recovered['id'] === $eventA, 'assigned event resolves after explicit switch');
 
 // Controller-level cross-event submit: A uuid + B slug must be not_found.
 $_SESSION['staff'] = true;
