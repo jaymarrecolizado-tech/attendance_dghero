@@ -4,7 +4,7 @@ declare(strict_types=1);
 $token = function_exists('csrf_token') ? csrf_token() : '';
 $eventSlug = isset($event) && isset($event['slug']) ? (string)$event['slug'] : trim((string)($_GET['e'] ?? ''));
 $eventName = isset($event) ? (string)($event['name'] ?? '') : '';
-$guestTitle = 'Event Registration — GovNet-Launching';
+$guestTitle = 'Event Registration - GovNet-Launching';
 $guestIncludeRegistrationAssets = true;
 $guestIncludeRegistrationJs = true;
 require __DIR__ . DIRECTORY_SEPARATOR . 'partials' . DIRECTORY_SEPARATOR . 'guest_head.php';
@@ -24,7 +24,7 @@ require __DIR__ . DIRECTORY_SEPARATOR . 'partials' . DIRECTORY_SEPARATOR . 'gues
             <div class="guest-stepper-progress" aria-hidden="true">
               <div class="guest-stepper-progress-bar" id="stepperProgress" style="width:33%"></div>
             </div>
-            <p class="guest-stepper-label guest-stepper-label-mobile" id="stepperLabel">Step 1 of 3 — Personal details</p>
+            <p class="guest-stepper-label guest-stepper-label-mobile" id="stepperLabel">Step 1 of 3 - Personal details</p>
             <div class="guest-stepper-tabs" role="tablist">
               <button type="button" class="guest-stepper-tab is-active" data-step="1" role="tab" aria-current="step">Personal</button>
               <button type="button" class="guest-stepper-tab" data-step="2" role="tab">Work</button>
@@ -132,9 +132,9 @@ require __DIR__ . DIRECTORY_SEPARATOR . 'partials' . DIRECTORY_SEPARATOR . 'gues
             <fieldset class="reg-step" data-step="3">
               <legend>Contact and submit</legend>
               <div class="guest-review" aria-label="Registration summary">
-                <span class="guest-review-chip"><strong>Name:</strong> <span id="reviewName">—</span></span>
-                <span class="guest-review-chip"><strong>Agency:</strong> <span id="reviewAgency">—</span></span>
-                <span class="guest-review-chip"><strong>Email:</strong> <span id="reviewEmail">—</span></span>
+                <span class="guest-review-chip"><strong>Name:</strong> <span id="reviewName">-</span></span>
+                <span class="guest-review-chip"><strong>Agency:</strong> <span id="reviewAgency">-</span></span>
+                <span class="guest-review-chip"><strong>Email:</strong> <span id="reviewEmail">-</span></span>
               </div>
               <div class="row g-3 g-md-4">
                 <div class="col-12 col-md-6">

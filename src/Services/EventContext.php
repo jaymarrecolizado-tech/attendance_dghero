@@ -102,7 +102,18 @@ final class EventContext
         if (!array_key_exists('status', $event)) {
             return ((int)($event['active'] ?? 1)) === 1;
         }
-        return (string)($event['status'] ?? '') === 'open';
+        if ((string)($event['status'] ?? '') !== 'open') {
+            return false;
+        }
+        // Schedule window uses server local time, same as attendance date()/time().
+        $now = time();
+        if (!empty($event['starts_at']) && $now < (int)strtotime((string)$event['starts_at'])) {
+            return false;
+        }
+        if (!empty($event['ends_at']) && $now > (int)strtotime((string)$event['ends_at'])) {
+            return false;
+        }
+        return true;
     }
 
     public static function isAllFather(): bool

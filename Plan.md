@@ -36,20 +36,20 @@ Then work the **Remaining work** list in order. After each item, tick it here.
 ## Checklist
 
 - [x] Create and push remote branch `attendance_accend` from `main`
-- [ ] Commit and push the local multi-event draft (currently only `Plan.md` is on origin)
-- [ ] Wire OpenCode skills for real (taste-skill files missing; ponytail is only a plugin line)
+- [x] Commit and push the local multi-event draft (currently only `Plan.md` is on origin)
+- [x] Wire OpenCode skills for real (taste-skill files missing; ponytail is only a plugin line)
 - [x] Draft `009_multi_event` + `EventContext` + backfill (local; harden schema leftovers below)
 - [x] Draft unique links `e=slug` + picker + All Father copy buttons (local)
-- [ ] `event_admin` can see/copy unique links (All Father only today)
+- [x] `event_admin` can see/copy unique links (All Father only today)
 - [x] Draft event switcher + scoped lists/import/export/report/gallery/SEO (local)
-- [ ] Enforce schedule (`starts_at` / `ends_at`) on public register/scan
-- [ ] Fix event Save wiping schedule fields
-- [ ] Tighten `requireAdmin()` and stop Router fail-open
-- [ ] Require event slug on participant lookup API
-- [ ] Schema leftovers: NOT NULL `event_id`, attendance unique key, drop `setActive`, stop SEO NULL bleed
-- [ ] Tests that hit controllers (not only SQL / remapped session)
-- [ ] Taste-skill audit-first restyle of register/scan/events/switcher
-- [ ] `/ponytail-review` then commit remaining work to `attendance_accend`
+- [x] Enforce schedule (`starts_at` / `ends_at`) on public register/scan
+- [x] Fix event Save wiping schedule fields
+- [x] Tighten `requireAdmin()` and stop Router fail-open
+- [x] Require event slug on participant lookup API
+- [x] Schema leftovers: NOT NULL `event_id`, attendance unique key, drop `setActive`, stop SEO NULL bleed
+- [x] Tests that hit controllers (not only SQL / remapped session)
+- [x] Taste-skill audit-first restyle of register/scan/events/switcher
+- [x] `/ponytail-review` then commit remaining work to `attendance_accend`
 
 ---
 

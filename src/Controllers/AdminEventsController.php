@@ -29,6 +29,15 @@ class AdminEventsController
         return true;
     }
 
+    /** Normalize HTML datetime-local ("2026-09-14T10:00") to MySQL DATETIME. */
+    private function normDt(string $v): ?string
+    {
+        $v = trim($v);
+        if ($v === '') return null;
+        $v = str_replace('T', ' ', $v);
+        return strlen($v) === 16 ? $v . ':00' : $v;
+    }
+
     public function list(): void
     {
         if (!$this->requireAllFather()) return;
@@ -62,7 +71,7 @@ class AdminEventsController
         $pdo = Database::pdo();
         $stmt = $pdo->prepare('INSERT INTO events (name, slug, enforce_single_time_in, active, status, starts_at, ends_at) VALUES (?,?,?,?,?,?,?)');
         $tmpSlug = EventContext::slugify($name);
-        $stmt->execute([$name, $tmpSlug . '-' . time(), $enforce, 0, $status, $starts !== '' ? $starts : null, $ends !== '' ? $ends : null]);
+        $stmt->execute([$name, $tmpSlug . '-' . time(), $enforce, 0, $status, $this->normDt($starts), $this->normDt($ends)]);
         $id = (int)$pdo->lastInsertId();
         $slug = EventContext::slugify($name, $id);
         // Ensure unique slug.
@@ -87,9 +96,22 @@ class AdminEventsController
         if ($id <= 0 || !in_array($status, ['draft', 'open', 'closed'], true)) { http_response_code(422); echo 'Invalid'; return; }
         $pdo = Database::pdo();
         $stmt = $pdo->prepare('UPDATE events SET status = ?, starts_at = ?, ends_at = ?, enforce_single_time_in = ? WHERE id = ?');
-        $stmt->execute([$status, $starts !== '' ? $starts : null, $ends !== '' ? $ends : null, $enforce, $id]);
+        $stmt->execute([$status, $this->normDt($starts), $this->normDt($ends), $enforce, $id]);
         Logger::log(AuthService::id(), 'event_updated', ['event_id' => $id, 'status' => $status], $id);
         header('Location: ?r=admin_events');
+    }
+
+    /**
+     * Links-only view for event_admin: assigned events with copyable
+     * register/scan links. No create, assign, or cross-event access.
+     */
+    public function links(): void
+    {
+        if (!AuthService::check()) { header('Location: ?r=admin_login'); return; }
+        $pdo = Database::pdo();
+        $adminId = (int)($_SESSION['admin_id'] ?? 0);
+        $events = AuthService::isAdmin() ? EventContext::allEvents($pdo) : EventContext::assignedEvents($pdo, $adminId);
+        require dirname(__DIR__, 2) . DIRECTORY_SEPARATOR . 'views' . DIRECTORY_SEPARATOR . 'admin_event_links.php';
     }
 
     public function switch(): void
@@ -137,18 +159,6 @@ class AdminEventsController
         $pdo = Database::pdo();
         $pdo->prepare('DELETE FROM event_assignments WHERE admin_id = ? AND event_id = ?')->execute([$adminId, $eventId]);
         Logger::log(AuthService::id(), 'event_unassigned', ['event_id' => $eventId, 'admin_id' => $adminId], $eventId);
-        header('Location: ?r=admin_events');
-    }
-
-    public function setActive(): void
-    {
-        // Legacy singleton switch replaced by per-event status + session switcher.
-        if (!$this->requireAllFather()) return;
-        if (!$this->csrfOk()) return;
-        $id = (int)($_POST['id'] ?? 0);
-        if ($id > 0) {
-            EventContext::setCurrentEvent($id);
-        }
         header('Location: ?r=admin_events');
     }
 }

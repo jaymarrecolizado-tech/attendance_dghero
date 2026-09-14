@@ -202,12 +202,12 @@ return [
         'GET' => [AdminEventsController::class, 'list'],
         '_guards' => [$rolesAdmin],
     ],
+    'admin_event_links' => [
+        'GET' => [AdminEventsController::class, 'links'],
+        '_guards' => [$eventManage],
+    ],
     'admin_events_create' => [
         'POST' => [AdminEventsController::class, 'create'],
-        '_guards' => [$rolesAdmin],
-    ],
-    'admin_events_set_active' => [
-        'POST' => [AdminEventsController::class, 'setActive'],
         '_guards' => [$rolesAdmin],
     ],
     'admin_events_update' => [

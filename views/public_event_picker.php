@@ -18,15 +18,18 @@ $target = $isScan ? 'scan' : 'register';
         <?php if (!empty($events)): ?>
         <div class="list-group">
           <?php foreach ($events as $ev): ?>
-            <?php $slug = (string)($ev['slug'] ?? ''); if ($slug === '') continue; ?>
-            <a class="list-group-item list-group-item-action d-flex justify-content-between align-items-center" href="?r=<?= htmlspecialchars($target, ENT_QUOTES) ?>&amp;e=<?= urlencode($slug) ?>">
+            <?php
+              $slug = (string)($ev['slug'] ?? ''); if ($slug === '') continue;
+              $startsRaw = trim((string)($ev['starts_at'] ?? ''));
+              $startsTs = $startsRaw !== '' ? strtotime($startsRaw) : false;
+              $schedule = $startsTs ? date('M j, Y, g:i A', $startsTs) : ($startsRaw !== '' ? $startsRaw : 'Schedule to be announced');
+            ?>
+            <a class="list-group-item list-group-item-action d-flex justify-content-between align-items-center gap-3" href="?r=<?= htmlspecialchars($target, ENT_QUOTES) ?>&amp;e=<?= urlencode($slug) ?>">
               <span>
                 <strong><?= htmlspecialchars((string)($ev['name'] ?? 'Event'), ENT_QUOTES) ?></strong>
-                <?php if (!empty($ev['starts_at'])): ?>
-                  <br><small class="text-muted"><?= htmlspecialchars((string)$ev['starts_at'], ENT_QUOTES) ?></small>
-                <?php endif; ?>
+                <br><small class="text-muted"><?= htmlspecialchars($schedule, ENT_QUOTES) ?></small>
               </span>
-              <span class="btn btn-primary btn-sm"><?= $isScan ? 'Open kiosk' : 'Register' ?></span>
+              <span class="btn btn-primary btn-sm flex-shrink-0"><?= $isScan ? 'Open kiosk' : 'Register' ?></span>
             </a>
           <?php endforeach; ?>
         </div>

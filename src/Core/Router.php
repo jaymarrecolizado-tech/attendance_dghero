@@ -103,7 +103,11 @@ final class Router
                         return false;
                     }
                 } catch (\Throwable $e) {
-                    // Fail open to controller-level checks when event tables are unavailable.
+                    // Fail closed: only All Father may proceed (to create the first event).
+                    if (!AuthService::isAdmin()) {
+                        AuthService::deny($method);
+                        return false;
+                    }
                 }
                 continue;
             }

@@ -69,6 +69,7 @@ function loginAs(array $admin): void
 $adminId = ensureUser($pdo, '_rbac_admin', AuthService::ROLE_ADMIN);
 $checkerId = ensureUser($pdo, '_rbac_checker', AuthService::ROLE_CHECKER);
 $seoId = ensureUser($pdo, '_rbac_seo', AuthService::ROLE_SEO);
+$eventAdminId = ensureUser($pdo, '_rbac_eventadmin', AuthService::ROLE_CHECKER);
 $inactiveId = ensureUser($pdo, '_rbac_inactive', AuthService::ROLE_CHECKER);
 $pdo->prepare('UPDATE admins SET is_active=0 WHERE id=?')->execute([$inactiveId]);
 
@@ -103,7 +104,7 @@ $inactive = $stmt->fetch();
 assertTrue((int)$inactive['is_active'] === 0, 'inactive user flagged');
 
 // Multi-event fixture: two concurrent open events.
-$pdo->prepare('DELETE FROM event_assignments WHERE admin_id IN (?,?,?)')->execute([$adminId, $checkerId, $seoId]);
+$pdo->prepare('DELETE FROM event_assignments WHERE admin_id IN (?,?,?,?)')->execute([$adminId, $checkerId, $seoId, $eventAdminId]);
 $pdo->exec("DELETE FROM participants WHERE email IN ('_rbac_same@test.local')");
 $pdo->exec("DELETE FROM events WHERE slug IN ('_test-event-a','_test-event-b')");
 $pdo->prepare("INSERT INTO events (name, slug, enforce_single_time_in, active, status) VALUES ('_Test Event A','_test-event-a',1,0,'open')")->execute();
@@ -112,11 +113,13 @@ $pdo->prepare("INSERT INTO events (name, slug, enforce_single_time_in, active, s
 $eventB = (int)$pdo->lastInsertId();
 assertTrue($eventA > 0 && $eventB > 0 && $eventA !== $eventB, 'two concurrent events created');
 
-// Staff isolation fixture: checker on A only, seo on B only.
+// Staff isolation fixture: checker on A only, seo on B only, event_admin on A only.
 $pdo->prepare('INSERT INTO event_assignments (admin_id, event_id, role) VALUES (?,?,?) ON DUPLICATE KEY UPDATE role=VALUES(role)')
     ->execute([$checkerId, $eventA, 'checker']);
 $pdo->prepare('INSERT INTO event_assignments (admin_id, event_id, role) VALUES (?,?,?) ON DUPLICATE KEY UPDATE role=VALUES(role)')
     ->execute([$seoId, $eventB, 'seo_viewer']);
+$pdo->prepare('INSERT INTO event_assignments (admin_id, event_id, role) VALUES (?,?,?) ON DUPLICATE KEY UPDATE role=VALUES(role)')
+    ->execute([$eventAdminId, $eventA, 'event_admin']);
 $_SESSION['current_event_id'] = $eventA;
 
 // Router matrix via captured output
@@ -207,11 +210,88 @@ $foundB = $pdo->prepare('SELECT id FROM participants WHERE uuid = ? AND event_id
 $foundB->execute([$uuidA, $eventB]);
 assertTrue(!$foundB->fetch(), 'cross-event QR rejected (uuid+event mismatch)');
 
+// event_admin in the matrix: manage routes allowed on A, global admin routes denied.
+function guardAllows(Router $router, string $route, string $method, array $admin): bool
+{
+    $ref = new ReflectionClass($router);
+    $m = $ref->getMethod('runGuards');
+    $m->setAccessible(true);
+    $def = (require dirname(__DIR__) . '/config/routes.php')[$route] ?? null;
+    if (!$def) return false;
+    loginAs($admin);
+    ob_start();
+    $ok = $m->invoke($router, $def, $method, $route);
+    ob_end_clean();
+    return (bool)$ok;
+}
+$eventAdmin = ['id' => $eventAdminId, 'username' => '_rbac_eventadmin', 'role' => AuthService::ROLE_CHECKER, 'display_name' => 'E'];
+$_SESSION['current_event_id'] = $eventA;
+assertTrue(guardAllows($router, 'admin_registrant_vip', 'POST', $eventAdmin), 'event_admin may manage VIP on assigned event');
+assertTrue(guardAllows($router, 'admin_event_links', 'GET', $eventAdmin), 'event_admin may open unique links');
+assertTrue(!guardAllows($router, 'admin_users', 'GET', $eventAdmin), 'event_admin denied global users');
+assertTrue(!guardAllows($router, 'admin_events', 'GET', $eventAdmin), 'event_admin denied event management');
+
+// Forced context: A-only checker with session pinned to B must not reach B data.
+// currentEvent() remaps to the assigned event, so assert the remap target is A
+// and direct B access stays denied.
+loginAs(['id' => $checkerId, 'username' => '_rbac_checker', 'role' => AuthService::ROLE_CHECKER, 'display_name' => 'C']);
+$_SESSION['current_event_id'] = $eventB;
+$remapped = EventContext::currentEvent($pdo);
+assertTrue($remapped !== null && (int)$remapped['id'] === $eventA, 'forced B context remaps A-only staff to A');
+assertTrue(!EventContext::canAccess($pdo, $checkerId, $eventB, null), 'forced B context still denies B access');
+ob_start();
+$refRouter = new ReflectionClass($router);
+$guardMethod = $refRouter->getMethod('runGuards');
+$guardMethod->setAccessible(true);
+$regDef = (require dirname(__DIR__) . '/config/routes.php')['admin_registrants'];
+$guardOk = $guardMethod->invoke($router, $regDef, 'GET', 'admin_registrants');
+ob_end_clean();
+assertTrue($guardOk && (int)$_SESSION['current_event_id'] === $eventA, 'guard serves assigned event, never forced B');
+
+// Controller-level cross-event submit: A uuid + B slug must be not_found.
+$_SESSION['staff'] = true;
+$_SESSION['csrf'] = bin2hex(random_bytes(16));
+$attCtrl = new \App\Controllers\AttendanceController();
+$cross = $attCtrl->submitJsonForTest(['uuid' => $uuidA, 'signature' => 'data:image/png;base64,AAAA', 'e' => '_test-event-b'], $_SESSION['csrf']);
+assertTrue(($cross['error'] ?? '') === 'not_found', 'controller rejects cross-event submit');
+$noEvent = $attCtrl->submitJsonForTest(['uuid' => $uuidA, 'signature' => 'data:image/png;base64,AAAA'], $_SESSION['csrf']);
+assertTrue(($noEvent['error'] ?? '') === 'missing_event', 'controller requires event slug');
+unset($_SESSION['staff']);
+
+// Participant lookup requires the event after item 7.
+$partCtrl = new \App\Controllers\ParticipantController();
+unset($_SESSION['scan_event_id']);
+$_GET = ['uuid' => $uuidA];
+ob_start();
+$partCtrl->getByUuidJson();
+ob_end_clean();
+assertTrue(http_response_code() === 400, 'participant lookup without event is refused');
+$_GET = ['uuid' => $uuidA, 'e' => '_test-event-b'];
+ob_start();
+$partCtrl->getByUuidJson();
+ob_end_clean();
+assertTrue(http_response_code() === 404, 'participant lookup with other event is not found');
+$_GET = ['uuid' => $uuidA, 'e' => '_test-event-a'];
+http_response_code(200);
+ob_start();
+$partCtrl->getByUuidJson();
+$body = (string)ob_get_clean();
+assertTrue(http_response_code() === 200 && str_contains($body, $uuidA), 'participant lookup with own event resolves');
+http_response_code(200);
+
+// Schedule window: future starts_at and past ends_at close the event.
+$future = date('Y-m-d H:i:s', time() + 86400);
+$past = date('Y-m-d H:i:s', time() - 86400);
+assertTrue(!EventContext::isPublicOpen(['status' => 'open', 'starts_at' => $future, 'ends_at' => null]), 'future starts_at closes register');
+assertTrue(!EventContext::isPublicOpen(['status' => 'open', 'starts_at' => null, 'ends_at' => $past]), 'past ends_at closes register');
+assertTrue(EventContext::isPublicOpen(['status' => 'open', 'starts_at' => $past, 'ends_at' => $future]), 'open window stays open');
+assertTrue(!EventContext::isPublicOpen(['status' => 'draft', 'starts_at' => null, 'ends_at' => null]), 'draft stays closed');
+
 // Cleanup multi-event fixture rows (keep users for next run).
 $pdo->prepare('DELETE FROM participants WHERE email = ?')->execute(['_rbac_same@test.local']);
-$pdo->prepare('DELETE FROM event_assignments WHERE admin_id IN (?,?,?)')->execute([$adminId, $checkerId, $seoId]);
+$pdo->prepare('DELETE FROM event_assignments WHERE admin_id IN (?,?,?,?)')->execute([$adminId, $checkerId, $seoId, $eventAdminId]);
 $pdo->exec("DELETE FROM events WHERE slug IN ('_test-event-a','_test-event-b')");
-unset($_SESSION['current_event_id']);
+unset($_SESSION['current_event_id'], $_SESSION['scan_event_id']);
 
 // Last admin protection
 $adminCount = (int)$pdo->query("SELECT COUNT(*) FROM admins WHERE role='admin' AND is_active=1")->fetchColumn();

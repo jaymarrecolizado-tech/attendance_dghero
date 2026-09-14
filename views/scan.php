@@ -40,7 +40,7 @@ $eventName = isset($event) ? (string)($event['name'] ?? '') : '';
   <div class="row g-4">
     <div class="col-12 col-lg-6">
       <div class="glass-panel h-100">
-        <p class="text-uppercase text-muted mb-2" style="letter-spacing:.2em;font-size:.75rem;">Step 2<?php if ($eventName !== ''): ?> — <?= htmlspecialchars($eventName, ENT_QUOTES) ?><?php endif; ?></p>
+        <p class="text-uppercase text-muted mb-2" style="letter-spacing:.2em;font-size:.75rem;">Step 2<?php if ($eventName !== ''): ?> - <?= htmlspecialchars($eventName, ENT_QUOTES) ?><?php endif; ?></p>
         <h1 class="page-heading h3 mb-3">Scan QR and capture signature</h1>
         <div id="reader" class="mb-4 bg-white position-relative">
           <div id="scanLoading" class="text-center p-4">
@@ -59,12 +59,22 @@ $eventName = isset($event) ? (string)($event['name'] ?? '') : '';
       </div>
     </div>
     <div class="col-12 col-lg-6">
+      <div class="glass-panel mb-3" id="idlePanel">
+        <p class="text-uppercase text-muted mb-2" style="letter-spacing:.2em;font-size:.75rem;">Check-in</p>
+        <h2 class="page-heading h4 mb-3">Waiting for a scan</h2>
+        <ol class="subtext mb-3 ps-3">
+          <li class="mb-1">Participant presents the QR code from their registration.</li>
+          <li class="mb-1">The camera reads the code and opens the signature pad.</li>
+          <li>Participant signs to record attendance.</li>
+        </ol>
+        <a class="btn btn-outline-secondary btn-sm" href="?r=register&amp;e=<?= urlencode($eventSlug) ?>">Back to registration</a>
+      </div>
       <div class="card mb-3" id="participantCard" style="display:none">
         <div class="card-body">
           <div id="pinfo" class="mb-3 fw-semibold"></div>
           <div id="pvip" class="mb-2" style="display:none">
             <span class="badge text-bg-warning">VIP</span>
-            <span class="small text-muted ms-1">Priority guest — protocol care</span>
+            <span class="small text-muted ms-1">Priority guest - protocol care</span>
           </div>
           <canvas id="sigCanvas"></canvas>
           <div class="mt-3 d-flex flex-wrap gap-2">
@@ -75,7 +85,6 @@ $eventName = isset($event) ? (string)($event['name'] ?? '') : '';
           <div id="status" class="mt-3 text-muted small"></div>
         </div>
       </div>
-          <a class="btn btn-outline-secondary" href="?r=register&amp;e=<?= urlencode($eventSlug) ?>">Back to registration</a>
     </div>
   </div>
 </div>
@@ -316,6 +325,8 @@ function onScanSuccess(decodedText, decodedResult) {
         if (j.participant) {
           currentUuid = j.participant.uuid;
           document.getElementById('participantCard').style.display = 'block';
+          const idleEl = document.getElementById('idlePanel');
+          if (idleEl) idleEl.style.display = 'none';
           const p = j.participant;
           document.getElementById('pinfo').innerText = `${p.first_name} ${p.last_name}${p.agency ? ' (' + p.agency + ')' : ''}`;
           const vipEl = document.getElementById('pvip');
@@ -389,6 +400,8 @@ document.getElementById('saveBtn').addEventListener('click', () => {
     if (j.ok) {
       sigPad.clear();
       document.getElementById('participantCard').style.display = 'none';
+      const idleEl = document.getElementById('idlePanel');
+      if (idleEl) idleEl.style.display = '';
       currentUuid = null;
       setTimeout(() => { startScan(); }, 500);
     }

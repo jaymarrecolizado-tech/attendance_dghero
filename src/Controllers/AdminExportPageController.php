@@ -11,7 +11,7 @@ final class AdminExportPageController
 {
     public function index(): void
     {
-        if (empty($_SESSION['admin_id'])) {
+        if (!AuthService::check()) {
             header('Location: ?r=admin_login');
             return;
         }

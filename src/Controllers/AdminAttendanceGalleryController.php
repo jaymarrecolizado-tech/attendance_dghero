@@ -11,7 +11,7 @@ class AdminAttendanceGalleryController
 {
     public function list(): void
     {
-        if (empty($_SESSION['admin_id'])) { header('Location: ?r=admin_login'); return; }
+        if (!AuthService::check()) { header('Location: ?r=admin_login'); return; }
         $pdo = Database::pdo();
         $event = EventContext::currentEvent($pdo);
         if (!$event) { http_response_code(404); echo 'No events'; return; }

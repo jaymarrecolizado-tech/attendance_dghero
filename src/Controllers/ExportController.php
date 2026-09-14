@@ -11,7 +11,7 @@ class ExportController
 {
     private function requireAdmin(): bool
     {
-        if (empty($_SESSION['admin_id'])) { http_response_code(403); echo 'Forbidden'; return false; }
+        if (!AuthService::check()) { http_response_code(403); echo 'Forbidden'; return false; }
         return true;
     }
 

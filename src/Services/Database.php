@@ -124,6 +124,39 @@ class Database
         if (self::tableExists($pdo, 'events') && (!self::tableExists($pdo, 'event_assignments') || !self::columnExists($pdo, 'events', 'slug') || !self::columnExists($pdo, 'participants', 'event_id'))) {
             self::executeSqlFileTolerant($pdo, $base . '009_multi_event.sql');
         }
+        // 010_multi_event_hardening (conditional: only when backfill left no gaps)
+        if (self::tableExists($pdo, 'participants') && self::columnExists($pdo, 'participants', 'event_id')) {
+            self::migrate010($pdo);
+        }
+    }
+
+    private static function migrate010(PDO $pdo): void
+    {
+        try {
+            $nullInfo = $pdo->query("SELECT IS_NULLABLE FROM information_schema.columns WHERE table_schema = DATABASE() AND table_name = 'participants' AND column_name = 'event_id'")->fetch();
+            $nullable = $nullInfo && (($nullInfo['IS_NULLABLE'] ?? '') === 'YES');
+            if ($nullable && (int)$pdo->query('SELECT COUNT(*) FROM participants WHERE event_id IS NULL')->fetchColumn() === 0) {
+                try {
+                    $pdo->exec('ALTER TABLE participants MODIFY event_id INT NOT NULL');
+                } catch (\PDOException $e) {
+                    // Leave nullable; per-event checks in the app remain the rule.
+                }
+            }
+        } catch (\Throwable $e) {
+            // Read-only fallback: keep 009 schema.
+        }
+        try {
+            $allEnforce = (int)$pdo->query('SELECT COUNT(*) FROM events WHERE enforce_single_time_in <> 1')->fetchColumn() === 0;
+            if ($allEnforce && !self::indexExists($pdo, 'attendance', 'uq_attendance_participant_event_date')) {
+                try {
+                    $pdo->exec('ALTER TABLE attendance ADD UNIQUE KEY uq_attendance_participant_event_date (participant_id, event_id, attendance_date)');
+                } catch (\PDOException $e) {
+                    // Duplicate legacy rows: app-level enforce check remains the rule.
+                }
+            }
+        } catch (\Throwable $e) {
+            // Read-only fallback: keep 009 schema.
+        }
     }
 
     private static function executeSqlFileTolerant(PDO $pdo, string $path): void

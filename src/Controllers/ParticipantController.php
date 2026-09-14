@@ -19,10 +19,13 @@ class ParticipantController
         $row = $stmt->fetch();
         if (!$row) { http_response_code(404); echo json_encode(['error'=>'not_found']); return; }
         $slug = trim((string)($_GET['e'] ?? ''));
-        if ($slug !== '') {
-            $event = EventContext::findBySlug($pdo, $slug);
-            if (!$event || (int)$row['event_id'] !== (int)$event['id']) { http_response_code(404); echo json_encode(['error'=>'not_found']); return; }
+        if ($slug === '' && !empty($_SESSION['scan_event_id'])) {
+            $kiosk = EventContext::findById($pdo, (int)$_SESSION['scan_event_id']);
+            $slug = $kiosk && isset($kiosk['slug']) ? (string)$kiosk['slug'] : '';
         }
+        if ($slug === '') { http_response_code(400); echo json_encode(['error'=>'missing_event']); return; }
+        $event = EventContext::findBySlug($pdo, $slug);
+        if (!$event || (int)$row['event_id'] !== (int)$event['id']) { http_response_code(404); echo json_encode(['error'=>'not_found']); return; }
         echo json_encode(['participant'=>$row]);
     }
 }

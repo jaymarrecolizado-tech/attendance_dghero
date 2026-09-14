@@ -11,7 +11,7 @@ class ReportController
 {
     private function requireAdmin(): bool
     {
-        if (empty($_SESSION['admin_id'])) { header('Location: ?r=admin_login'); return false; }
+        if (!AuthService::check()) { header('Location: ?r=admin_login'); return false; }
         return true;
     }
 

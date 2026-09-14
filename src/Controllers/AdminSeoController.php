@@ -88,7 +88,7 @@ class AdminSeoController
 
         $joinOn = 'a.participant_id = p.id AND a.attendance_date = ?';
         $bind = [$selectedDate];
-        $joinOn .= ' AND (a.event_id = ? OR a.event_id IS NULL)';
+        $joinOn .= ' AND a.event_id = ?';
         $bind[] = $eventId;
 
         $like = '%' . $q . '%';
@@ -197,7 +197,7 @@ class AdminSeoController
         $scopeSql = "COALESCE(a.signature_path, '') <> '' AND COALESCE(a.status, 'present') = 'present'";
         $scopeParams = [];
         if ($eventId !== null) {
-            $scopeSql .= ' AND (a.event_id = ? OR a.event_id IS NULL)';
+            $scopeSql .= ' AND a.event_id = ?';
             $scopeParams[] = $eventId;
         }
 
@@ -218,7 +218,7 @@ class AdminSeoController
         $absentSql = "SELECT COUNT(DISTINCT a.participant_id) FROM attendance a WHERE a.attendance_date = ? AND a.status = 'absent'";
         $absentBind = [$selectedDate];
         if ($eventId !== null) {
-            $absentSql .= ' AND (a.event_id = ? OR a.event_id IS NULL)';
+            $absentSql .= ' AND a.event_id = ?';
             $absentBind[] = $eventId;
         }
         $absentStmt = $pdo->prepare($absentSql);
@@ -267,7 +267,7 @@ class AdminSeoController
         $joinOn = 'a.participant_id = p.id AND a.attendance_date = ?';
         $bind = [$selectedDate];
         if ($eventId !== null) {
-            $joinOn .= ' AND (a.event_id = ? OR a.event_id IS NULL)';
+            $joinOn .= ' AND a.event_id = ?';
             $bind[] = $eventId;
         }
 
@@ -364,7 +364,7 @@ class AdminSeoController
         $joinOn = 'a.participant_id = p.id AND a.attendance_date = ?';
         $bind = [$selectedDate];
         if ($eventId !== null) {
-            $joinOn .= ' AND (a.event_id = ? OR a.event_id IS NULL)';
+            $joinOn .= ' AND a.event_id = ?';
             $bind[] = $eventId;
         }
 
