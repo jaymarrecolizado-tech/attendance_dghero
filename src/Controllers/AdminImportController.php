@@ -4,12 +4,12 @@ declare(strict_types=1);
 namespace App\Controllers;
 
 use App\Controllers\Concerns\ResolvesEventContext;
-use App\Services\AuthService;
 use App\Services\Database;
-use App\Services\EventContext;
 
 class AdminImportController
 {
+    use ResolvesEventContext;
+
     // Database field mappings with multiple possible CSV column name variations
     // Order matters: more specific matches should come first
     private array $fieldMappings = [
