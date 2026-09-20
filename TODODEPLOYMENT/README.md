@@ -22,42 +22,40 @@ Ready-to-use files and steps for Hostinger (KVM / cloud) deployment of **GovNet-
 
 | File / folder | Purpose |
 |---------------|---------|
-| **`uploads/`** | **Ready-to-upload app package** — upload its *contents* to public_html |
-| `.env.production` | Source for production `.env` (also copied into `uploads/.env`) |
-| `.htaccess.production` | Source for production `.htaccess` (also in `uploads/`) |
-| `set_permissions.sh` | Permission enforcer (also in `uploads/`) |
+| `.env.production` | Source for production `.env` |
+| `.htaccess.production` | Source for production `.htaccess` (copy to public_html as `.htaccess`) |
+| `set_permissions.sh` | Permission enforcer |
 | `PERMISSIONS.md` | Permission reference |
-| `CHECKLIST.md` | Go-live tick list |
+| `CHECKLIST.md` | Go-live tick list (pack from **project root**, not `uploads/`) |
 | `DO_NOT_UPLOAD.txt` | Files to exclude |
 | `post_deploy.sh` | Permissions + migrations helper |
 | `SERVER_INFO.md` | Connection summary |
 | `README.md` | This guide |
 
+> `TODODEPLOYMENT/uploads/` is **not in the repo**. Pack from **project root** and exclude `DO_NOT_UPLOAD.txt`.
+
 ---
 
 ## Fast path (recommended)
 
-1. Open **`TODODEPLOYMENT/uploads/`**
-2. Upload **all contents** of that folder to the site document root
-3. SSH → `bash set_permissions.sh` → `php scripts/run_migrations.php` → seed admin
-4. Test https://digitalhero.dictr2.cloud
-
-See `uploads/UPLOAD_README.txt` for the short version.
+1. Pack from **project root** excluding `DO_NOT_UPLOAD.txt`
+2. Upload to site document root (`~/domains/digitalhero.dictr2.cloud/public_html`)
+3. Copy `.env.production` → `.env` and `.htaccess.production` → `.htaccess`, fill `SMTP_*`
+4. SSH → `bash set_permissions.sh` → `php scripts/run_migrations.php` → seed admin
+5. Test https://digitalhero.dictr2.cloud/?r=register
 
 ---
 
 ## 1. Prepare files locally
 
-**Preferred:** use the prebuilt package in `TODODEPLOYMENT/uploads/` (already filtered).
-
-If rebuilding from the project root instead, include:
+Pack from **project root**. Include:
 
 - `index.php`, `config/`, `src/`, `views/`, `assets/`, `migrations/`, `scripts/`
 - `vendor/` (or run Composer on the server)
 - `storage/` folders (can be empty; must be writable)
-- `qrcode.php`, `signature.php`
+- `qrcode.php`, `signature.php`, `TODODEPLOYMENT/.env.production` → `.env`, `TODODEPLOYMENT/.htaccess.production` → `.htaccess`
 
-**Do not upload** items listed in `DO_NOT_UPLOAD.txt`.
+**Do not upload** items listed in `DO_NOT_UPLOAD.txt`. There is no `TODODEPLOYMENT/uploads/` folder in the repo — do not look for one.
 
 ---
 

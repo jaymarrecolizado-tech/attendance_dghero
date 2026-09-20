@@ -85,6 +85,7 @@ class AdminImportController
         $_SESSION['import_file'] = $stored;
         $_SESSION['import_map'] = $map;
         $_SESSION['import_event_id'] = $eventId;
+        if (function_exists('csrf_rotate')) csrf_rotate();
         $this->renderPreview($rows, $errors);
     }
 

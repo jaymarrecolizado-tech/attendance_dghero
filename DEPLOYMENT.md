@@ -1,7 +1,7 @@
-# Hostinger Deployment Guide - ISSP Solo
+# Deployment Guide — digitalhero.dictr2.cloud
 
 ## Domain
-**Production URL:** https://digitalbayanihan.site/
+**Production URL:** https://digitalhero.dictr2.cloud/
 
 ## Pre-Deployment Checklist
 
@@ -16,22 +16,22 @@
 
 1. Log in to your Hostinger hPanel
 2. Go to **Databases** → **MySQL Databases**
-3. Create a new database (e.g., `digitalbayanihan_db`)
-4. Create a new database user with a strong password
+3. Create a new database (e.g., `dbdigitalhero` — already created on 187.77.150.203)
+4. Create a new database user (`dbudigitalhero`) with a strong password
 5. Add the user to the database with **ALL PRIVILEGES**
 6. Note down:
-   - Database name
-   - Database username
-   - Database password
-   - Database host (usually `localhost`)
+    - Database name (`dbdigitalhero`)
+    - Database username (`dbudigitalhero`)
+    - Database password (from `.env.production`)
+    - Database host (usually `localhost` on VPS)
 
 ### 2. File Upload
 
-1. Upload all files from `hostinger_migrate` folder to your `public_html` directory
+1. Upload all files from project root (see `TODODEPLOYMENT/DO_NOT_UPLOAD.txt` for exclusions) to your `public_html` / `~/domains/digitalhero.dictr2.cloud/public_html`
 2. You can use:
-   - **File Manager** in hPanel
-   - **FTP Client** (FileZilla, WinSCP, etc.)
-   - **SSH** (if available)
+    - **File Manager** in hPanel
+    - **SFTP / SCP**: `scp -r . digitalhero@187.77.150.203:~/domains/digitalhero.dictr2.cloud/public_html`
+    - **SSH** (if available)
 
 3. Ensure file permissions:
    ```bash
@@ -54,20 +54,22 @@
 
 2. Edit `.env` file with your actual credentials:
    ```env
-   DB_HOST=localhost
-   DB_NAME=digitalbayanihan_db
-   DB_USER=your_db_user
-   DB_PASS=your_db_password
-   DB_AUTO_MIGRATE=false
-   
-   SMTP_HOST=smtp.hostinger.com
-   SMTP_PORT=465
-   SMTP_USER=noreply@digitalbayanihan.site
-   SMTP_PASS=your_email_password
-   SMTP_SECURE=ssl
-   SMTP_FROM=noreply@digitalbayanihan.site
-   
-   APP_URL=https://digitalbayanihan.site
+    DB_HOST=localhost
+    DB_NAME=dbdigitalhero
+    DB_USER=dbudigitalhero
+    DB_PASS=your_db_password
+    DB_AUTO_MIGRATE=false
+    RATE_LIMITER_DRIVER=file
+    APP_DEBUG=false
+    
+    SMTP_HOST=smtp.hostinger.com
+    SMTP_PORT=465
+    SMTP_USER=noreply@digitalhero.dictr2.cloud
+    SMTP_PASS=your_email_password
+    SMTP_SECURE=ssl
+    SMTP_FROM=noreply@digitalhero.dictr2.cloud
+    
+    APP_URL=https://digitalhero.dictr2.cloud
    ```
 
 ### 4. Run Database Migrations
@@ -88,7 +90,7 @@ php scripts/run_migrations.php
    \App\Services\Database::migrate();
    echo "Migrations completed!";
    ```
-3. Visit: `https://digitalbayanihan.site/run_migrations_once.php`
+3. Visit: `https://digitalhero.dictr2.cloud/run_migrations_once.php`
 4. **DELETE this file immediately after running!**
 
 ### 5. Create Admin User
@@ -126,10 +128,10 @@ Ensure these directories are writable:
 
 ### 7. Test the Application
 
-1. Visit: https://digitalbayanihan.site/
+1. Visit: https://digitalhero.dictr2.cloud/?r=register&e=your-event-slug (or picker at `?r=register`)
 2. Test registration
 3. Test admin login: `?r=admin_login`
-4. Test all features
+4. Test all features — use production `.htaccess` from `TODODEPLOYMENT/.htaccess.production` (HTTPS forced)
 
 ### 8. Security Hardening
 

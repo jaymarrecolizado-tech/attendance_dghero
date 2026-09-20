@@ -2,15 +2,24 @@
 declare(strict_types=1);
 
 use App\Services\AuthService;
+use App\Services\Database;
+use App\Services\EventContext;
 
 $guestShowActions = $guestShowActions ?? true;
 $isLoggedIn = AuthService::check();
 $dashboardRoute = $isLoggedIn ? AuthService::loginHomeRoute() : 'admin_login';
+$navSlugForBrand = trim((string)($_GET['e'] ?? ''));
+$navBrand = $eventName ?? $eventTitle ?? $guestBrand ?? null;
+if (($navBrand === null || $navBrand === '') && $navSlugForBrand !== '') {
+    try { $pdo0 = Database::pdo(); $ev0 = EventContext::findBySlug($pdo0, $navSlugForBrand); if ($ev0 && !empty($ev0['name'])) $navBrand = (string)$ev0['name']; } catch (\Throwable $e) {}
+}
+if ($navBrand === null || $navBrand === '') $navBrand = 'GovNet-Launching';
+$navHome = $navSlugForBrand !== '' ? '?r=register&e=' . urlencode($navSlugForBrand) : '?r=register';
 ?>
 <nav class="navbar navbar-expand-lg navbar-dark guest-navbar sticky-top">
   <div class="container guest-container">
-    <a class="navbar-brand guest-brand" href="?r=register">
-      <span>GovNet-Launching</span>
+    <a class="navbar-brand guest-brand" href="<?= htmlspecialchars($navHome, ENT_QUOTES) ?>">
+      <span><?= htmlspecialchars($navBrand, ENT_QUOTES) ?></span>
     </a>
     <?php if ($guestShowActions): ?>
     <div class="ms-auto d-flex gap-2 guest-nav-actions">

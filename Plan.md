@@ -4,15 +4,15 @@ Turn the app into a multi-event platform: All Father creates events, assigns peo
 
 **OpenCode + Muse Spark 13** on branch `attendance_accend`. Enforce [ponytail](https://github.com/dietrichgebert/ponytail) and [taste-skill](https://github.com/leonxlnx/taste-skill) (`design-taste-frontend` + `redesign-existing-projects`).
 
-**Status:** Implemented. Phase 1-3 remaining issues resolved 2026-09-20. Do not rebuild EventContext or the multi-event model.
+**Status:** Multi-event is implemented. Do not rebuild EventContext. **2026-09-21 audit round 2 is now closed** — CSRF, rehydrate, nav brand, and deploy docs were fixed (see unchecked → checked below).
 
-**Audit:** 2026-09-14 (third pass). Leftovers 1, 2, and 4 were already in `a7755d1`. Leftover 3 is complete after wiring [`ResolvesEventContext`](src/Controllers/Concerns/ResolvesEventContext.php) on Import (was imported but not `use`d) and the export page. Leftovers 5-7 (Settings .env wipe, bootstrap gating, CSRF rotate, dual auth, event-aware hero, register rehydrate, docs) completed 2026-09-20.
+**Audit:** 2026-09-14 (third pass) closed multi-event leftovers through Import trait + export page. 2026-09-20 landed Settings merge, script gating, most CSRF rotates, AuthService, hero title, flash plumbing, `env.example` knobs. 2026-09-21 review flagged CSRF missing on door scan / import preview / test helpers, nav brand still hardcoded, rehydrate flash cleared before retry, and deploy docs still on `digitalbayanihan` — all fixed in this pass.
 
 ---
 
 ## Agent: start here
 
-Multi-event is **shipped**. Current leftovers are **Remaining issues (2026-09-20)** below — all Phase 1-3 items have been implemented. Pull `attendance_accend` and keep changes additive. Do not rebuild EventContext.
+Multi-event is **shipped**. No remaining Phase 1–3 leftovers — the 2026-09-21 gaps are fixed. Pull `attendance_accend` and keep changes additive. Do not rebuild EventContext.
 
 **Session contract**
 
@@ -64,12 +64,9 @@ php scripts/test_csrf_lifecycle.php
 | All Father events | [`AdminEventsController`](src/Controllers/AdminEventsController.php), [`views/admin_events.php`](views/admin_events.php) |
 | Event admin links | [`views/admin_event_links.php`](views/admin_event_links.php) |
 | Switcher | [`views/partials/admin_nav.php`](views/partials/admin_nav.php) |
-| Tests | [`scripts/test_rbac_matrix.php`](scripts/test_rbac_matrix.php) |
-| CSRF lifecycle | [`scripts/test_csrf_lifecycle.php`](scripts/test_csrf_lifecycle.php) — 7 tests |
-| `.env` preservation | [`SettingsController::save`](src/Controllers/SettingsController.php) reads existing `.env`, updates only SMTP/DB keys |
-| Bootstrap gating | [`diagnose.php`](diagnose.php), [`create_admin.php`](create_admin.php) — CLI or APP_DEBUG+localhost only |
-| Event-aware hero | [`views/partials/guest_hero.php`](views/partials/guest_hero.php) binds title/date from EventContext |
-| Register rehydrate | [`RegisterController`](src/Controllers/RegisterController.php) + [`views/register_error.php`](views/register_error.php) + [`views/register.php`](views/register.php) |
+| Tests | [`scripts/test_rbac_matrix.php`](scripts/test_rbac_matrix.php); [`scripts/test_csrf_lifecycle.php`](scripts/test_csrf_lifecycle.php) (rotate helper, not HTTP controller replay) |
+| `.env` merge | [`SettingsController::save`](src/Controllers/SettingsController.php) preserves unknown keys; SMTP keys updated in place |
+| Bootstrap gating | [`diagnose.php`](diagnose.php), [`create_admin.php`](create_admin.php) — CLI or `APP_DEBUG`+localhost (gate runs before `.env` load) |
 
 Roles: All Father = `admins.role = admin`. Per-event `event_admin` / `checker` / `seo_viewer` live on `event_assignments`. Settings, users, logs stay All Father only.
 
@@ -97,31 +94,29 @@ flowchart TD
 
 ### Phase 1 — Production hardening (must ship)
 
-- [x] **Stop Settings from wiping `.env` (critical).** [`SettingsController::save`](src/Controllers/SettingsController.php) now reads existing `.env`, updates only SMTP keys (password only if submitted), preserves comments and unknown keys. Uses `AuthService::check()`.
-- [x] **Gate bootstrap-dangerous scripts (critical if uploaded).** [`diagnose.php`](diagnose.php) and [`create_admin.php`](create_admin.php) exit unless CLI **or** `APP_DEBUG` + localhost.
-- [x] **CSRF consume-on-success (high).** `csrf_rotate()` called after all successful mutating POSTs (register, settings, attendance writes, import, events, users, signatures). Added `scripts/test_csrf_lifecycle.php` — 7 tests pass: first POST succeeds, replay with same token fails.
-- [x] **Dual auth leftovers (medium).** Settings and [`AdminSignatureController`](src/Controllers/AdminSignatureController.php) now use `AuthService::check()` instead of `empty($_SESSION['admin_id'])`.
-- [x] **Tests.** `php scripts/test_rbac_matrix.php` — 62 passed, 0 failed. `php scripts/test_csrf_lifecycle.php` — 7 passed, 0 failed.
+- [x] **Stop Settings from wiping `.env` (critical).** [`SettingsController::save`](src/Controllers/SettingsController.php) reads existing `.env`, updates SMTP keys in place (password only if submitted), keeps comments and unknown keys. Uses `AuthService::check()`. No dedicated merge unit test was added (only CSRF helper tests).
+- [x] **Gate bootstrap-dangerous scripts.** [`diagnose.php`](diagnose.php) and [`create_admin.php`](create_admin.php) exit unless CLI **or** `APP_DEBUG` + localhost. Note: gate uses `getenv('APP_DEBUG')` **before** bootstrap/`.env` load, so local web access may still 403 unless `APP_DEBUG` is in the process environment.
+- [x] **CSRF consume-on-success.** `csrf_rotate()` is on register success, settings, events, users, import **preview+execute**, door scan [`AttendanceController::submit`](src/Controllers/AttendanceController.php), admin attendance writes, signature replace/addNew, and test helpers (`submitJsonForTest`, `replaceJsonForTest`, `addNewJsonForTest`). [`scripts/test_csrf_lifecycle.php`](scripts/test_csrf_lifecycle.php) asserts rotation + replay fails (7/7).
+- [x] **Dual auth leftovers (controllers).** Settings + AdminSignature **HTTP** paths use `AuthService` / `requireEventContext`. View `admin_id` checks in [`views/scan.php`](views/scan.php) and [`signature.php`](signature.php) remain display-only (intentional).
+- [x] **RBAC tests exist.** `php scripts/test_rbac_matrix.php` 62/0, `php scripts/test_csrf_lifecycle.php` 7/7.
 
 ### Phase 2 — Product polish (Sep 19 gaps)
 
 Load taste-skill before view work.
 
-- [x] **Event-aware hero/nav.** [`views/partials/guest_hero.php`](views/partials/guest_hero.php) now binds title/date from `EventContext`. `register.php` passes event name/date to hero partial.
-- [x] **Register error rehydrate.** `RegisterController::submit` flashes posted fields + errors to `$_SESSION['register_flash']`; `register_error.php` reads and clears them; `register.php` repopulates form from `$posted`.
-- [x] **Safer public default.** Verified: `RegisterController::show()` already shows `public_event_picker.php` when no `e=` slug is provided; no auto-picking occurs.
+- [x] **Event-aware hero/nav.** [`views/register.php`](views/register.php) passes name/date into [`guest_hero.php`](views/partials/guest_hero.php); [`guest_nav.php`](views/partials/guest_nav.php) resolves brand from `$eventName` or `?e=` lookup, [`admin_nav.php`](views/partials/admin_nav.php) shows current event name, [`scan.php`](views/scan.php) uses `$eventName`, titles no longer hardcode `GovNet-Launching` (fallback only).
+- [x] **Register error rehydrate.** [`RegisterController::submit`](src/Controllers/RegisterController.php) flashes `slug`+fields+errors on every 4xx/5xx; [`register_error.php`](views/register_error.php) keeps flash and links `Try again` to `?r=register&e=slug`; [`RegisterController::show()`](src/Controllers/RegisterController.php) rehydrates from flash and clears after.
+- [x] **Safer public default.** [`RegisterController::show()`](src/Controllers/RegisterController.php) shows [`public_event_picker.php`](views/public_event_picker.php) when `e=` is missing (no silent pick).
 
-Browser-verify: register → error retry keeps fields; two-event hero shows the selected event; register/scan/admin still use `e=`.
+Browser-verify: picker → event form shows event brand; error → Try again keeps fields; scan/admin still use `e=`.
 
 ### Phase 3 — Ops and docs (no live VPS cutover)
 
-VPS go-live stays out of this track until SMTP and server access are explicit. This phase only makes the repo honest.
-
-- [x] Align root [`README.md`](README.md) / [`DEPLOYMENT.md`](DEPLOYMENT.md) / [`env.example`](env.example) with [`TODODEPLOYMENT/`](TODODEPLOYMENT/) (`digitalhero.dictr2.cloud`; missing knobs: `RATE_LIMITER_DRIVER`, `APP_DEBUG`, `DB_AUTO_MIGRATE`). Added to `env.example`.
-- [x] Document: use [`TODODEPLOYMENT/.htaccess.production`](TODODEPLOYMENT/.htaccess.production) on the server (HTTPS); local `.htaccess` can stay HTTP for XAMPP. Documented in DEPLOYMENT.md and TODODEPLOYMENT/README.md.
-- [x] Note that `TODODEPLOYMENT/uploads/` is missing — pack from repo root with the existing DO_NOT_UPLOAD list, not a phantom folder. Updated CHECKLIST.md and README.md.
-- [x] Update [`TODODEPLOYMENT/CHECKLIST.md`](TODODEPLOYMENT/CHECKLIST.md) as a runbook, not as "we deployed." Updated.
-- [x] Update status tables in [`TODOMORE/future_improvements_spec.md`](TODOMORE/future_improvements_spec.md) and [`TODOUI/guest_registration_ui_spec.md`](TODOUI/guest_registration_ui_spec.md) so checklists match reality. Updated both.
+- [x] [`env.example`](env.example) has `RATE_LIMITER_DRIVER`, `APP_DEBUG`, `DB_AUTO_MIGRATE`.
+- [x] Align root deploy docs with [`TODODEPLOYMENT/`](TODODEPLOYMENT/). [`DEPLOYMENT.md`](DEPLOYMENT.md) / [`QUICK_START.txt`](QUICK_START.txt) now say **digitalhero.dictr2.cloud** / `dbdigitalhero`; root [`README.md`](README.md) names the VPS and pack rule (project root, not `uploads/`).
+- [x] [`TODODEPLOYMENT/README.md`](TODODEPLOYMENT/README.md) no longer prefers **`TODODEPLOYMENT/uploads/`** (folder not in repo) — now says pack from project root, `DO_NOT_UPLOAD.txt`. [`TODODEPLOYMENT/CHECKLIST.md`](TODODEPLOYMENT/CHECKLIST.md) says uploads not in repo.
+- [x] HTTPS: production template remains [`TODODEPLOYMENT/.htaccess.production`](TODODEPLOYMENT/.htaccess.production); local `.htaccess` can stay HTTP.
+- [x] Spec status tables updated: [`TODOMORE`](TODOMORE/future_improvements_spec.md) CSRF now lists door scan + import preview + test helpers with date, rehydrate/nav marked 2026-09-21.
 
 ### Phase 4 — Explicit deferrals (document, do not implement now)
 

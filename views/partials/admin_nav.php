@@ -54,10 +54,11 @@ $homeRoute = AuthService::loginHomeRoute($role);
 $roleLabel = AuthService::roleLabel($role) . ($effectiveRole !== $role ? ' / ' . $effectiveRole : '');
 $displayName = AuthService::displayName() ?? 'Staff';
 $csrfNav = function_exists('csrf_token') ? csrf_token() : '';
+$adminBrand = $navCurrent && !empty($navCurrent['name']) ? (string)$navCurrent['name'] : 'GovNet-Launching';
 ?>
 <nav class="navbar navbar-expand-lg navbar-dark py-2">
   <div class="container">
-    <a class="navbar-brand" href="?r=<?= htmlspecialchars($homeRoute, ENT_QUOTES) ?>">GovNet-Launching</a>
+    <a class="navbar-brand" href="?r=<?= htmlspecialchars($homeRoute, ENT_QUOTES) ?>"><?= htmlspecialchars($adminBrand, ENT_QUOTES) ?></a>
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#adminNavbar" aria-controls="adminNavbar" aria-expanded="false" aria-label="Toggle navigation">
       <span class="navbar-toggler-icon"></span>
     </button>

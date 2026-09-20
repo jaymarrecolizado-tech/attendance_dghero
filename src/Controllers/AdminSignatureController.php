@@ -93,6 +93,7 @@ class AdminSignatureController
         $path = SignatureService::saveBase64((string)$row['uuid'], $sig);
         $up = $pdo->prepare('UPDATE attendance SET signature_path=? WHERE id=?');
         $up->execute([$path, $aid]);
+        if (function_exists('csrf_rotate')) csrf_rotate();
         return ['ok'=>true];
     }
 
@@ -122,6 +123,7 @@ class AdminSignatureController
         $path = SignatureService::saveBase64($uuid, $sig);
         $ins = $pdo->prepare("INSERT INTO attendance (participant_id, attendance_date, time_in, signature_path, event_id, status) VALUES (?,?,?,?,?,'present')");
         $ins->execute([(int)$p['id'], $date, date('H:i:s'), $path, $eventId]);
+        if (function_exists('csrf_rotate')) csrf_rotate();
         return ['ok'=>true];
     }
 }

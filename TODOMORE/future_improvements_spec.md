@@ -64,14 +64,14 @@ This document outlines the architectural, security, and user experience (UX) imp
 | 2.2 DB indexes | Done | `idx_participants_agency`, `idx_attendance_date` in migration `005_performance_security.sql` |
 | 3.1 Session cookies | Already done | `config/bootstrap.php` sets httponly, secure (HTTPS), SameSite Strict |
 | 3.2 Admin lockout | Done | 5 failed logins → 15 min IP lockout; failures logged to `action_logs` |
-| 3.3 CSRF rotation | Done | Token rotates on admin login, successful registration, settings save, event create/update, user create/update, import execute, attendance writes, signature writes; replay with consumed token fails |
+| 3.3 CSRF rotation | Done (2026-09-21) | Token rotates on success for: register, settings, event create/update/assign, user create/update, import preview+execute, attendance submit (door), admin attendance writes, signature replace/new; `csrf_rotate()` is single-use. Helpers `submitJsonForTest`/`replaceJsonForTest` also rotate. Replay with consumed token fails (`test_csrf_lifecycle.php` 7/7). |
 | 4.1 Real-time KPI (SSE) | Reverted to polling | SSE blocked PHP session locks / WAMP workers; attendance page now polls every 15s |
 | 4.2 Offline scanner PWA | Deferred | Not started; documented as Phase 4 deferral |
-| Settings .env preservation | Done | `SettingsController::save` now reads existing `.env`, updates only SMTP/DB keys, preserves comments and unknown keys |
-| Bootstrap script gating | Done | `diagnose.php` and `create_admin.php` exit unless CLI or APP_DEBUG + localhost |
-| Dual auth leftovers | Done | Settings and AdminSignatureController now use `AuthService::check()` instead of `empty($_SESSION['admin_id'])` |
-| Event-aware hero | Done | `guest_hero.php` binds title/date from `EventContext`; register page passes event name |
-| Register error rehydrate | Done | `RegisterController::submit` flashes posted fields + errors; `register_error.php` preserves them; `register.php` repopulates from flash |
+| Settings .env preservation | Done | `SettingsController::save` preserves unknown keys/comments; only SMTP keys updated in place |
+| Bootstrap script gating | Done | `diagnose.php`/`create_admin.php` exit unless CLI or `APP_DEBUG`+localhost (gate before `.env` load) |
+| Dual auth leftovers | Done | Settings + AdminSignature HTTP paths use `AuthService`; views `scan.php`/`signature.php` display-only `admin_id` intentional |
+| Event-aware hero/nav | Done (2026-09-21) | `guest_hero.php` binds title/date, `guest_nav.php`/`admin_nav.php`/`scan.php` brand from current event (`GovNet-Launching` fallback) |
+| Register error rehydrate | Done (2026-09-21) | `RegisterController::submit` flashes `slug`+fields+errors; `register_error.php` keeps flash and links `?r=register&e=slug`; `register.php` repopulates from `show()` flash |
 
 ### Deploy notes
 - Migration `005` runs automatically on next DB connection (or run `php scripts/run_migrations.php`).

@@ -447,8 +447,8 @@ assets/app.css (optional shared tokens only)
 | Tablet/kiosk layout | Done |
 | Agency picker redesign | Done |
 | Success/error page refresh | Done |
-| Event-aware hero | Done (2026-09-20) |
-| Register error rehydrate | Done (2026-09-20) |
+| Event-aware hero/nav | Done (2026-09-21) — hero binds event, nav brand from event (GovNet fallback) |
+| Register error rehydrate | Done (2026-09-21) — flash keeps slug, Try again `?r=register&e=slug`, fields repopulated |
 
 ---
 

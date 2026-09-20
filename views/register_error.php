@@ -2,11 +2,12 @@
 declare(strict_types=1);
 
 $flash = $_SESSION['register_flash'] ?? null;
-unset($_SESSION['register_flash']);
 $posted = $flash['fields'] ?? [];
-$errorsList = $flash['errors'] ?? [];
-$error = $flash['error'] ?? 'An unexpected error occurred.';
-$guestTitle = 'Registration Error — GovNet-Launching';
+$errorsList = $flash['errors'] ?? ($errorsList ?? []);
+$error = $flash['error'] ?? ($error ?? 'An unexpected error occurred.');
+$flashSlug = trim((string)($flash['slug'] ?? $_GET['e'] ?? $_POST['e'] ?? ''));
+$retryHref = $flashSlug !== '' ? '?r=register&e=' . urlencode($flashSlug) : '?r=register';
+$guestTitle = 'Registration Error — GovNet';
 $guestShowActions = false;
 $guestIncludeRegistrationAssets = true;
 require __DIR__ . DIRECTORY_SEPARATOR . 'partials' . DIRECTORY_SEPARATOR . 'guest_head.php';
@@ -30,7 +31,7 @@ require __DIR__ . DIRECTORY_SEPARATOR . 'partials' . DIRECTORY_SEPARATOR . 'gues
             </div>
           <?php endif; ?>
           <div class="d-flex flex-column flex-sm-row gap-2 mt-4">
-            <a class="btn btn-primary guest-btn guest-btn-lg" href="?r=register">Try again</a>
+            <a class="btn btn-primary guest-btn guest-btn-lg" href="<?= htmlspecialchars($retryHref, ENT_QUOTES) ?>">Try again</a>
             <a class="btn btn-outline-secondary guest-btn guest-btn-lg" href="mailto:<?= htmlspecialchars(function_exists('env') ? env('SUPPORT_EMAIL', 'support@example.com') : 'support@example.com', ENT_QUOTES) ?>">Contact support</a>
           </div>
         </div>

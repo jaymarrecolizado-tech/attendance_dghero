@@ -1,12 +1,13 @@
-# All Father - Multi-Event Attendance Platform
+# All Father — Multi-Event Attendance (digitalhero.dictr2.cloud)
 
-This is a multi-event registration and attendance system. All Father creates events, assigns people and roles per event, each event has unique register/scan links.
+Multi-event platform: All Father creates events, assigns people and roles per event, each event has unique `?r=register&e=slug` / `?r=scan&e=slug` links. VPS `187.77.150.203` / DB `dbdigitalhero`.
 
 ## Quick Start
 
-1. Upload all files to your web server
-2. Copy `env.example` to `.env` and update with your database credentials
-3. Run database migrations
-4. Create admin user
-5. Configure SMTP via admin panel at `?r=admin_settings`
+1. Copy `env.example` → `.env` and fill `DB_*`, `SMTP_*`, `APP_URL=https://digitalhero.dictr2.cloud`
+2. `composer install` (or upload `vendor/`)
+3. `php scripts/run_migrations.php` and `php scripts/seed_admin.php`
+4. Configure SMTP via `?r=admin_settings` and use `TODODEPLOYMENT/.htaccess.production` on server (HTTPS)
+
+See `DEPLOYMENT.md` and `TODODEPLOYMENT/README.md` / `TODODEPLOYMENT/CHECKLIST.md`. Do not upload `diagnose.php` / `create_admin.php` — see `TODODEPLOYMENT/DO_NOT_UPLOAD.txt`. Pack from **project root**, not `TODODEPLOYMENT/uploads/` (folder not in repo).
 

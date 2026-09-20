@@ -16,8 +16,8 @@
 - [ ] SSL certificate planned (Let's Encrypt / Hostinger SSL)
 
 ## Upload
-- [ ] Upload **all contents** of the project root to the site document root (or `TODODEPLOYMENT/uploads/` contents if using prebuilt package)
-- [ ] Confirm `.env` and `.htaccess` are in the document root
+- [ ] Upload **all contents** of the project root (exclude `DO_NOT_UPLOAD.txt`) to the site document root — `TODODEPLOYMENT/uploads/` is **not in repo**
+- [ ] Confirm `.env` (from `.env.production`) and `.htaccess` (from `.htaccess.production`) are in the document root
 - [ ] Do **not** upload `diagnose.php`, `create_admin.php`, or SQL dumps
 
 ## On server (SSH)

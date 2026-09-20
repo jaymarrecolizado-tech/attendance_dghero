@@ -1,7 +1,8 @@
 <?php
 declare(strict_types=1);
 
-$guestTitle = 'Registration Complete — GovNet-Launching';
+$eventSlugForSuccess = trim((string)($_GET['e'] ?? ''));
+$guestTitle = $eventSlugForSuccess !== '' ? 'Registration Complete' : 'Registration Complete — GovNet';
 $guestShowActions = false;
 $guestIncludeRegistrationAssets = true;
 require __DIR__ . DIRECTORY_SEPARATOR . 'partials' . DIRECTORY_SEPARATOR . 'guest_head.php';

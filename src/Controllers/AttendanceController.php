@@ -63,6 +63,7 @@ class AttendanceController
         }
         $ins = $pdo->prepare("INSERT INTO attendance (participant_id, attendance_date, time_in, signature_path, event_id, status) VALUES (?,?,?,?,?,'present')");
         $ins->execute([(int)$row['id'], $date, $time, $path, $eventId]);
+        if (function_exists('csrf_rotate')) csrf_rotate();
         echo json_encode(['ok'=>true]);
     }
 
@@ -102,6 +103,7 @@ class AttendanceController
         }
         $ins = $pdo->prepare("INSERT INTO attendance (participant_id, attendance_date, time_in, signature_path, event_id, status) VALUES (?,?,?,?,?,'present')");
         $ins->execute([(int)$row['id'], $date, $time, $path, $eventId]);
+        if (function_exists('csrf_rotate')) csrf_rotate();
         return ['ok'=>true];
     }
 }

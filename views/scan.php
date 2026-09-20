@@ -23,8 +23,9 @@ $eventName = isset($event) ? (string)($event['name'] ?? '') : '';
   </style>
   </head>
 <body>
+<?php $scanBrand = $eventName !== '' ? $eventName : 'GovNet-Launching'; $scanHome = $eventSlug !== '' ? '?r=register&e=' . urlencode($eventSlug) : '?r=register'; ?>
 <nav class="navbar navbar-expand-lg navbar-dark py-3">
-  <div class="container"><a class="navbar-brand" href="?r=register">GovNet-Launching</a>
+  <div class="container"><a class="navbar-brand" href="<?= htmlspecialchars($scanHome, ENT_QUOTES) ?>"><?= htmlspecialchars($scanBrand, ENT_QUOTES) ?></a>
     <div class="ms-auto d-flex gap-2">
       <a class="btn btn-outline-light btn-sm px-3" href="?r=scan">Scan</a>
       <?php if (!empty($_SESSION['admin_id'])): ?>
