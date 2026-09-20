@@ -1,6 +1,11 @@
 <?php
 declare(strict_types=1);
 
+$flash = $_SESSION['register_flash'] ?? null;
+unset($_SESSION['register_flash']);
+$posted = $flash['fields'] ?? [];
+$errorsList = $flash['errors'] ?? [];
+$error = $flash['error'] ?? 'An unexpected error occurred.';
 $guestTitle = 'Registration Error — GovNet-Launching';
 $guestShowActions = false;
 $guestIncludeRegistrationAssets = true;
@@ -14,7 +19,7 @@ require __DIR__ . DIRECTORY_SEPARATOR . 'partials' . DIRECTORY_SEPARATOR . 'gues
         <div class="glass-panel guest-form-card">
           <div class="guest-error-icon" aria-hidden="true">&#9888;</div>
           <h1 class="guest-form-title h4 mb-3">We couldn&rsquo;t complete your registration</h1>
-          <p class="guest-form-subtitle mb-4"><?= htmlspecialchars($error ?? 'An unexpected error occurred.', ENT_QUOTES) ?></p>
+          <p class="guest-form-subtitle mb-4"><?= htmlspecialchars($error, ENT_QUOTES) ?></p>
           <?php if (!empty($errorsList) && is_array($errorsList)): ?>
             <div class="alert alert-warning" role="alert">
               <ul class="mb-0 ps-3">

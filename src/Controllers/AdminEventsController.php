@@ -81,6 +81,7 @@ class AdminEventsController
         $pdo->prepare('UPDATE events SET slug = ? WHERE id = ?')->execute([$slug, $id]);
         $_SESSION['current_event_id'] = $id;
         Logger::log(AuthService::id(), 'event_created', ['event_id' => $id, 'name' => $name], $id);
+        if (function_exists('csrf_rotate')) csrf_rotate();
         header('Location: ?r=admin_events');
     }
 
@@ -98,6 +99,7 @@ class AdminEventsController
         $stmt = $pdo->prepare('UPDATE events SET status = ?, starts_at = ?, ends_at = ?, enforce_single_time_in = ? WHERE id = ?');
         $stmt->execute([$status, $this->normDt($starts), $this->normDt($ends), $enforce, $id]);
         Logger::log(AuthService::id(), 'event_updated', ['event_id' => $id, 'status' => $status], $id);
+        if (function_exists('csrf_rotate')) csrf_rotate();
         header('Location: ?r=admin_events');
     }
 
@@ -129,6 +131,7 @@ class AdminEventsController
         }
         EventContext::setCurrentEvent($id);
         $back = trim((string)($_POST['back'] ?? ''));
+        if (function_exists('csrf_rotate')) csrf_rotate();
         header('Location: ' . ($back !== '' ? $back : '?r=admin_registrants'));
     }
 
@@ -146,6 +149,7 @@ class AdminEventsController
         $stmt = $pdo->prepare('INSERT INTO event_assignments (admin_id, event_id, role) VALUES (?,?,?) ON DUPLICATE KEY UPDATE role = VALUES(role)');
         $stmt->execute([$adminId, $eventId, $role]);
         Logger::log(AuthService::id(), 'event_assigned', ['event_id' => $eventId, 'admin_id' => $adminId, 'role' => $role], $eventId);
+        if (function_exists('csrf_rotate')) csrf_rotate();
         header('Location: ?r=admin_events');
     }
 
@@ -159,6 +163,7 @@ class AdminEventsController
         $pdo = Database::pdo();
         $pdo->prepare('DELETE FROM event_assignments WHERE admin_id = ? AND event_id = ?')->execute([$adminId, $eventId]);
         Logger::log(AuthService::id(), 'event_unassigned', ['event_id' => $eventId, 'admin_id' => $adminId], $eventId);
+        if (function_exists('csrf_rotate')) csrf_rotate();
         header('Location: ?r=admin_events');
     }
 }

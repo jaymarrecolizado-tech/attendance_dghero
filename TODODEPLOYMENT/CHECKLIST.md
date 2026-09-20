@@ -16,7 +16,7 @@
 - [ ] SSL certificate planned (Let's Encrypt / Hostinger SSL)
 
 ## Upload
-- [ ] Upload **all contents** of `TODODEPLOYMENT/uploads/` to the site document root
+- [ ] Upload **all contents** of the project root to the site document root (or `TODODEPLOYMENT/uploads/` contents if using prebuilt package)
 - [ ] Confirm `.env` and `.htaccess` are in the document root
 - [ ] Do **not** upload `diagnose.php`, `create_admin.php`, or SQL dumps
 
@@ -28,7 +28,9 @@
 - [ ] `php scripts/seed_admin.php YOURUSER 'StrongPassword'`
 - [ ] Optional: `php scripts/seed_role_users.php`
 - [ ] Delete `diagnose.php` / `create_admin.php` if uploaded
-- [ ] Remove `TODODEPLOYMENT/` from the live docroot if you uploaded it
+- [ ] Remove `TODODEPLOYMENT/` from the live docroot if uploaded
+- [ ] Confirm `APP_DEBUG` is not true
+- [ ] Confirm `DB_AUTO_MIGRATE=false`
 
 ## Verify in browser
 - [ ] https://digitalhero.dictr2.cloud/?r=register

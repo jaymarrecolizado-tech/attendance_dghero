@@ -56,17 +56,22 @@ This document outlines the architectural, security, and user experience (UX) imp
 
 ---
 
-## 5. Implementation Status (2026-07-11)
+## 5. Implementation Status (2026-09-20)
 
 | Item | Status | Notes |
 |------|--------|-------|
-| 2.1 Rate limiter refactor | Done | MySQL `rate_limits` table with row locking; file fallback via `RATE_LIMITER_DRIVER=file` |
+| 2.1 Rate limiter | Done | MySQL `rate_limits` table with row locking; file fallback via `RATE_LIMITER_DRIVER=file` |
 | 2.2 DB indexes | Done | `idx_participants_agency`, `idx_attendance_date` in migration `005_performance_security.sql` |
 | 3.1 Session cookies | Already done | `config/bootstrap.php` sets httponly, secure (HTTPS), SameSite Strict |
 | 3.2 Admin lockout | Done | 5 failed logins → 15 min IP lockout; failures logged to `action_logs` |
-| 3.3 CSRF rotation | Partial | Token rotates on admin login and successful registration; single-use invalidation not yet applied |
+| 3.3 CSRF rotation | Done | Token rotates on admin login, successful registration, settings save, event create/update, user create/update, import execute, attendance writes, signature writes; replay with consumed token fails |
 | 4.1 Real-time KPI (SSE) | Reverted to polling | SSE blocked PHP session locks / WAMP workers; attendance page now polls every 15s |
-| 4.2 Offline scanner PWA | Pending | Not started |
+| 4.2 Offline scanner PWA | Deferred | Not started; documented as Phase 4 deferral |
+| Settings .env preservation | Done | `SettingsController::save` now reads existing `.env`, updates only SMTP/DB keys, preserves comments and unknown keys |
+| Bootstrap script gating | Done | `diagnose.php` and `create_admin.php` exit unless CLI or APP_DEBUG + localhost |
+| Dual auth leftovers | Done | Settings and AdminSignatureController now use `AuthService::check()` instead of `empty($_SESSION['admin_id'])` |
+| Event-aware hero | Done | `guest_hero.php` binds title/date from `EventContext`; register page passes event name |
+| Register error rehydrate | Done | `RegisterController::submit` flashes posted fields + errors; `register_error.php` preserves them; `register.php` repopulates from flash |
 
 ### Deploy notes
 - Migration `005` runs automatically on next DB connection (or run `php scripts/run_migrations.php`).

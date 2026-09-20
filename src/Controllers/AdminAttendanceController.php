@@ -326,6 +326,7 @@ class AdminAttendanceController
         }
 
         echo json_encode(['ok' => true, 'message' => 'Guest marked absent']);
+        if (function_exists('csrf_rotate')) csrf_rotate();
     }
 
     public function clearAbsent(): void
@@ -373,6 +374,7 @@ class AdminAttendanceController
         }
 
         echo json_encode(['ok' => true, 'message' => 'Guest returned to in vicinity']);
+        if (function_exists('csrf_rotate')) csrf_rotate();
     }
 
     /**
@@ -461,5 +463,6 @@ class AdminAttendanceController
         }
 
         echo json_encode(['ok' => true, 'message' => 'Attendance marked successfully']);
+        if (function_exists('csrf_rotate')) csrf_rotate();
     }
 }

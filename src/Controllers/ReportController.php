@@ -271,6 +271,7 @@ class ReportController
         $stmt = $pdo->prepare('INSERT INTO report_templates (admin_id,name,config) VALUES (?,?,?)');
         $stmt->execute([(int)$_SESSION['admin_id'],$name,json_encode($config)]);
         header('Location: ?r=admin_report');
+        if (function_exists('csrf_rotate')) csrf_rotate();
     }
 
     public function loadTemplate(): void

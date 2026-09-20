@@ -6,9 +6,18 @@
  * DELETE this file after fixing issues!
  */
 
+if (PHP_SAPI !== 'cli') {
+    $isLocal = ($_SERVER['REMOTE_ADDR'] ?? '') === '127.0.0.1' || ($_SERVER['REMOTE_ADDR'] ?? '') === '::1';
+    $appDebug = getenv('APP_DEBUG') === 'true';
+    if (!$isLocal || !$appDebug) {
+        http_response_code(403);
+        echo 'Access denied.';
+        exit;
+    }
+}
+
 error_reporting(E_ALL);
 ini_set('display_errors', '1');
-set_time_limit(30);
 
 ?>
 <!DOCTYPE html>

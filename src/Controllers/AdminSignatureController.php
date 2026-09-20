@@ -38,6 +38,7 @@ class AdminSignatureController
         $up = $pdo->prepare('UPDATE attendance SET signature_path=? WHERE id=?');
         $up->execute([$path, $aid]);
         Logger::log($_SESSION['admin_id'] ?? null, 'signature_replace', ['aid'=>$aid,'uuid'=>$row['uuid'],'ip'=>$ip], $eventId);
+        if (function_exists('csrf_rotate')) csrf_rotate();
         echo json_encode(['ok'=>true]);
     }
 
@@ -73,12 +74,13 @@ class AdminSignatureController
         $ins->execute([(int)$p['id'], $date, date('H:i:s'), $path, $eventId]);
         $aid = (int)$pdo->lastInsertId();
         Logger::log($_SESSION['admin_id'] ?? null, 'signature_new', ['aid'=>$aid,'uuid'=>$uuid,'date'=>$date,'ip'=>$ip], $eventId);
+        if (function_exists('csrf_rotate')) csrf_rotate();
         echo json_encode(['ok'=>true]);
     }
 
     public function replaceJsonForTest(array $payload, string $csrf): array
     {
-        if (empty($_SESSION['admin_id'])) return ['error'=>'forbidden'];
+        if (!AuthService::check()) return ['error'=>'forbidden'];
         if (!function_exists('csrf_check') || !csrf_check($csrf)) return ['error'=>'csrf'];
         $aid = (int)($payload['aid'] ?? 0);
         $sig = (string)($payload['signature'] ?? '');
@@ -96,7 +98,7 @@ class AdminSignatureController
 
     public function addNewJsonForTest(array $payload, string $csrf): array
     {
-        if (empty($_SESSION['admin_id'])) return ['error'=>'forbidden'];
+        if (!AuthService::check()) return ['error'=>'forbidden'];
         if (!function_exists('csrf_check') || !csrf_check($csrf)) return ['error'=>'csrf'];
         $uuid = trim((string)($payload['uuid'] ?? ''));
         $date = trim((string)($payload['date'] ?? date('Y-m-d')));

@@ -27,6 +27,9 @@ class RegisterController
     {
         $pdo = \App\Services\Database::pdo();
         $slug = trim((string)($_GET['e'] ?? ''));
+        $flash = $_SESSION['register_flash'] ?? null;
+        unset($_SESSION['register_flash']);
+        $posted = $flash['fields'] ?? [];
         if ($slug === '') {
             $events = EventContext::openEvents($pdo);
             $mode = 'register';
@@ -119,6 +122,25 @@ class RegisterController
             http_response_code(422);
             $error = 'Please fix the highlighted fields.';
             $errorsList = $errors;
+            $_SESSION['register_flash'] = [
+                'fields' => [
+                    'first_name' => $_POST['first_name'] ?? '',
+                    'middle_name' => $_POST['middle_name'] ?? '',
+                    'last_name' => $_POST['last_name'] ?? '',
+                    'nickname' => $_POST['nickname'] ?? '',
+                    'email' => $_POST['email'] ?? '',
+                    'agency_select' => $_POST['agency_select'] ?? ($_POST['agency'] ?? ''),
+                    'agency_other' => $_POST['agency_other'] ?? '',
+                    'designation_select' => $_POST['designation_select'] ?? ($_POST['designation'] ?? ''),
+                    'designation_other' => $_POST['designation_other'] ?? '',
+                    'office_email' => $_POST['office_email'] ?? '',
+                    'contact_no' => $_POST['contact_no'] ?? '',
+                    'sex' => $sex ?? '',
+                    'sector' => $sector ?? '',
+                ],
+                'errors' => $errorsList,
+                'error' => $error,
+            ];
             require dirname(__DIR__, 2) . DIRECTORY_SEPARATOR . 'views' . DIRECTORY_SEPARATOR . 'register_error.php';
             return;
         }

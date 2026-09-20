@@ -88,6 +88,7 @@ class AdminRegistrantsController
             'role' => AuthService::role(),
         ], $eventId);
         $_SESSION['flash'] = ['type' => 'success', 'message' => $isVip ? 'Marked as VIP.' : 'VIP flag cleared.'];
+        if (function_exists('csrf_rotate')) csrf_rotate();
         $q = http_build_query(array_filter([
             'r' => 'admin_registrants',
             'q' => $_POST['q'] ?? null,
@@ -134,6 +135,7 @@ class AdminRegistrantsController
         $msg = "Generated {$updated} QR(s)";
         if ($failed) $msg .= ", {$failed} failed";
         $_SESSION['flash'] = ['type'=>$failed ? 'warning' : 'success','message'=>$msg];
+        if (function_exists('csrf_rotate')) csrf_rotate();
         header('Location: ?r=admin_registrants');
     }
 
@@ -177,6 +179,7 @@ class AdminRegistrantsController
             . '<p>Your QR code is attached for convenience.</p>';
         $sent = Mailer::send($to, 'Your event QR code', $body, $path);
         $_SESSION['flash'] = ['type' => $sent ? 'success' : 'danger', 'message' => $sent ? 'Email sent successfully.' : 'Failed to send email.'];
+        if (function_exists('csrf_rotate')) csrf_rotate();
         header('Location: ?r=admin_registrants');
     }
 

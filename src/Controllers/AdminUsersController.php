@@ -92,6 +92,7 @@ class AdminUsersController
             'actor_role' => AuthService::role(),
         ]);
         $this->flash('success', 'User created.');
+        if (function_exists('csrf_rotate')) csrf_rotate();
         header('Location: ?r=admin_users');
     }
 
@@ -216,6 +217,7 @@ class AdminUsersController
                     'actor_role' => AuthService::role(),
                 ]);
                 $this->flash('success', 'Account updated.');
+                if (function_exists('csrf_rotate')) csrf_rotate();
                 break;
 
             default:

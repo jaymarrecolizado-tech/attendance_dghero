@@ -4,7 +4,9 @@ declare(strict_types=1);
 $token = function_exists('csrf_token') ? csrf_token() : '';
 $eventSlug = isset($event) && isset($event['slug']) ? (string)$event['slug'] : trim((string)($_GET['e'] ?? ''));
 $eventName = isset($event) ? (string)($event['name'] ?? '') : '';
-$guestTitle = 'Event Registration - GovNet-Launching';
+$eventDate = isset($event) && isset($event['starts_at']) ? (string)$event['starts_at'] : '';
+$posted = $posted ?? [];
+$guestTitle = 'Event Registration - ' . ($eventName ?: 'GovNet');
 $guestIncludeRegistrationAssets = true;
 $guestIncludeRegistrationJs = true;
 require __DIR__ . DIRECTORY_SEPARATOR . 'partials' . DIRECTORY_SEPARATOR . 'guest_head.php';
@@ -13,7 +15,11 @@ require __DIR__ . DIRECTORY_SEPARATOR . 'partials' . DIRECTORY_SEPARATOR . 'gues
 <main class="guest-main">
   <div class="container guest-container">
     <div class="guest-layout">
-      <?php require __DIR__ . DIRECTORY_SEPARATOR . 'partials' . DIRECTORY_SEPARATOR . 'guest_hero.php'; ?>
+      <?php
+$eventTitle = $eventName ?: 'GovNet-Launching';
+$eventDate = $eventDate ?? '';
+require __DIR__ . DIRECTORY_SEPARATOR . 'partials' . DIRECTORY_SEPARATOR . 'guest_hero.php';
+?>
 
       <div class="guest-form-wrap">
         <div class="guest-form-card">
@@ -44,32 +50,32 @@ require __DIR__ . DIRECTORY_SEPARATOR . 'partials' . DIRECTORY_SEPARATOR . 'gues
               <div class="row g-3 g-md-4">
                 <div class="col-12 col-md-6">
                   <label class="form-label" for="first_name">First Name <span class="req" aria-hidden="true">*</span></label>
-                  <input name="first_name" id="first_name" class="form-control" required autocomplete="given-name">
+                  <input name="first_name" id="first_name" class="form-control" required autocomplete="given-name" value="<?= htmlspecialchars($posted['first_name'] ?? '', ENT_QUOTES) ?>">
                 </div>
                 <div class="col-12 col-md-6">
                   <label class="form-label" for="middle_name">Middle Name</label>
-                  <input name="middle_name" id="middle_name" class="form-control" autocomplete="additional-name">
+                  <input name="middle_name" id="middle_name" class="form-control" autocomplete="additional-name" value="<?= htmlspecialchars($posted['middle_name'] ?? '', ENT_QUOTES) ?>">
                 </div>
                 <div class="col-12 col-md-6">
                   <label class="form-label" for="last_name">Last Name <span class="req" aria-hidden="true">*</span></label>
-                  <input name="last_name" id="last_name" class="form-control" required autocomplete="family-name">
+                  <input name="last_name" id="last_name" class="form-control" required autocomplete="family-name" value="<?= htmlspecialchars($posted['last_name'] ?? '', ENT_QUOTES) ?>">
                 </div>
                 <div class="col-12 col-md-6">
                   <label class="form-label" for="nickname">Nickname</label>
-                  <input name="nickname" id="nickname" class="form-control" autocomplete="nickname">
+                  <input name="nickname" id="nickname" class="form-control" autocomplete="nickname" value="<?= htmlspecialchars($posted['nickname'] ?? '', ENT_QUOTES) ?>">
                 </div>
                 <div class="col-12 col-md-6">
                   <label class="form-label" for="sex">Sex</label>
                   <select name="sex" id="sex" class="form-select">
                     <option value="">Select</option>
-                    <option value="Female">Female</option>
-                    <option value="Male">Male</option>
-                    <option value="Other">Prefer not to say</option>
+                    <option value="Female" <?= ($posted['sex'] ?? '') === 'Female' ? 'selected' : '' ?>>Female</option>
+                    <option value="Male" <?= ($posted['sex'] ?? '') === 'Male' ? 'selected' : '' ?>>Male</option>
+                    <option value="Other" <?= ($posted['sex'] ?? '') === 'Other' ? 'selected' : '' ?>>Prefer not to say</option>
                   </select>
                 </div>
                 <div class="col-12 col-md-6">
                   <label class="form-label" for="email">Email Address</label>
-                  <input name="email" id="email" type="email" class="form-control" autocomplete="email">
+                  <input name="email" id="email" type="email" class="form-control" autocomplete="email" value="<?= htmlspecialchars($posted['email'] ?? '', ENT_QUOTES) ?>">
                 </div>
               </div>
             </fieldset>
@@ -91,7 +97,7 @@ require __DIR__ . DIRECTORY_SEPARATOR . 'partials' . DIRECTORY_SEPARATOR . 'gues
                 <div class="col-12 col-md-6">
                   <label class="form-label" for="agencyPickerBtn">Agency <span class="req" aria-hidden="true">*</span></label>
                   <div class="picker-field">
-                    <input name="agency_select" id="agencyInput" class="form-control picker-value-input" list="agencyList" placeholder="Type or tap to search" autocomplete="organization">
+                    <input name="agency_select" id="agencyInput" class="form-control picker-value-input" list="agencyList" placeholder="Type or tap to search" autocomplete="organization" value="<?= htmlspecialchars($posted['agency_select'] ?? '', ENT_QUOTES) ?>">
                     <button type="button" id="agencyPickerBtn" class="picker-trigger is-placeholder" data-placeholder="Tap to select agency" aria-haspopup="listbox" aria-expanded="false">
                       <span class="picker-trigger-text">Tap to select agency</span>
                       <span class="picker-trigger-chevron" aria-hidden="true">&#9662;</span>
@@ -101,14 +107,14 @@ require __DIR__ . DIRECTORY_SEPARATOR . 'partials' . DIRECTORY_SEPARATOR . 'gues
                         <option value="<?= htmlspecialchars($a['agency'], ENT_QUOTES) ?>"></option>
                       <?php endforeach; ?>
                     </datalist>
-                    <input name="agency_other" id="agencyOther" class="form-control mt-2" placeholder="Enter agency name" style="display:none" autocomplete="organization">
+                    <input name="agency_other" id="agencyOther" class="form-control mt-2" placeholder="Enter agency name" style="display:none" autocomplete="organization" value="<?= htmlspecialchars($posted['agency_other'] ?? '', ENT_QUOTES) ?>">
                   </div>
                   <p class="field-hint">Search your organization or choose Other if not listed.</p>
                 </div>
                 <div class="col-12 col-md-6">
                   <label class="form-label" for="designationPickerBtn">Designation</label>
                   <div class="picker-field">
-                    <input name="designation_select" id="designationInput" class="form-control picker-value-input" list="designationList" placeholder="Type or tap to search" autocomplete="organization-title">
+                    <input name="designation_select" id="designationInput" class="form-control picker-value-input" list="designationList" placeholder="Type or tap to search" autocomplete="organization-title" value="<?= htmlspecialchars($posted['designation_select'] ?? '', ENT_QUOTES) ?>">
                     <button type="button" id="designationPickerBtn" class="picker-trigger is-placeholder" data-placeholder="Tap to select designation" aria-haspopup="listbox">
                       <span class="picker-trigger-text">Tap to select designation</span>
                       <span class="picker-trigger-chevron" aria-hidden="true">&#9662;</span>
@@ -118,12 +124,12 @@ require __DIR__ . DIRECTORY_SEPARATOR . 'partials' . DIRECTORY_SEPARATOR . 'gues
                         <option value="<?= htmlspecialchars($d['designation'], ENT_QUOTES) ?>"></option>
                       <?php endforeach; ?>
                     </datalist>
-                    <input name="designation_other" id="designationOther" class="form-control mt-2" placeholder="Enter designation" style="display:none" autocomplete="organization-title">
+                    <input name="designation_other" id="designationOther" class="form-control mt-2" placeholder="Enter designation" style="display:none" autocomplete="organization-title" value="<?= htmlspecialchars($posted['designation_other'] ?? '', ENT_QUOTES) ?>">
                   </div>
                 </div>
                 <div class="col-12 col-md-6">
                   <label class="form-label" for="office_email">Office Email</label>
-                  <input name="office_email" id="office_email" type="email" class="form-control" autocomplete="work email">
+                  <input name="office_email" id="office_email" type="email" class="form-control" autocomplete="work email" value="<?= htmlspecialchars($posted['office_email'] ?? '', ENT_QUOTES) ?>">
                 </div>
               </div>
             </fieldset>
@@ -139,7 +145,7 @@ require __DIR__ . DIRECTORY_SEPARATOR . 'partials' . DIRECTORY_SEPARATOR . 'gues
               <div class="row g-3 g-md-4">
                 <div class="col-12 col-md-6">
                   <label class="form-label" for="contact_no">Contact No</label>
-                  <input name="contact_no" id="contact_no" class="form-control" type="tel" inputmode="tel" autocomplete="tel">
+                  <input name="contact_no" id="contact_no" class="form-control" type="tel" inputmode="tel" autocomplete="tel" value="<?= htmlspecialchars($posted['contact_no'] ?? '', ENT_QUOTES) ?>">
                 </div>
               </div>
             </fieldset>

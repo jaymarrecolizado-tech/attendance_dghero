@@ -306,6 +306,7 @@ class AdminImportController
             $log->execute([(int)$_SESSION['admin_id'], basename($file), 'execute', $strategy, $summary]);
 
             unset($_SESSION['import_file'], $_SESSION['import_map'], $_SESSION['import_event_id']);
+            if (function_exists('csrf_rotate')) csrf_rotate();
             header('Location: ?r=admin_import_history');
         } catch (\Exception $e) {
             error_log('Import execute error: ' . $e->getMessage() . ' in ' . $e->getFile() . ':' . $e->getLine());
