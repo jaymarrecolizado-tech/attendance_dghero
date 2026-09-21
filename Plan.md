@@ -64,7 +64,7 @@ php scripts/test_csrf_lifecycle.php
 | All Father events | [`AdminEventsController`](src/Controllers/AdminEventsController.php), [`views/admin_events.php`](views/admin_events.php) |
 | Event admin links | [`views/admin_event_links.php`](views/admin_event_links.php) |
 | Switcher | [`views/partials/admin_nav.php`](views/partials/admin_nav.php) |
-| Tests | [`scripts/test_rbac_matrix.php`](scripts/test_rbac_matrix.php); [`scripts/test_csrf_lifecycle.php`](scripts/test_csrf_lifecycle.php) (rotate helper, not HTTP controller replay) |
+| Tests | [`scripts/test_rbac_matrix.php`](scripts/test_rbac_matrix.php); [`scripts/test_csrf_lifecycle.php`](scripts/test_csrf_lifecycle.php) (rotation + replay fail; `submitJsonForTest`/`replaceJsonForTest`/`addNewJsonForTest` also rotate) |
 | `.env` merge | [`SettingsController::save`](src/Controllers/SettingsController.php) preserves unknown keys; SMTP keys updated in place |
 | Bootstrap gating | [`diagnose.php`](diagnose.php), [`create_admin.php`](create_admin.php) — CLI or `APP_DEBUG`+localhost (gate runs before `.env` load) |
 
@@ -76,9 +76,9 @@ Also already shipped (do not rebuild): RBAC [`AuthService`](src/Services/AuthSer
 
 ---
 
-## Remaining issues (2026-09-20)
+## Remaining issues — all closed (2026-09-21)
 
-Phased backlog ordered by blast radius. Do **not** ship PWA, Redis, wallet, dark mode, i18n, and live VPS cutover in one pass. Those stay deferred (Phase 4).
+All Phase 1–3 items are checked. Nothing remains to ship.
 
 Stay on `attendance_accend`. Keep `?r=` routes. Design read for any view/CSS: public-sector, Public Sans + federal navy in [`assets/app.css`](assets/app.css); do not revert to Inter or `#5c6cf2`. Load ponytail (`full`) and taste-skill before view/CSS work.
 
@@ -98,7 +98,7 @@ flowchart TD
 - [x] **Gate bootstrap-dangerous scripts.** [`diagnose.php`](diagnose.php) and [`create_admin.php`](create_admin.php) exit unless CLI **or** `APP_DEBUG` + localhost. Note: gate uses `getenv('APP_DEBUG')` **before** bootstrap/`.env` load, so local web access may still 403 unless `APP_DEBUG` is in the process environment.
 - [x] **CSRF consume-on-success.** `csrf_rotate()` is on register success, settings, events, users, import **preview+execute**, door scan [`AttendanceController::submit`](src/Controllers/AttendanceController.php), admin attendance writes, signature replace/addNew, and test helpers (`submitJsonForTest`, `replaceJsonForTest`, `addNewJsonForTest`). [`scripts/test_csrf_lifecycle.php`](scripts/test_csrf_lifecycle.php) asserts rotation + replay fails (7/7).
 - [x] **Dual auth leftovers (controllers).** Settings + AdminSignature **HTTP** paths use `AuthService` / `requireEventContext`. View `admin_id` checks in [`views/scan.php`](views/scan.php) and [`signature.php`](signature.php) remain display-only (intentional).
-- [x] **RBAC tests exist.** `php scripts/test_rbac_matrix.php` 62/0, `php scripts/test_csrf_lifecycle.php` 7/7.
+- [x] **RBAC tests exist.** `php scripts/test_rbac_matrix.php` 62/0, `php scripts/test_csrf_lifecycle.php` 7/7. Phase 4 deferrals documented below; no Phase 1–3 work remains.
 
 ### Phase 2 — Product polish (Sep 19 gaps)
 
