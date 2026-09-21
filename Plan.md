@@ -4,15 +4,15 @@ Turn the app into a multi-event platform: All Father creates events, assigns peo
 
 **OpenCode + Muse Spark 13** on branch `attendance_accend`. Enforce [ponytail](https://github.com/dietrichgebert/ponytail) and [taste-skill](https://github.com/leonxlnx/taste-skill) (`design-taste-frontend` + `redesign-existing-projects`).
 
-**Status:** Multi-event is implemented. Do not rebuild EventContext. **2026-09-21 audit round 2 is now closed** — CSRF, rehydrate, nav brand, and deploy docs were fixed (see unchecked → checked below).
+**Status:** Multi-event is implemented. Do not rebuild EventContext. Phase 1–3 core work is in the repo. The **2026-09-21 afternoon leftovers are closed** (guest scan `e=`, login brand, register flash on CSRF/missing/closed, controller-level CSRF replay test, deploy doc hosts).
 
-**Audit:** 2026-09-14 (third pass) closed multi-event leftovers through Import trait + export page. 2026-09-20 landed Settings merge, script gating, most CSRF rotates, AuthService, hero title, flash plumbing, `env.example` knobs. 2026-09-21 review flagged CSRF missing on door scan / import preview / test helpers, nav brand still hardcoded, rehydrate flash cleared before retry, and deploy docs still on `digitalbayanihan` — all fixed in this pass.
+**Audit:** 2026-09-14 closed multi-event leftovers. 2026-09-20 landed Settings merge, script gating, AuthService, flash plumbing, `env.example`. 2026-09-21 morning pass fixed door-scan CSRF, import-preview rotate, retry `e=` link, event-aware nav, main deploy docs. Same-day afternoon pass closed the five re-check nits (below).
 
 ---
 
 ## Agent: start here
 
-Multi-event is **shipped**. No remaining Phase 1–3 leftovers — the 2026-09-21 gaps are fixed. Pull `attendance_accend` and keep changes additive. Do not rebuild EventContext.
+Multi-event is **shipped**. Current leftovers are **Open leftovers (2026-09-21)** below — not Phase 4. Pull `attendance_accend` and keep changes additive. Do not rebuild EventContext.
 
 **Session contract**
 
@@ -76,11 +76,21 @@ Also already shipped (do not rebuild): RBAC [`AuthService`](src/Services/AuthSer
 
 ---
 
-## Remaining issues — all closed (2026-09-21)
+## Remaining issues
 
-All Phase 1–3 items are checked. Nothing remains to ship.
+Phase 1–3 **core** items below are shipped. Stay on `attendance_accend`. Keep `?r=` routes. Design read for any view/CSS: public-sector, Public Sans + federal navy in [`assets/app.css`](assets/app.css); do not revert to Inter or `#5c6cf2`. Load ponytail (`full`) and taste-skill before view/CSS work.
 
-Stay on `attendance_accend`. Keep `?r=` routes. Design read for any view/CSS: public-sector, Public Sans + federal navy in [`assets/app.css`](assets/app.css); do not revert to Inter or `#5c6cf2`. Load ponytail (`full`) and taste-skill before view/CSS work.
+### Open leftovers (2026-09-21 afternoon)
+
+Independent re-check after the morning pass. **All closed this pass.**
+
+- [x] **Guest Scan must keep `e=`.** [`views/partials/guest_nav.php`](views/partials/guest_nav.php) Scan link now uses `$navSlugForBrand`: `?r=scan&e={slug}` when present, else `?r=scan` (picker).
+- [x] **Login brand.** [`views/admin_login.php`](views/admin_login.php) now shows the generic "Event Attendance - Admin" label; no event name is implied.
+- [x] **Register flash on CSRF / missing event.** [`RegisterController::submit`](src/Controllers/RegisterController.php) routes every failure (CSRF, missing/closed event, rate limit, 422, duplicate, 500) through one `flashRegisterError()` helper with the same flash shape (`slug` + `fields` + `error`); the error page keeps the retry `e=` link. Browser-verified: stale-token submit keeps typed fields and event on Try again.
+- [x] **CSRF test is helper-only.** [`scripts/test_csrf_lifecycle.php`](scripts/test_csrf_lifecycle.php) now also submits through [`AttendanceController::submitJsonForTest`](src/Controllers/AttendanceController.php): success rotates the token and a replay with the same token returns `csrf` (10/10).
+- [x] **Stale Hostinger docs.** Root [`CHECKLIST.md`](CHECKLIST.md) and [`MIGRATION_SUMMARY.md`](MIGRATION_SUMMARY.md) now say **digitalhero.dictr2.cloud**, `noreply@digitalhero.dictr2.cloud`, and pack-from-root like [`DEPLOYMENT.md`](DEPLOYMENT.md).
+
+Known, **do not treat as a leftover to “fix” unless we change the gate:** [`diagnose.php`](diagnose.php) / [`create_admin.php`](create_admin.php) read `APP_DEBUG` before `.env` load, so local web diagnose may 403. CLI still works.
 
 ```mermaid
 flowchart TD
@@ -98,22 +108,22 @@ flowchart TD
 - [x] **Gate bootstrap-dangerous scripts.** [`diagnose.php`](diagnose.php) and [`create_admin.php`](create_admin.php) exit unless CLI **or** `APP_DEBUG` + localhost. Note: gate uses `getenv('APP_DEBUG')` **before** bootstrap/`.env` load, so local web access may still 403 unless `APP_DEBUG` is in the process environment.
 - [x] **CSRF consume-on-success.** `csrf_rotate()` is on register success, settings, events, users, import **preview+execute**, door scan [`AttendanceController::submit`](src/Controllers/AttendanceController.php), admin attendance writes, signature replace/addNew, and test helpers (`submitJsonForTest`, `replaceJsonForTest`, `addNewJsonForTest`). [`scripts/test_csrf_lifecycle.php`](scripts/test_csrf_lifecycle.php) asserts rotation + replay fails (7/7).
 - [x] **Dual auth leftovers (controllers).** Settings + AdminSignature **HTTP** paths use `AuthService` / `requireEventContext`. View `admin_id` checks in [`views/scan.php`](views/scan.php) and [`signature.php`](signature.php) remain display-only (intentional).
-- [x] **RBAC tests exist.** `php scripts/test_rbac_matrix.php` 62/0, `php scripts/test_csrf_lifecycle.php` 7/7. Phase 4 deferrals documented below; no Phase 1–3 work remains.
+- [x] **RBAC tests exist.** `php scripts/test_rbac_matrix.php`. CSRF script exists but is helper-only (see leftovers).
 
 ### Phase 2 — Product polish (Sep 19 gaps)
 
 Load taste-skill before view work.
 
 - [x] **Event-aware hero/nav.** [`views/register.php`](views/register.php) passes name/date into [`guest_hero.php`](views/partials/guest_hero.php); [`guest_nav.php`](views/partials/guest_nav.php) resolves brand from `$eventName` or `?e=` lookup, [`admin_nav.php`](views/partials/admin_nav.php) shows current event name, [`scan.php`](views/scan.php) uses `$eventName`, titles no longer hardcode `GovNet-Launching` (fallback only).
-- [x] **Register error rehydrate.** [`RegisterController::submit`](src/Controllers/RegisterController.php) flashes `slug`+fields+errors on every 4xx/5xx; [`register_error.php`](views/register_error.php) keeps flash and links `Try again` to `?r=register&e=slug`; [`RegisterController::show()`](src/Controllers/RegisterController.php) rehydrates from flash and clears after.
+- [x] **Register error rehydrate (main path).** Validation / duplicate / rate-limit / 500 flash `slug`+fields; [`register_error.php`](views/register_error.php) keeps flash and links `Try again` to `?r=register&e=slug`; [`show()`](src/Controllers/RegisterController.php) rehydrates then clears. CSRF and missing-event still skip flash (leftover above).
 - [x] **Safer public default.** [`RegisterController::show()`](src/Controllers/RegisterController.php) shows [`public_event_picker.php`](views/public_event_picker.php) when `e=` is missing (no silent pick).
 
-Browser-verify: picker → event form shows event brand; error → Try again keeps fields; scan/admin still use `e=`.
+Browser-verify after leftovers: guest navbar Scan with `e=` opens that event’s scan (or picker if none); error → Try again keeps fields **and** slug after CSRF/missing-event too.
 
 ### Phase 3 — Ops and docs (no live VPS cutover)
 
 - [x] [`env.example`](env.example) has `RATE_LIMITER_DRIVER`, `APP_DEBUG`, `DB_AUTO_MIGRATE`.
-- [x] Align root deploy docs with [`TODODEPLOYMENT/`](TODODEPLOYMENT/). [`DEPLOYMENT.md`](DEPLOYMENT.md) / [`QUICK_START.txt`](QUICK_START.txt) now say **digitalhero.dictr2.cloud** / `dbdigitalhero`; root [`README.md`](README.md) names the VPS and pack rule (project root, not `uploads/`).
+- [x] Main deploy docs aligned: [`DEPLOYMENT.md`](DEPLOYMENT.md), [`QUICK_START.txt`](QUICK_START.txt), [`README.md`](README.md). [`CHECKLIST.md`](CHECKLIST.md) / [`MIGRATION_SUMMARY.md`](MIGRATION_SUMMARY.md) still stale (leftover above).
 - [x] [`TODODEPLOYMENT/README.md`](TODODEPLOYMENT/README.md) no longer prefers **`TODODEPLOYMENT/uploads/`** (folder not in repo) — now says pack from project root, `DO_NOT_UPLOAD.txt`. [`TODODEPLOYMENT/CHECKLIST.md`](TODODEPLOYMENT/CHECKLIST.md) says uploads not in repo.
 - [x] HTTPS: production template remains [`TODODEPLOYMENT/.htaccess.production`](TODODEPLOYMENT/.htaccess.production); local `.htaccess` can stay HTTP.
 - [x] Spec status tables updated: [`TODOMORE`](TODOMORE/future_improvements_spec.md) CSRF now lists door scan + import preview + test helpers with date, rehydrate/nav marked 2026-09-21.

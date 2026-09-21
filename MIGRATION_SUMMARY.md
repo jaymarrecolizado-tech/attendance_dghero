@@ -61,7 +61,7 @@ Your migration package is ready for deployment to Hostinger.
    - Ensure PHP 8.0+ is enabled
 
 ### 3. Upload Files
-   - Upload ALL files from `hostinger_migrate/` to `public_html/`
+   - Upload all files from the project root (see `TODODEPLOYMENT/DO_NOT_UPLOAD.txt` for exclusions) to `~/domains/digitalhero.dictr2.cloud/public_html`
    - Use File Manager, FTP, or SSH
    - Maintain folder structure
 
@@ -93,7 +93,7 @@ Your migration package is ready for deployment to Hostinger.
 
 ## 🌐 Domain Configuration
 
-**Production URL:** https://digitalbayanihan.site/
+**Production URL:** https://digitalhero.dictr2.cloud/
 
 The `.htaccess` file is configured for this domain. If you need to change it:
 - Update `APP_URL` in `.env`
@@ -114,7 +114,7 @@ DB_AUTO_MIGRATE=false
 ```
 SMTP_HOST=smtp.hostinger.com
 SMTP_PORT=465
-SMTP_USER=your_email@digitalbayanihan.site
+SMTP_USER=noreply@digitalhero.dictr2.cloud
 SMTP_PASS=your_email_password
 SMTP_SECURE=ssl
 ```

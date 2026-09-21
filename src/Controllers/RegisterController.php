@@ -74,27 +74,27 @@ class RegisterController
 
     public function submit(): void
     {
+        $slug = trim((string)($_POST['e'] ?? $_GET['e'] ?? ''));
         if (!isset($_POST['csrf']) || !function_exists('csrf_check') || !csrf_check($_POST['csrf'])) {
-            http_response_code(400);
-            echo 'Invalid CSRF';
+            $this->flashRegisterError(400, $slug, 'Your security token expired. Please try again - your answers are kept.');
             return;
         }
 
         $pdo = Database::pdo();
-        $slug = trim((string)($_POST['e'] ?? $_GET['e'] ?? ''));
         $event = $slug !== '' ? EventContext::findBySlug($pdo, $slug) : null;
-        if (!$event) { http_response_code(400); echo 'Missing event'; return; }
-        if (!EventContext::isPublicOpen($event)) { http_response_code(403); echo 'Registration is closed for this event'; return; }
+        if (!$event) {
+            $this->flashRegisterError(400, $slug, 'This registration link does not point to a valid event.');
+            return;
+        }
+        if (!EventContext::isPublicOpen($event)) {
+            $this->flashRegisterError(403, $slug, 'Registration is closed for this event.');
+            return;
+        }
         $eventId = (int)$event['id'];
 
         $ip = $_SERVER['REMOTE_ADDR'] ?? 'unknown';
         if (!RateLimiter::allow('register:' . $ip, 10, 300)) {
-            http_response_code(429);
-            $error = 'Too many registration attempts. Please try again in a few minutes.';
-            $_SESSION['register_flash'] = ['slug'=>$slug,'fields'=>[
-                'first_name'=>$_POST['first_name']??'','middle_name'=>$_POST['middle_name']??'','last_name'=>$_POST['last_name']??'','nickname'=>$_POST['nickname']??'','email'=>$_POST['email']??'','agency_select'=>$_POST['agency_select']??($_POST['agency']??''),'agency_other'=>$_POST['agency_other']??'','designation_select'=>$_POST['designation_select']??($_POST['designation']??''),'designation_other'=>$_POST['designation_other']??'','office_email'=>$_POST['office_email']??'','contact_no'=>$_POST['contact_no']??'','sex'=>$_POST['sex']??'','sector'=>$_POST['sector']??'',
-            ],'errors'=>[],'error'=>$error];
-            require dirname(__DIR__, 2) . DIRECTORY_SEPARATOR . 'views' . DIRECTORY_SEPARATOR . 'register_error.php';
+            $this->flashRegisterError(429, $slug, 'Too many registration attempts. Please try again in a few minutes.');
             return;
         }
 
@@ -122,30 +122,7 @@ class RegisterController
         $clean = $validation['data'];
         $errors = $validation['errors'];
         if ($errors) {
-            http_response_code(422);
-            $error = 'Please fix the highlighted fields.';
-            $errorsList = $errors;
-            $_SESSION['register_flash'] = [
-                'slug' => $slug,
-                'fields' => [
-                    'first_name' => $_POST['first_name'] ?? '',
-                    'middle_name' => $_POST['middle_name'] ?? '',
-                    'last_name' => $_POST['last_name'] ?? '',
-                    'nickname' => $_POST['nickname'] ?? '',
-                    'email' => $_POST['email'] ?? '',
-                    'agency_select' => $_POST['agency_select'] ?? ($_POST['agency'] ?? ''),
-                    'agency_other' => $_POST['agency_other'] ?? '',
-                    'designation_select' => $_POST['designation_select'] ?? ($_POST['designation'] ?? ''),
-                    'designation_other' => $_POST['designation_other'] ?? '',
-                    'office_email' => $_POST['office_email'] ?? '',
-                    'contact_no' => $_POST['contact_no'] ?? '',
-                    'sex' => $sex ?? '',
-                    'sector' => $sector ?? '',
-                ],
-                'errors' => $errorsList,
-                'error' => $error,
-            ];
-            require dirname(__DIR__, 2) . DIRECTORY_SEPARATOR . 'views' . DIRECTORY_SEPARATOR . 'register_error.php';
+            $this->flashRegisterError(422, $slug, 'Please fix the highlighted fields.', $errors);
             return;
         }
 
@@ -155,13 +132,7 @@ class RegisterController
                 $chk = $pdo->prepare('SELECT id FROM participants WHERE email = ? AND event_id = ?');
                 $chk->execute([$clean['email'], $eventId]);
                 if ($chk->fetch()) {
-                    http_response_code(409);
-                    $error = 'Email already registered';
-                    $errorsList = [];
-                    $_SESSION['register_flash'] = ['slug'=>$slug,'fields'=>[
-                        'first_name'=>$_POST['first_name']??'','middle_name'=>$_POST['middle_name']??'','last_name'=>$_POST['last_name']??'','nickname'=>$_POST['nickname']??'','email'=>$_POST['email']??'','agency_select'=>$_POST['agency_select']??($_POST['agency']??''),'agency_other'=>$_POST['agency_other']??'','designation_select'=>$_POST['designation_select']??($_POST['designation']??''),'designation_other'=>$_POST['designation_other']??'','office_email'=>$_POST['office_email']??'','contact_no'=>$_POST['contact_no']??'','sex'=>$sex??'','sector'=>$sector??'',
-                    ],'errors'=>[],'error'=>$error];
-                    require dirname(__DIR__, 2) . DIRECTORY_SEPARATOR . 'views' . DIRECTORY_SEPARATOR . 'register_error.php';
+                    $this->flashRegisterError(409, $slug, 'Email already registered');
                     return;
                 }
             }
@@ -199,12 +170,7 @@ class RegisterController
             $up = $pdo->prepare('UPDATE participants SET qr_path=? WHERE uuid=?');
             $up->execute([$qrPath, $uuid]);
         } catch (\PDOException $e) {
-            http_response_code(500);
-            $error = 'Registration failed';
-            $_SESSION['register_flash'] = ['slug'=>$slug,'fields'=>[
-                'first_name'=>$_POST['first_name']??'','middle_name'=>$_POST['middle_name']??'','last_name'=>$_POST['last_name']??'','nickname'=>$_POST['nickname']??'','email'=>$_POST['email']??'','agency_select'=>$_POST['agency_select']??($_POST['agency']??''),'agency_other'=>$_POST['agency_other']??'','designation_select'=>$_POST['designation_select']??($_POST['designation']??''),'designation_other'=>$_POST['designation_other']??'','office_email'=>$_POST['office_email']??'','contact_no'=>$_POST['contact_no']??'','sex'=>$sex??'','sector'=>$sector??'',
-            ],'errors'=>[],'error'=>$error];
-            require dirname(__DIR__, 2) . DIRECTORY_SEPARATOR . 'views' . DIRECTORY_SEPARATOR . 'register_error.php';
+            $this->flashRegisterError(500, $slug, 'Registration failed');
             return;
         }
 
@@ -224,6 +190,33 @@ class RegisterController
         }
         header('Location: ?r=register_success&uuid=' . urlencode($uuid) . '&e=' . urlencode($slug));
         exit;
+    }
+
+    /**
+     * Flash the submitted answers back and render the error page with a
+     * retry link. One shape for every submit failure (CSRF, missing or
+     * closed event, rate limit, validation, duplicate email, server error)
+     * so show() can always rehydrate slug + fields.
+     */
+    private function flashRegisterError(int $code, string $slug, string $error, array $errors = []): void
+    {
+        http_response_code($code);
+        $_SESSION['register_flash'] = ['slug' => $slug, 'fields' => [
+            'first_name' => $_POST['first_name'] ?? '',
+            'middle_name' => $_POST['middle_name'] ?? '',
+            'last_name' => $_POST['last_name'] ?? '',
+            'nickname' => $_POST['nickname'] ?? '',
+            'email' => $_POST['email'] ?? '',
+            'agency_select' => $_POST['agency_select'] ?? ($_POST['agency'] ?? ''),
+            'agency_other' => $_POST['agency_other'] ?? '',
+            'designation_select' => $_POST['designation_select'] ?? ($_POST['designation'] ?? ''),
+            'designation_other' => $_POST['designation_other'] ?? '',
+            'office_email' => $_POST['office_email'] ?? '',
+            'contact_no' => $_POST['contact_no'] ?? '',
+            'sex' => $this->allowList($_POST['sex'] ?? '', self::SEXES),
+            'sector' => $this->allowList($_POST['sector'] ?? '', self::SECTORS, allowCustom: true),
+        ], 'errors' => $errors, 'error' => $error];
+        require dirname(__DIR__, 2) . DIRECTORY_SEPARATOR . 'views' . DIRECTORY_SEPARATOR . 'register_error.php';
     }
 
     private function resolveCustomSelect(string $selected, string $other): string

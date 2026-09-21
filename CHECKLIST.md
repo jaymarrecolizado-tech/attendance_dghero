@@ -67,7 +67,7 @@ When uploading to Hostinger:
 
 After deployment, verify:
 
-- [ ] Homepage loads: https://digitalbayanihan.site/
+- [ ] Homepage loads: https://digitalhero.dictr2.cloud/
 - [ ] Registration form works
 - [ ] Admin login works: `?r=admin_login`
 - [ ] Database connection successful

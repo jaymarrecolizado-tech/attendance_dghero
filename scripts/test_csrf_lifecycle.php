@@ -21,6 +21,7 @@ spl_autoload_register(static function ($class): void {
     }
 });
 
+use App\Controllers\AttendanceController;
 use App\Services\AuthService;
 use App\Services\Database;
 
@@ -104,7 +105,38 @@ $fresh = function_exists('csrf_token') ? csrf_token() : '';
 assertTrue($fresh !== '', 'Fresh CSRF token generated when session empty');
 assertTrue(strlen($fresh) === 64, 'Fresh CSRF token is 64 chars');
 
+// Test 6: consume-on-success through the real controller helper.
+// submitJsonForTest must rotate the token on success, so a replay with the
+// same token is rejected at the controller level (not only in isolation).
+$pdo->exec("DELETE FROM attendance WHERE participant_id IN (SELECT id FROM participants WHERE email = '_csrf_attend@test.local')");
+$pdo->exec("DELETE FROM participants WHERE email = '_csrf_attend@test.local'");
+$pdo->exec("DELETE FROM event_assignments WHERE event_id IN (SELECT id FROM events WHERE slug LIKE '_csrf-lc-%')");
+$pdo->exec("DELETE FROM events WHERE slug LIKE '_csrf-lc-%'");
+$pdo->prepare("INSERT INTO events (name, slug, enforce_single_time_in, active, status, starts_at, ends_at) VALUES ('_CSRF Lifecycle Event','_csrf-lc-a',0,0,'open',?,?)")
+    ->execute([date('Y-m-d H:i:s', time() - 3600), date('Y-m-d H:i:s', time() + 3600)]);
+$csrfEventId = (int)$pdo->lastInsertId();
+$uuid = sprintf('%04x%04x-%04x-%04x-%04x-%04x%04x%04x', mt_rand(0, 0xffff), mt_rand(0, 0xffff), mt_rand(0, 0x0fff) | 0x4000, mt_rand(0, 0x3fff) | 0x8000, mt_rand(0, 0xffff), mt_rand(0, 0xffff), mt_rand(0, 0xffff), mt_rand(0, 0xffff));
+$pdo->prepare('INSERT INTO participants (event_id, uuid, email, first_name, last_name) VALUES (?,?,?,?,?)')
+    ->execute([$csrfEventId, $uuid, '_csrf_attend@test.local', 'CSRF', 'Replay']);
+
+$_SESSION['staff'] = true;
+$controllerToken = bin2hex(random_bytes(32));
+$_SESSION['csrf'] = $controllerToken;
+$attCtrl = new AttendanceController();
+$ok = $attCtrl->submitJsonForTest(['uuid' => $uuid, 'signature' => 'data:image/png;base64,AAAA', 'e' => '_csrf-lc-a'], $controllerToken);
+assertTrue(($ok['ok'] ?? false) === true, 'Controller submit succeeds with valid token');
+$rotated = $_SESSION['csrf'] ?? '';
+assertTrue($rotated !== '' && $rotated !== $controllerToken, 'Controller submit rotated the CSRF token');
+$replay = $attCtrl->submitJsonForTest(['uuid' => $uuid, 'signature' => 'data:image/png;base64,AAAA', 'e' => '_csrf-lc-a'], $controllerToken);
+assertTrue(($replay['error'] ?? '') === 'csrf', 'Controller rejects replay of consumed token');
+unset($_SESSION['staff']);
+
 // Cleanup.
+unset($_SESSION['staff'], $_SESSION['scan_event_id']);
+$pdo->exec("DELETE FROM attendance WHERE participant_id IN (SELECT id FROM participants WHERE email = '_csrf_attend@test.local')");
+$pdo->exec("DELETE FROM participants WHERE email = '_csrf_attend@test.local'");
+$pdo->exec("DELETE FROM event_assignments WHERE event_id IN (SELECT id FROM events WHERE slug LIKE '_csrf-lc-%')");
+$pdo->exec("DELETE FROM events WHERE slug LIKE '_csrf-lc-%'");
 AuthService::logoutLocal();
 $pdo->exec("DELETE FROM admins WHERE username = '_csrf_test'");
 

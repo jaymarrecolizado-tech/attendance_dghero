@@ -15,6 +15,7 @@ if (($navBrand === null || $navBrand === '') && $navSlugForBrand !== '') {
 }
 if ($navBrand === null || $navBrand === '') $navBrand = 'GovNet-Launching';
 $navHome = $navSlugForBrand !== '' ? '?r=register&e=' . urlencode($navSlugForBrand) : '?r=register';
+$navScan = $navSlugForBrand !== '' ? '?r=scan&e=' . urlencode($navSlugForBrand) : '?r=scan';
 ?>
 <nav class="navbar navbar-expand-lg navbar-dark guest-navbar sticky-top">
   <div class="container guest-container">
@@ -23,7 +24,7 @@ $navHome = $navSlugForBrand !== '' ? '?r=register&e=' . urlencode($navSlugForBra
     </a>
     <?php if ($guestShowActions): ?>
     <div class="ms-auto d-flex gap-2 guest-nav-actions">
-      <a class="btn btn-outline-light guest-nav-btn" href="?r=scan" title="Scan & Sign">
+      <a class="btn btn-outline-light guest-nav-btn" href="<?= htmlspecialchars($navScan, ENT_QUOTES) ?>" title="Scan & Sign">
         <span class="guest-nav-icon d-md-none" aria-hidden="true">&#128247;</span>
         <span class="d-none d-md-inline">Scan &amp; Sign</span>
       </a>

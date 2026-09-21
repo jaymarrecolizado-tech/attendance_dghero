@@ -14,7 +14,7 @@ $token = function_exists('csrf_token') ? csrf_token() : '';
 </head>
 <body>
 <nav class="navbar navbar-expand-lg navbar-dark py-3">
-  <div class="container"><a class="navbar-brand" href="?r=register">GovNet-Launching — Admin</a></div>
+  <div class="container"><a class="navbar-brand" href="?r=register">Event Attendance - Admin</a></div>
 </nav>
 <div class="container py-5">
   <div class="row justify-content-center">
