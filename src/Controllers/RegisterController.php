@@ -40,6 +40,7 @@ class RegisterController
         if (!$event) { http_response_code(404); echo 'Event not found'; return; }
         if (!EventContext::isPublicOpen($event)) { http_response_code(403); echo 'Registration is closed for this event'; return; }
         $eventId = (int)$event['id'];
+        $eventTheme = EventContext::themeFor($event);
         $agencies = $pdo->query("SELECT DISTINCT agency FROM participants WHERE event_id = {$eventId} AND agency IS NOT NULL AND agency <> '' ORDER BY agency ASC LIMIT 500")->fetchAll();
         $designations = $pdo->query("SELECT DISTINCT designation FROM participants WHERE event_id = {$eventId} AND designation IS NOT NULL AND designation <> '' ORDER BY designation ASC LIMIT 500")->fetchAll();
         $sexes = self::SEXES;
@@ -69,6 +70,7 @@ class RegisterController
         ];
         if (!isset($_SESSION['qr_allowed'])) $_SESSION['qr_allowed'] = [];
         $_SESSION['qr_allowed'][$uuid] = true;
+        $eventTheme = $event ? EventContext::themeFor($event) : [];
         require dirname(__DIR__, 2) . DIRECTORY_SEPARATOR . 'views' . DIRECTORY_SEPARATOR . 'register_success.php';
     }
 
@@ -201,6 +203,8 @@ class RegisterController
     private function flashRegisterError(int $code, string $slug, string $error, array $errors = []): void
     {
         http_response_code($code);
+        $themeEvent = $slug !== '' ? EventContext::findBySlug(Database::pdo(), $slug) : null;
+        $eventTheme = EventContext::themeFor($themeEvent);
         $_SESSION['register_flash'] = ['slug' => $slug, 'fields' => [
             'first_name' => $_POST['first_name'] ?? '',
             'middle_name' => $_POST['middle_name'] ?? '',

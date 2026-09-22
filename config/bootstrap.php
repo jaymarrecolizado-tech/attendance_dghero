@@ -40,6 +40,12 @@ if ($envPath && is_file($envPath)) {
     }
 }
 
+$tz = getenv('TZ') ?: 'Asia/Manila';
+if (!in_array($tz, timezone_identifiers_list(), true)) {
+    $tz = 'Asia/Manila';
+}
+date_default_timezone_set($tz);
+
 // Set headers only if not already sent
 if (!headers_sent()) {
     header('X-Content-Type-Options: nosniff');

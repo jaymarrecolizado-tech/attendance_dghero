@@ -166,4 +166,112 @@ class AdminEventsController
         if (function_exists('csrf_rotate')) csrf_rotate();
         header('Location: ?r=admin_events');
     }
+
+    /**
+     * Per-event appearance (structured branding): primary/accent hex colors,
+     * a short welcome line, and optional logo/banner images. All Father only.
+     */
+    public function theme(): void
+    {
+        if (!$this->requireAllFather()) return;
+        if (!$this->csrfOk()) return;
+        $id = (int)($_POST['id'] ?? 0);
+        if ($id <= 0) { http_response_code(422); echo 'Invalid'; return; }
+        $pdo = Database::pdo();
+        $event = EventContext::findById($pdo, $id);
+        if (!$event) { http_response_code(404); echo 'Not found'; return; }
+
+        $primaryRaw = trim((string)($_POST['theme_primary'] ?? ''));
+        $accentRaw = trim((string)($_POST['theme_accent'] ?? ''));
+        if ($primaryRaw !== '' && $this->normalizeHex($primaryRaw) === null) { http_response_code(422); echo 'Invalid primary color'; return; }
+        if ($accentRaw !== '' && $this->normalizeHex($accentRaw) === null) { http_response_code(422); echo 'Invalid accent color'; return; }
+        $welcome = trim(strip_tags((string)($_POST['welcome_text'] ?? '')));
+        if (mb_strlen($welcome) > 180) { $welcome = mb_substr($welcome, 0, 180); }
+
+        $logoPath = $this->storeBrandingImage($id, 'logo');
+        $bannerPath = $this->storeBrandingImage($id, 'banner');
+        if ($logoPath === false || $bannerPath === false) {
+            http_response_code(422);
+            echo 'Invalid image (png, jpeg, or webp, up to 1 MB)';
+            return;
+        }
+
+        if (isset($_POST['clear_logo'])) { $this->dropBrandingImage($pdo, $id, 'logo_path'); }
+        if (isset($_POST['clear_banner'])) { $this->dropBrandingImage($pdo, $id, 'banner_path'); }
+
+        // Column names come from fixed call sites above, never from user input.
+        $stmt = $pdo->prepare('UPDATE events SET theme_primary = ?, theme_accent = ?, welcome_text = ?, logo_path = COALESCE(?, logo_path), banner_path = COALESCE(?, banner_path) WHERE id = ?');
+        $stmt->execute([
+            isset($_POST['reset_colors']) ? null : $this->normalizeHex($primaryRaw),
+            isset($_POST['reset_colors']) ? null : $this->normalizeHex($accentRaw),
+            $welcome !== '' ? $welcome : null,
+            $logoPath,
+            $bannerPath,
+            $id,
+        ]);
+        Logger::log(AuthService::id(), 'event_theme_updated', ['event_id' => $id], $id);
+        if (function_exists('csrf_rotate')) csrf_rotate();
+        header('Location: ?r=admin_events');
+    }
+
+    /** Normalize "#RRGGBB" / "RRGGBB" to uppercase "#RRGGBB"; null when invalid or empty. */
+    private function normalizeHex(string $value): ?string
+    {
+        if ($value === '') return null;
+        if (preg_match('/^#?([0-9a-fA-F]{6})$/', $value, $m) === 1) {
+            return '#' . strtoupper($m[1]);
+        }
+        return null;
+    }
+
+    /**
+     * Move an uploaded logo/banner into storage/event-branding/{eventId}/.
+     * Returns the stored relative path, null when nothing was uploaded,
+     * or false when the upload is not a valid image.
+     * @return string|null|false
+     */
+    private function storeBrandingImage(int $eventId, string $kind)
+    {
+        $file = $_FILES[$kind] ?? null;
+        if (!is_array($file)) return null;
+        $error = (int)($file['error'] ?? UPLOAD_ERR_NO_FILE);
+        if ($error === UPLOAD_ERR_NO_FILE) return null;
+        if ($error !== UPLOAD_ERR_OK) return false;
+        if ((int)($file['size'] ?? 0) <= 0 || (int)$file['size'] > 1_048_576) return false;
+
+        $ext = strtolower(pathinfo((string)($file['name'] ?? ''), PATHINFO_EXTENSION));
+        if (!in_array($ext, ['png', 'jpg', 'jpeg', 'webp'], true)) return false;
+        try {
+            $mime = (new \finfo(FILEINFO_MIME_TYPE))->file($file['tmp_name']);
+        } catch (\Throwable $e) {
+            return false;
+        }
+        if (!in_array((string)$mime, ['image/png', 'image/jpeg', 'image/webp'], true)) return false;
+
+        $dir = dirname(__DIR__, 2) . DIRECTORY_SEPARATOR . 'storage' . DIRECTORY_SEPARATOR . 'event-branding' . DIRECTORY_SEPARATOR . $eventId;
+        if (!is_dir($dir) && !mkdir($dir, 0775, true) && !is_dir($dir)) return false;
+        $name = $kind . '.' . ($ext === 'jpeg' ? 'jpg' : $ext);
+        foreach (['png', 'jpg', 'webp'] as $oldExt) {
+            if ($oldExt === ($ext === 'jpeg' ? 'jpg' : $ext)) continue;
+            $old = $dir . DIRECTORY_SEPARATOR . $kind . '.' . $oldExt;
+            if (is_file($old)) { @unlink($old); }
+        }
+        if (!move_uploaded_file($file['tmp_name'], $dir . DIRECTORY_SEPARATOR . $name)) return false;
+        return 'storage/event-branding/' . $eventId . '/' . $name;
+    }
+
+    /** Remove a branding image file (only from this event's branding dir) and clear the column. */
+    private function dropBrandingImage(\PDO $pdo, int $eventId, string $column): void
+    {
+        $stmt = $pdo->prepare("SELECT {$column} FROM events WHERE id = ?");
+        $stmt->execute([$eventId]);
+        $path = (string)($stmt->fetchColumn() ?: '');
+        $dir = dirname(__DIR__, 2) . DIRECTORY_SEPARATOR . 'storage' . DIRECTORY_SEPARATOR . 'event-branding' . DIRECTORY_SEPARATOR . $eventId;
+        $realDir = realpath($dir);
+        $real = $path !== '' ? realpath($path) : false;
+        if ($realDir !== false && $real !== false && str_starts_with($real, $realDir . DIRECTORY_SEPARATOR) && is_file($real)) {
+            @unlink($real);
+        }
+        $pdo->prepare("UPDATE events SET {$column} = NULL WHERE id = ?")->execute([$eventId]);
+    }
 }

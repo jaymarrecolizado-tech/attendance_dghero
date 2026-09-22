@@ -20,6 +20,10 @@ $navScan = $navSlugForBrand !== '' ? '?r=scan&e=' . urlencode($navSlugForBrand) 
 <nav class="navbar navbar-expand-lg navbar-dark guest-navbar sticky-top">
   <div class="container guest-container">
     <a class="navbar-brand guest-brand" href="<?= htmlspecialchars($navHome, ENT_QUOTES) ?>">
+      <?php $navLogoUrl = (string)($eventTheme['logo_url'] ?? ''); ?>
+      <?php if ($navLogoUrl !== ''): ?>
+      <img class="guest-brand-logo" src="<?= htmlspecialchars($navLogoUrl, ENT_QUOTES) ?>" alt="<?= htmlspecialchars($navBrand, ENT_QUOTES) ?> logo">
+      <?php endif; ?>
       <span><?= htmlspecialchars($navBrand, ENT_QUOTES) ?></span>
     </a>
     <?php if ($guestShowActions): ?>

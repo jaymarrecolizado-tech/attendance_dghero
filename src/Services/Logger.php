@@ -17,8 +17,12 @@ class Logger
             $stmt = $pdo->prepare('INSERT INTO action_logs (admin_id, event_id, action, detail) VALUES (?,?,?,?)');
             $stmt->execute([$adminId, $eventId, $action, json_encode($detail)]);
         } catch (\Throwable $e) {
-            $stmt = $pdo->prepare('INSERT INTO action_logs (admin_id, action, detail) VALUES (?,?,?)');
-            $stmt->execute([$adminId, $action, json_encode($detail)]);
+            try {
+                $stmt = $pdo->prepare('INSERT INTO action_logs (admin_id, action, detail) VALUES (?,?,?)');
+                $stmt->execute([$adminId, $action, json_encode($detail)]);
+            } catch (\Throwable $e2) {
+                error_log('action_logs insert failed: ' . $e2->getMessage());
+            }
         }
     }
 }

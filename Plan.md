@@ -4,7 +4,7 @@ Turn the app into a multi-event platform: All Father creates events, assigns peo
 
 **OpenCode + Muse Spark 13** on branch `attendance_accend`. Enforce [ponytail](https://github.com/dietrichgebert/ponytail) and [taste-skill](https://github.com/leonxlnx/taste-skill) (`design-taste-frontend` + `redesign-existing-projects`).
 
-**Status:** Multi-event is implemented. Do not rebuild EventContext. Phase 1–3 core work is in the repo. The **2026-09-21 afternoon leftovers are closed** (guest scan `e=`, login brand, register flash on CSRF/missing/closed, controller-level CSRF replay test, deploy doc hosts).
+**Status:** Multi-event is shipped. VPS is live at https://digitalhero.dictr2.cloud. **Per-event registration branding is implemented and verified** (below). PWA/Redis/SSE stay later.
 
 **Audit:** 2026-09-14 closed multi-event leftovers. 2026-09-20 landed Settings merge, script gating, AuthService, flash plumbing, `env.example`. 2026-09-21 morning pass fixed door-scan CSRF, import-preview rotate, retry `e=` link, event-aware nav, main deploy docs. Same-day afternoon pass closed the five re-check nits (below).
 
@@ -12,7 +12,7 @@ Turn the app into a multi-event platform: All Father creates events, assigns peo
 
 ## Agent: start here
 
-Multi-event is **shipped**. Current leftovers are **Open leftovers (2026-09-21)** below — not Phase 4. Pull `attendance_accend` and keep changes additive. Do not rebuild EventContext.
+Multi-event is **shipped**. VPS cutover **ran 2026-09-21**. Current work is **Per-event registration branding** under Left to do. Do not rebuild EventContext. Do not commit `.env` / `.env.vps`.
 
 **Session contract**
 
@@ -31,7 +31,89 @@ php scripts/test_csrf_lifecycle.php
 
 ---
 
-## Checklist
+## Left to do
+
+### Now — per-event registration branding
+
+Each event can look like its own registration page. **Structured branding only** — no custom CSS box. All Father sets logo, primary color, accent color, a short welcome line, and an optional banner. Layout, steps, and POST field names stay the same. No branding keeps Public Sans + federal navy in [`assets/app.css`](assets/app.css) and [`assets/guest-registration.css`](assets/guest-registration.css).
+
+Same theme on that event’s guest shell: register, success, and error ([`guest_head.php`](views/partials/guest_head.php), [`guest_nav.php`](views/partials/guest_nav.php), [`guest_hero.php`](views/partials/guest_hero.php)). Scan keeps the event name; navbar color follows the same variables when `e=` is set.
+
+```mermaid
+flowchart LR
+  admin[AllFather_events_form]
+  db[events_theme_columns]
+  reg[RegisterController]
+  css[CSS_variables_on_guest_page]
+  admin --> db --> reg --> css
+```
+
+- [x] Migration [`migrations/011_event_theme.sql`](migrations/011_event_theme.sql), wired in [`Database::runMigrations`](src/Services/Database.php) like `009` (add columns only if missing; no new foreign keys — production tables are MyISAM):
+  - `theme_primary` CHAR(7) NULL (`#RRGGBB`)
+  - `theme_accent` CHAR(7) NULL
+  - `welcome_text` VARCHAR(180) NULL
+  - `logo_path` VARCHAR(255) NULL
+  - `banner_path` VARCHAR(255) NULL
+- [x] Store files under `storage/event-branding/{eventId}/`. Serve through a PHP route (same pattern as QR), not a public upload folder.
+- [x] **Appearance** block on [`views/admin_events.php`](views/admin_events.php), All Father only. New POST `admin_event_theme` on [`AdminEventsController`](src/Controllers/AdminEventsController.php):
+  - Hex colors only
+  - Welcome text plain, max 180 characters
+  - Logo/banner: png, jpeg, or webp, about 1 MB max
+  - Clear controls to drop images and revert to navy
+- [x] [`RegisterController`](src/Controllers/RegisterController.php) passes the theme into register, success, and the error flash path.
+- [x] [`guest_head.php`](views/partials/guest_head.php) sets `--brand-primary`, `--brand-primary-dark`, `--brand-accent`, and `--guest-hero-gradient` on `.guest-page` when a theme exists.
+- [x] [`guest_nav.php`](views/partials/guest_nav.php) shows the logo beside the event name. [`guest_hero.php`](views/partials/guest_hero.php) uses `welcome_text` when set. Banner sits in the hero only.
+- [x] Check: unthemed event still looks like today; themed event shares colors on register, success, and error; bad color or non-image upload is rejected; phone and desktop for one themed event and one default event.
+
+No new frontend stack. Keep `?r=register&e={slug}`.
+
+### Done — VPS go-live
+
+Target: `https://digitalhero.dictr2.cloud`.
+
+- SSH: `dghero111@187.77.150.203` → `/home/digitalhero/htdocs/digitalhero.dictr2.cloud`
+- `.env` from [`.env.vps`](.env.vps); `DB_AUTO_MIGRATE=false`; `APP_DEBUG=false`
+- Seed username **`allfather`** (password given once in chat, not stored here)
+
+```mermaid
+flowchart LR
+  localTests[Local_scripts]
+  pack[Pack_from_root]
+  upload[SFTP]
+  ssh[SSH_perms_migrate_seed]
+  smoke[Browser_smoke]
+  localTests --> pack --> upload --> ssh --> smoke
+```
+
+- [x] Run `php scripts/test_rbac_matrix.php` and `php scripts/test_csrf_lifecycle.php`
+- [x] Pack from **project root**; exclude `diagnose.php`, `create_admin.php`, `TODO*`, `graphify-out`, `.git`, `.env`
+- [x] Upload as `dghero111` to `/home/digitalhero/htdocs/digitalhero.dictr2.cloud` (storage QR/signatures kept)
+- [x] `.env` from `.env.vps`; production `.htaccess` present
+- [x] Permissions `755`/`644`/`.env` `600`, `storage/` writable
+- [x] Migrations: `event_assignments` created as MyISAM (no FK to MyISAM `admins`); `php scripts/run_migrations.php` succeeded; `DB_AUTO_MIGRATE=false`
+- [x] `php scripts/seed_admin.php allfather` (upsert)
+- [x] No `diagnose.php` on docroot
+- [x] Browser: `/?r=register` event picker (DICT AI ROADSHOW 2026); `/?r=admin_login` HTTP 200. Sign-in as `allfather` and QR email still for operator to confirm
+- [x] [`TODODEPLOYMENT/SERVER_INFO.md`](TODODEPLOYMENT/SERVER_INFO.md) SSH user/path/DB source updated (no secrets)
+- [ ] Operator: log in as `allfather`, scan/attendance, SEO, send a test QR email
+
+Remote backup: `/home/dghero111/tmp/pred-site-bak-20260921-145717.tgz`
+
+### Later — not this cutover
+
+- [ ] Offline scanner PWA (service worker + IndexedDB queue)
+- [ ] Redis rate limiter (MySQL limiter already works)
+- [ ] SSE KPI (reverted; polling stays)
+- [ ] Add to Wallet, dark mode, EN/Fil, draft storage, QR brightness
+- [ ] `must_change_password`, pretty URLs `/e/slug/register`, SSO, people directory
+
+### Explicitly not a leftover
+
+[`diagnose.php`](diagnose.php) / [`create_admin.php`](create_admin.php) read `APP_DEBUG` before `.env` load. CLI still works. Do not “fix” unless we change the gate.
+
+---
+
+## Done (do not rebuild)
 
 - [x] Branch `attendance_accend` created and pushed
 - [x] Multi-event draft (`c619ef0`) + finish commit (`3d1ec25`) + leftover close (`a7755d1`)
@@ -76,11 +158,11 @@ Also already shipped (do not rebuild): RBAC [`AuthService`](src/Services/AuthSer
 
 ---
 
-## Remaining issues
+## Remaining issues (closed — history)
 
-Phase 1–3 **core** items below are shipped. Stay on `attendance_accend`. Keep `?r=` routes. Design read for any view/CSS: public-sector, Public Sans + federal navy in [`assets/app.css`](assets/app.css); do not revert to Inter or `#5c6cf2`. Load ponytail (`full`) and taste-skill before view/CSS work.
+Open work is only in **Left to do**. Below is shipped Phase 1–3. Stay on `attendance_accend`. Keep `?r=` routes. Design read: Public Sans + federal navy; do not revert to Inter or `#5c6cf2`.
 
-### Open leftovers (2026-09-21 afternoon)
+### Closed leftovers (2026-09-21 afternoon)
 
 Independent re-check after the morning pass. **All closed this pass.**
 
@@ -90,54 +172,29 @@ Independent re-check after the morning pass. **All closed this pass.**
 - [x] **CSRF test is helper-only.** [`scripts/test_csrf_lifecycle.php`](scripts/test_csrf_lifecycle.php) now also submits through [`AttendanceController::submitJsonForTest`](src/Controllers/AttendanceController.php): success rotates the token and a replay with the same token returns `csrf` (10/10).
 - [x] **Stale Hostinger docs.** Root [`CHECKLIST.md`](CHECKLIST.md) and [`MIGRATION_SUMMARY.md`](MIGRATION_SUMMARY.md) now say **digitalhero.dictr2.cloud**, `noreply@digitalhero.dictr2.cloud`, and pack-from-root like [`DEPLOYMENT.md`](DEPLOYMENT.md).
 
-Known, **do not treat as a leftover to “fix” unless we change the gate:** [`diagnose.php`](diagnose.php) / [`create_admin.php`](create_admin.php) read `APP_DEBUG` before `.env` load, so local web diagnose may 403. CLI still works.
-
-```mermaid
-flowchart TD
-  p1[Phase1_hardening]
-  p2[Phase2_product]
-  p3[Phase3_ops_docs]
-  p4[Phase4_deferred]
-  p1 --> p2 --> p3
-  p3 -.-> p4
-```
-
 ### Phase 1 — Production hardening (must ship)
 
 - [x] **Stop Settings from wiping `.env` (critical).** [`SettingsController::save`](src/Controllers/SettingsController.php) reads existing `.env`, updates SMTP keys in place (password only if submitted), keeps comments and unknown keys. Uses `AuthService::check()`. No dedicated merge unit test was added (only CSRF helper tests).
 - [x] **Gate bootstrap-dangerous scripts.** [`diagnose.php`](diagnose.php) and [`create_admin.php`](create_admin.php) exit unless CLI **or** `APP_DEBUG` + localhost. Note: gate uses `getenv('APP_DEBUG')` **before** bootstrap/`.env` load, so local web access may still 403 unless `APP_DEBUG` is in the process environment.
 - [x] **CSRF consume-on-success.** `csrf_rotate()` is on register success, settings, events, users, import **preview+execute**, door scan [`AttendanceController::submit`](src/Controllers/AttendanceController.php), admin attendance writes, signature replace/addNew, and test helpers (`submitJsonForTest`, `replaceJsonForTest`, `addNewJsonForTest`). [`scripts/test_csrf_lifecycle.php`](scripts/test_csrf_lifecycle.php) asserts rotation + replay fails (7/7).
 - [x] **Dual auth leftovers (controllers).** Settings + AdminSignature **HTTP** paths use `AuthService` / `requireEventContext`. View `admin_id` checks in [`views/scan.php`](views/scan.php) and [`signature.php`](signature.php) remain display-only (intentional).
-- [x] **RBAC tests exist.** `php scripts/test_rbac_matrix.php`. CSRF script exists but is helper-only (see leftovers).
+- [x] **RBAC tests exist.** `php scripts/test_rbac_matrix.php`. [`scripts/test_csrf_lifecycle.php`](scripts/test_csrf_lifecycle.php) covers rotate + `AttendanceController::submitJsonForTest` replay.
 
 ### Phase 2 — Product polish (Sep 19 gaps)
 
 Load taste-skill before view work.
 
 - [x] **Event-aware hero/nav.** [`views/register.php`](views/register.php) passes name/date into [`guest_hero.php`](views/partials/guest_hero.php); [`guest_nav.php`](views/partials/guest_nav.php) resolves brand from `$eventName` or `?e=` lookup, [`admin_nav.php`](views/partials/admin_nav.php) shows current event name, [`scan.php`](views/scan.php) uses `$eventName`, titles no longer hardcode `GovNet-Launching` (fallback only).
-- [x] **Register error rehydrate (main path).** Validation / duplicate / rate-limit / 500 flash `slug`+fields; [`register_error.php`](views/register_error.php) keeps flash and links `Try again` to `?r=register&e=slug`; [`show()`](src/Controllers/RegisterController.php) rehydrates then clears. CSRF and missing-event still skip flash (leftover above).
+- [x] **Register error rehydrate.** All submit failures (including CSRF and missing/closed event) go through `flashRegisterError()`; [`register_error.php`](views/register_error.php) keeps flash and `Try again` with `e=`; [`show()`](src/Controllers/RegisterController.php) rehydrates then clears.
 - [x] **Safer public default.** [`RegisterController::show()`](src/Controllers/RegisterController.php) shows [`public_event_picker.php`](views/public_event_picker.php) when `e=` is missing (no silent pick).
 
-Browser-verify after leftovers: guest navbar Scan with `e=` opens that event’s scan (or picker if none); error → Try again keeps fields **and** slug after CSRF/missing-event too.
-
-### Phase 3 — Ops and docs (no live VPS cutover)
+### Phase 3 — Ops and docs (docs done; live cutover is Left to do)
 
 - [x] [`env.example`](env.example) has `RATE_LIMITER_DRIVER`, `APP_DEBUG`, `DB_AUTO_MIGRATE`.
-- [x] Main deploy docs aligned: [`DEPLOYMENT.md`](DEPLOYMENT.md), [`QUICK_START.txt`](QUICK_START.txt), [`README.md`](README.md). [`CHECKLIST.md`](CHECKLIST.md) / [`MIGRATION_SUMMARY.md`](MIGRATION_SUMMARY.md) still stale (leftover above).
+- [x] Deploy docs aligned: [`DEPLOYMENT.md`](DEPLOYMENT.md), [`QUICK_START.txt`](QUICK_START.txt), [`README.md`](README.md), [`CHECKLIST.md`](CHECKLIST.md), [`MIGRATION_SUMMARY.md`](MIGRATION_SUMMARY.md) use **digitalhero.dictr2.cloud** / pack-from-root.
 - [x] [`TODODEPLOYMENT/README.md`](TODODEPLOYMENT/README.md) no longer prefers **`TODODEPLOYMENT/uploads/`** (folder not in repo) — now says pack from project root, `DO_NOT_UPLOAD.txt`. [`TODODEPLOYMENT/CHECKLIST.md`](TODODEPLOYMENT/CHECKLIST.md) says uploads not in repo.
 - [x] HTTPS: production template remains [`TODODEPLOYMENT/.htaccess.production`](TODODEPLOYMENT/.htaccess.production); local `.htaccess` can stay HTTP.
 - [x] Spec status tables updated: [`TODOMORE`](TODOMORE/future_improvements_spec.md) CSRF now lists door scan + import preview + test helpers with date, rehydrate/nav marked 2026-09-21.
-
-### Phase 4 — Explicit deferrals (document, do not implement now)
-
-| Item | Why defer |
-|------|-----------|
-| Offline scanner PWA | New architecture (SW + IndexedDB + sync); venue-critical later |
-| Redis rate limiter | MySQL limiter already shipped |
-| SSE KPI | Reverted for PHP session locks |
-| Add to Wallet, dark mode, EN/Fil, draft storage, QR brightness | Guest spec post-MVP |
-| `must_change_password`, pretty URLs, SSO, people directory | Spec / original out of scope |
-| Full VPS cutover | Needs SMTP mailbox + SSH on 187.77.150.203 |
 
 ---
 
@@ -146,9 +203,8 @@ Browser-verify after leftovers: guest navbar Scan with `e=` opens that event’s
 - Pretty paths like `/e/slug/register`
 - Shared people directory
 - SSO / per-agency tenancy
-- Live VPS deploy / cutover
 - Rebuilding EventContext
 - New frontend stack or PHPUnit tree conversion
-- Committing `.env.vps`, storage uploads, `graphify-out/cache`, or duplicate skill folders (`.claude/skills/`, `agent/`)
+- Committing `.env.vps`, `.env.production`, storage uploads, `graphify-out/cache`, or duplicate skill folders (`.claude/skills/`, `agent/`)
 
 After code changes: `graphify update .`.

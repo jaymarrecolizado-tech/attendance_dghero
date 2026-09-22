@@ -41,6 +41,14 @@
   font-weight: 700;
 }
 
+.guest-brand-logo {
+  height: 34px;
+  width: auto;
+  max-width: 120px;
+  object-fit: contain;
+  display: block;
+}
+
 .guest-nav-btn {
   min-height: 48px;
   min-width: 48px;
@@ -77,6 +85,17 @@
 }
 
 /* Hero */
+.guest-hero-banner {
+  display: block;
+  width: 100%;
+  height: auto;
+  border-radius: var(--guest-radius-xl);
+  border: 1px solid var(--border-soft);
+  box-shadow: var(--guest-shadow);
+  margin-bottom: 1rem;
+  object-fit: cover;
+}
+
 .guest-hero-mobile {
   display: flex;
   align-items: center;

@@ -257,4 +257,53 @@ final class EventContext
             'scan' => "?r=scan&e={$e}",
         ];
     }
+
+    /**
+     * Structured per-event branding, sanitized. Returns [] when the event has
+     * no theme so guests keep the default Public Sans + federal navy look.
+     * @return array{primary:string,dark:string,accent:string,welcome:string,logo_url:string,banner_url:string}
+     */
+    public static function themeFor(?array $event): array
+    {
+        if (!$event) {
+            return [];
+        }
+        $hex = static function (string $value): string {
+            $value = strtoupper(trim($value));
+            return preg_match('/^#[0-9A-F]{6}$/', $value) === 1 ? $value : '';
+        };
+        $primary = $hex((string)($event['theme_primary'] ?? ''));
+        $accent = $hex((string)($event['theme_accent'] ?? ''));
+        $welcome = trim((string)($event['welcome_text'] ?? ''));
+        $logoPath = trim((string)($event['logo_path'] ?? ''));
+        $bannerPath = trim((string)($event['banner_path'] ?? ''));
+        if ($primary === '' && $accent === '' && $welcome === '' && $logoPath === '' && $bannerPath === '') {
+            return [];
+        }
+        $eventId = (int)$event['id'];
+        $theme = [
+            'primary' => $primary,
+            'dark' => $primary !== '' ? self::darkenHex($primary) : '',
+            'accent' => $accent,
+            'welcome' => mb_substr($welcome, 0, 180),
+            'logo_url' => '',
+            'banner_url' => '',
+        ];
+        if ($logoPath !== '' && is_file($logoPath)) {
+            $theme['logo_url'] = '?r=event_branding&eid=' . $eventId . '&f=logo';
+        }
+        if ($bannerPath !== '' && is_file($bannerPath)) {
+            $theme['banner_url'] = '?r=event_branding&eid=' . $eventId . '&f=banner';
+        }
+        return $theme;
+    }
+
+    /** Same hue, ~28% darker, for hover and hero gradient stops. */
+    public static function darkenHex(string $hex): string
+    {
+        $r = (int)hexdec(substr($hex, 1, 2));
+        $g = (int)hexdec(substr($hex, 3, 2));
+        $b = (int)hexdec(substr($hex, 5, 2));
+        return sprintf('#%02X%02X%02X', (int)round($r * 0.72), (int)round($g * 0.72), (int)round($b * 0.72));
+    }
 }

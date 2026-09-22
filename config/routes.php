@@ -13,6 +13,7 @@ use App\Controllers\AdminUsersController;
 use App\Controllers\AdvancedExportController;
 use App\Controllers\AttendanceController;
 use App\Controllers\AuthController;
+use App\Controllers\EventBrandingController;
 use App\Controllers\ParticipantController;
 use App\Controllers\RegisterController;
 use App\Controllers\ReportController;
@@ -81,6 +82,13 @@ return [
     'admin_qr' => [
         'GET' => [AdminRegistrantsController::class, 'qrPreview'],
         '_guards' => [$eventOps],
+    ],
+    'event_branding' => [
+        'GET' => [EventBrandingController::class, 'image'],
+    ],
+    'admin_event_theme' => [
+        'POST' => [AdminEventsController::class, 'theme'],
+        '_guards' => [$rolesAdmin],
     ],
     'admin_registrant_vip' => [
         'POST' => [AdminRegistrantsController::class, 'toggleVip'],

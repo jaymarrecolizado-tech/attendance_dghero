@@ -1,9 +1,12 @@
 <?php
 declare(strict_types=1);
 
+use App\Services\EventContext;
+
 $token = function_exists('csrf_token') ? csrf_token() : '';
 $eventSlug = isset($event) && isset($event['slug']) ? (string)$event['slug'] : trim((string)($_GET['e'] ?? ''));
 $eventName = isset($event) ? (string)($event['name'] ?? '') : '';
+$scanTheme = isset($event) ? EventContext::themeFor($event) : [];
 ?>
 <!doctype html>
 <html lang="en">
@@ -17,6 +20,15 @@ $eventName = isset($event) ? (string)($event['name'] ?? '') : '';
   <script src="https://cdn.jsdelivr.net/npm/signature_pad@4.0.0/dist/signature_pad.umd.min.js"></script>
   <meta name="csrf" content="<?= htmlspecialchars($token, ENT_QUOTES) ?>">
   <meta name="event-slug" content="<?= htmlspecialchars($eventSlug, ENT_QUOTES) ?>">
+  <?php if (!empty($scanTheme['primary'])): ?>
+  <style>
+    :root {
+      --brand-primary: <?= htmlspecialchars($scanTheme['primary'], ENT_QUOTES) ?>;
+      --brand-primary-dark: <?= htmlspecialchars($scanTheme['dark'], ENT_QUOTES) ?>;
+      <?php if (!empty($scanTheme['accent'])): ?>--brand-accent: <?= htmlspecialchars($scanTheme['accent'], ENT_QUOTES) ?>;<?php endif; ?>
+    }
+  </style>
+  <?php endif; ?>
   <style>
     #reader { width: 100%; max-width: 520px; margin: 0 auto; border-radius: 14px; overflow: hidden; }
     #sigCanvas { border: 1px dashed rgba(26,68,128,0.35); border-radius: 10px; width: 100%; height: 260px; touch-action: none; background: #fbfcfe; }

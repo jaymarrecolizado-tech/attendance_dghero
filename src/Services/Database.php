@@ -128,6 +128,16 @@ class Database
         if (self::tableExists($pdo, 'participants') && self::columnExists($pdo, 'participants', 'event_id')) {
             self::migrate010($pdo);
         }
+        // 011_event_theme (add branding columns only if missing; no foreign keys)
+        if (self::tableExists($pdo, 'events') && (
+            !self::columnExists($pdo, 'events', 'theme_primary')
+            || !self::columnExists($pdo, 'events', 'theme_accent')
+            || !self::columnExists($pdo, 'events', 'welcome_text')
+            || !self::columnExists($pdo, 'events', 'logo_path')
+            || !self::columnExists($pdo, 'events', 'banner_path')
+        )) {
+            self::executeSqlFileTolerant($pdo, $base . '011_event_theme.sql');
+        }
     }
 
     private static function migrate010(PDO $pdo): void

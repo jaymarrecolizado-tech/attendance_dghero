@@ -41,7 +41,7 @@ $token = function_exists('csrf_token') ? csrf_token() : '';
   </form>
   <div class="table-responsive table-modern">
     <table class="table table-sm align-middle">
-      <thead><tr><th>#</th><th>Name</th><th>Slug</th><th>Status</th><th>Schedule</th><th>Links</th><th>Staff</th><th>Actions</th></tr></thead>
+      <thead><tr><th>#</th><th>Name</th><th>Slug</th><th>Status</th><th>Schedule</th><th>Links</th><th>Appearance</th><th>Staff</th><th>Actions</th></tr></thead>
       <tbody>
         <?php foreach (($rows??[]) as $r): ?>
         <?php
@@ -66,6 +66,40 @@ $token = function_exists('csrf_token') ? csrf_token() : '';
               <span class="small"><code class="text-break"><?= htmlspecialchars($links['scan'], ENT_QUOTES) ?></code> <button type="button" class="btn btn-sm btn-outline-secondary py-0" data-copy="<?= htmlspecialchars($links['scan'], ENT_QUOTES) ?>" aria-label="Copy scan kiosk link">Copy scan</button></span>
             </div>
             <?php endif; ?>
+          </td>
+          <td>
+            <?php
+              $themePrimary = trim((string)($r['theme_primary'] ?? ''));
+              $themeAccent = trim((string)($r['theme_accent'] ?? ''));
+              $themeWelcome = trim((string)($r['welcome_text'] ?? ''));
+              $themeLogo = trim((string)($r['logo_path'] ?? ''));
+              $themeBanner = trim((string)($r['banner_path'] ?? ''));
+              $appearanceActive = $themePrimary !== '' || $themeAccent !== '' || $themeWelcome !== '' || $themeLogo !== '' || $themeBanner !== '';
+            ?>
+            <details class="event-appearance">
+              <summary class="small <?= $appearanceActive ? 'fw-semibold text-primary' : 'text-muted' ?>">Appearance<?= $appearanceActive ? ' (set)' : '' ?></summary>
+              <form method="post" action="?r=admin_event_theme" enctype="multipart/form-data" class="d-flex flex-column gap-1 mt-1">
+                <input type="hidden" name="csrf" value="<?= htmlspecialchars($token, ENT_QUOTES) ?>">
+                <input type="hidden" name="id" value="<?= (int)$r['id'] ?>">
+                <div class="d-flex gap-2">
+                  <label class="small text-muted">Primary<br>
+                    <input type="color" name="theme_primary" aria-label="Primary color" class="form-control form-control-color form-control-sm" value="<?= htmlspecialchars($themePrimary !== '' ? $themePrimary : '#1A4480', ENT_QUOTES) ?>">
+                  </label>
+                  <label class="small text-muted">Accent<br>
+                    <input type="color" name="theme_accent" aria-label="Accent color" class="form-control form-control-color form-control-sm" value="<?= htmlspecialchars($themeAccent !== '' ? $themeAccent : '#0B687A', ENT_QUOTES) ?>">
+                  </label>
+                </div>
+                <input name="welcome_text" maxlength="180" class="form-control form-control-sm" placeholder="Welcome line (optional)" aria-label="Welcome line" value="<?= htmlspecialchars($themeWelcome, ENT_QUOTES) ?>">
+                <input type="file" name="logo" accept=".png,.jpg,.jpeg,.webp" class="form-control form-control-sm" aria-label="Logo upload">
+                <input type="file" name="banner" accept=".png,.jpg,.jpeg,.webp" class="form-control form-control-sm" aria-label="Banner upload">
+                <button class="btn btn-sm btn-outline-primary" aria-label="Save appearance">Save appearance</button>
+                <div class="d-flex flex-wrap gap-1">
+                  <button type="submit" name="clear_logo" value="1" class="btn btn-sm btn-outline-secondary" <?= $themeLogo === '' ? 'disabled' : '' ?>>Clear logo</button>
+                  <button type="submit" name="clear_banner" value="1" class="btn btn-sm btn-outline-secondary" <?= $themeBanner === '' ? 'disabled' : '' ?>>Clear banner</button>
+                  <button type="submit" name="reset_colors" value="1" class="btn btn-sm btn-outline-secondary">Revert colors</button>
+                </div>
+              </form>
+            </details>
           </td>
           <td class="small">
             <?php foreach ($assigned as $a): ?>
