@@ -6,8 +6,6 @@ TODODEPLOYMENT/          # optional: upload only set_permissions.sh + post_deplo
 TODOMORE/
 TODORBAC/
 TODOUI/
-graphify-out/
-.claude/
 .git/
 tests/   (if present)
 

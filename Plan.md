@@ -2,17 +2,15 @@
 
 Turn the app into a multi-event platform: All Father creates events, assigns people and roles per event, each event has unique register/scan links, current attendance capabilities stay.
 
-**OpenCode + Muse Spark 13** on branch `attendance_accend`. Enforce [ponytail](https://github.com/dietrichgebert/ponytail) and [taste-skill](https://github.com/leonxlnx/taste-skill) (`design-taste-frontend` + `redesign-existing-projects`).
-
-**Status:** Multi-event is shipped. VPS is live. **Plan#4** through **Plan#12** are on production (full sync 2026-09-22).
+**Status:** Multi-event is shipped. VPS is live. **Plan#4** through **Plan#12** are on production (full sync 2026-09-22). Current branch is `9232026_ultra`; `main` carries the same code.
 
 **Audit:** 2026-09-14 closed multi-event leftovers. 2026-09-20 landed Settings merge, script gating, AuthService, flash plumbing, `env.example`. 2026-09-21 morning pass fixed door-scan CSRF, import-preview rotate, retry `e=` link, event-aware nav, main deploy docs. Same-day afternoon pass closed the five re-check nits (below).
 
 ---
 
-## Agent: start here
+## Current state
 
-Multi-event is **shipped**. VPS cutover **ran 2026-09-21**. Full code+migration sync **ran 2026-09-22** (server `.env` and `storage/` uploads kept). **Plan#4** through **Plan#12** are live, including Hostinger cron for `scripts/coa_process_scheduled.php`. Do not rebuild EventContext. Do not commit `.env` / `.env.vps`.
+Multi-event is shipped. VPS cutover ran 2026-09-21. Full code and migration sync ran 2026-09-22 (server `.env` and `storage/` uploads kept). Plan#4 through Plan#12 are live, including the Hostinger cron for `scripts/coa_process_scheduled.php`. Do not rebuild EventContext. Do not commit `.env` or `.env.vps`.
 
 **Plan numbers**
 
@@ -31,17 +29,13 @@ Multi-event is **shipped**. VPS cutover **ran 2026-09-21**. Full code+migration 
 | Plan#11 | Certificate send monitor, nav, and templates | Live on digitalhero.dictr2.cloud |
 | Plan#12 | CoA control center (templates, signatories, compose, schedule) | Live on digitalhero.dictr2.cloud; cron installed |
 
-**Session contract**
+**Working notes**
 
-1. Branch is `attendance_accend`.
-2. Load ponytail (`full`) and taste-skill. Skills live in [`.agents/skills/`](.agents/skills/).
-3. Design read before CSS/view changes: public-sector, trust-first. Tokens are already Public Sans + federal navy in [`assets/app.css`](assets/app.css). Do not revert to Inter or `#5c6cf2`.
-4. Reuse `EventContext`, `AuthService`, `ResolvesEventContext`, and `?r=` routes.
-5. Do not commit `.env`, `.env.vps`, `storage/` uploads, `graphify-out/cache`, or extra skill copies under `.claude/skills/` or `agent/`.
+1. Public pages stay on Public Sans and the federal navy already in [`assets/app.css`](assets/app.css). Do not revert to Inter or `#5c6cf2`.
+2. Reuse `EventContext`, `AuthService`, `ResolvesEventContext`, and `?r=` routes.
+3. Do not commit `.env`, `.env.vps`, or `storage/` uploads.
 
 ```bash
-git checkout attendance_accend
-git pull origin attendance_accend
 php scripts/test_rbac_matrix.php
 php scripts/test_csrf_lifecycle.php
 ```
@@ -474,7 +468,7 @@ flowchart LR
 ```
 
 - [x] Run `php scripts/test_rbac_matrix.php` and `php scripts/test_csrf_lifecycle.php`
-- [x] Pack from **project root**; exclude `diagnose.php`, `create_admin.php`, `TODO*`, `graphify-out`, `.git`, `.env`
+- [x] Pack from **project root**; exclude one-off scripts, TODO folders, `.git`, and `.env`
 - [x] Upload as `dghero111` to `/home/digitalhero/htdocs/digitalhero.dictr2.cloud` (storage QR/signatures kept)
 - [x] `.env` from `.env.vps`; production `.htaccess` present
 - [x] Permissions `755`/`644`/`.env` `600`, `storage/` writable
@@ -507,7 +501,6 @@ Remote backups:
 
 - [x] Branch `attendance_accend` created and pushed
 - [x] Multi-event draft (`c619ef0`) + finish commit (`3d1ec25`) + leftover close (`a7755d1`)
-- [x] Ponytail in [`opencode.json`](opencode.json); taste-skill in [`.agents/skills/`](.agents/skills/) + [`skills-lock.json`](skills-lock.json)
 - [x] `009` + `010` migrations, [`EventContext`](src/Services/EventContext.php), backfill
 - [x] Unique links `e=slug`, public picker, All Father copy buttons
 - [x] `event_admin` links page [`admin_event_links`](views/admin_event_links.php)
@@ -518,7 +511,7 @@ Remote backups:
 - [x] Participant lookup requires `e` (or kiosk `scan_event_id`)
 - [x] Controller tests: `event_admin` matrix, cross-event submit, lookup without `e`, schedule window, hard-deny forced context
 - [x] SEO and attendance queries scoped with `event_id = ?` only (no `IS NULL` bleed)
-- [x] Taste restyle: Public Sans + federal navy (`#1a4480` / `#162e51`), flat surfaces, solid navbar
+- [x] Guest restyle: Public Sans + federal navy (`#1a4480` / `#162e51`), flat surfaces, solid navbar
 - [x] One auth helper [`ResolvesEventContext`](src/Controllers/Concerns/ResolvesEventContext.php) on event-scoped admin controllers, including Import (`use` the trait) and export page
 - [x] Hard-deny: `currentEvent()` returns null for an unassigned session event (no silent remap)
 
@@ -572,8 +565,6 @@ Independent re-check after the morning pass. **All closed this pass.**
 
 ### Phase 2 — Product polish (Sep 19 gaps)
 
-Load taste-skill before view work.
-
 - [x] **Event-aware hero/nav.** [`views/register.php`](views/register.php) passes name/date into [`guest_hero.php`](views/partials/guest_hero.php); [`guest_nav.php`](views/partials/guest_nav.php) resolves brand from `$eventName` or `?e=` lookup, [`admin_nav.php`](views/partials/admin_nav.php) shows current event name, [`scan.php`](views/scan.php) uses `$eventName`, titles no longer hardcode `GovNet-Launching` (fallback only).
 - [x] **Register error rehydrate.** All submit failures (including CSRF and missing/closed event) go through `flashRegisterError()`; [`register_error.php`](views/register_error.php) keeps flash and `Try again` with `e=`; [`show()`](src/Controllers/RegisterController.php) rehydrates then clears.
 - [x] **Safer public default.** [`RegisterController::show()`](src/Controllers/RegisterController.php) shows [`public_event_picker.php`](views/public_event_picker.php) when `e=` is missing (no silent pick).
@@ -595,6 +586,4 @@ Load taste-skill before view work.
 - SSO / per-agency tenancy
 - Rebuilding EventContext
 - New frontend stack or PHPUnit tree conversion
-- Committing `.env.vps`, `.env.production`, storage uploads, `graphify-out/cache`, or duplicate skill folders (`.claude/skills/`, `agent/`)
-
-After code changes: `graphify update .`.
+- Committing `.env.vps`, `.env.production`, or storage uploads
