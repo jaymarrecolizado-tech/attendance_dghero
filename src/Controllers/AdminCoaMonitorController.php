@@ -57,6 +57,7 @@ final class AdminCoaMonitorController
     {
         if (!$this->requireAllFather()) return;
         $pdo = Database::pdo();
+        Database::ensureCoaFacility($pdo);
         $scopeEventId = $this->scopeEventId();
         $scopeSql = $scopeEventId > 0 ? ' WHERE event_id = ?' : '';
         $scopeParams = $scopeEventId > 0 ? [$scopeEventId] : [];

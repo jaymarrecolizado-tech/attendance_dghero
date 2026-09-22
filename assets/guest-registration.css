@@ -676,7 +676,15 @@ html:not(.no-js) .guest-actions-sticky {
   }
 }
 
-.guest-btn:active {
+.guest-btn:disabled,
+.guest-btn[aria-disabled="true"] {
+  opacity: 0.45;
+  cursor: not-allowed;
+  pointer-events: none;
+  transform: none;
+}
+
+.guest-btn:active:not(:disabled) {
   transform: scale(0.98);
 }
 
@@ -686,8 +694,12 @@ html:not(.no-js) .guest-actions-sticky {
   border-width: 2px;
 }
 
+.guest-submit-fallback {
+  display: grid;
+}
+
 html:not(.no-js) .guest-submit-fallback {
-  display: none;
+  display: none !important;
 }
 
 html.no-js .guest-actions-inline,

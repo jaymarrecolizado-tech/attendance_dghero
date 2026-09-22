@@ -74,8 +74,9 @@ require __DIR__ . DIRECTORY_SEPARATOR . 'partials' . DIRECTORY_SEPARATOR . 'gues
                   </select>
                 </div>
                 <div class="col-12 col-md-6">
-                  <label class="form-label" for="email">Email Address</label>
-                  <input name="email" id="email" type="email" class="form-control" autocomplete="email" value="<?= htmlspecialchars($posted['email'] ?? '', ENT_QUOTES) ?>">
+                  <label class="form-label" for="email">Email Address <span class="req" aria-hidden="true">*</span></label>
+                  <input name="email" id="email" type="email" class="form-control" required autocomplete="email" value="<?= htmlspecialchars($posted['email'] ?? '', ENT_QUOTES) ?>">
+                  <p class="field-hint">Required so we can send your Certificate of Appearance. One email per person.</p>
                 </div>
               </div>
             </fieldset>
@@ -97,7 +98,7 @@ require __DIR__ . DIRECTORY_SEPARATOR . 'partials' . DIRECTORY_SEPARATOR . 'gues
                 <div class="col-12 col-md-6">
                   <label class="form-label" for="agencyPickerBtn">Agency <span class="req" aria-hidden="true">*</span></label>
                   <div class="picker-field">
-                    <input name="agency_select" id="agencyInput" class="form-control picker-value-input" list="agencyList" placeholder="Type or tap to search" autocomplete="organization" value="<?= htmlspecialchars($posted['agency_select'] ?? '', ENT_QUOTES) ?>">
+                    <input name="agency_select" id="agencyInput" class="form-control picker-value-input" list="agencyList" required placeholder="Type or tap to search" autocomplete="organization" value="<?= htmlspecialchars($posted['agency_select'] ?? '', ENT_QUOTES) ?>">
                     <button type="button" id="agencyPickerBtn" class="picker-trigger is-placeholder" data-placeholder="Tap to select agency" aria-haspopup="listbox" aria-expanded="false">
                       <span class="picker-trigger-text">Tap to select agency</span>
                       <span class="picker-trigger-chevron" aria-hidden="true">&#9662;</span>
@@ -153,16 +154,16 @@ require __DIR__ . DIRECTORY_SEPARATOR . 'partials' . DIRECTORY_SEPARATOR . 'gues
             <!-- Inline actions (tablet/desktop) -->
             <div class="guest-actions-inline d-none d-md-flex">
               <button type="button" class="btn btn-outline-secondary guest-btn guest-btn-lg guest-btn-back" id="btnBack" style="display:none">Back</button>
-              <button type="button" class="btn btn-primary guest-btn guest-btn-lg guest-btn-next" id="btnContinue">Continue</button>
-              <button type="submit" class="btn btn-primary guest-btn guest-btn-lg" id="btnRegister" style="display:none">
+              <button type="button" class="btn btn-primary guest-btn guest-btn-lg guest-btn-next" id="btnContinue" disabled>Continue</button>
+              <button type="submit" class="btn btn-primary guest-btn guest-btn-lg" id="btnRegister" style="display:none" disabled>
                 <span class="spinner-border spinner-border-sm d-none" role="status" aria-hidden="true"></span>
                 <span class="btn-label">Complete Registration</span>
               </button>
             </div>
 
             <!-- No-JS fallback submit -->
-            <div class="guest-submit-fallback mt-4 d-grid">
-              <button type="submit" class="btn btn-primary btn-lg guest-btn">Register</button>
+            <div class="guest-submit-fallback mt-4">
+              <button type="submit" class="btn btn-primary btn-lg guest-btn" id="btnRegisterFallback">Register</button>
             </div>
           </form>
         </div>
@@ -174,8 +175,8 @@ require __DIR__ . DIRECTORY_SEPARATOR . 'partials' . DIRECTORY_SEPARATOR . 'gues
 <!-- Sticky mobile actions -->
 <div class="guest-actions-sticky" aria-label="Form navigation">
   <button type="button" class="btn btn-outline-secondary guest-btn guest-btn-back" id="btnBackSticky" style="display:none">Back</button>
-  <button type="button" class="btn btn-primary guest-btn flex-grow-1" id="btnContinueSticky">Continue</button>
-  <button type="submit" form="registrationForm" class="btn btn-primary guest-btn flex-grow-1" id="btnRegisterSticky" style="display:none">
+  <button type="button" class="btn btn-primary guest-btn flex-grow-1" id="btnContinueSticky" disabled>Continue</button>
+  <button type="submit" form="registrationForm" class="btn btn-primary guest-btn flex-grow-1" id="btnRegisterSticky" style="display:none" disabled>
     <span class="spinner-border spinner-border-sm d-none" role="status" aria-hidden="true"></span>
     <span class="btn-label">Complete Registration</span>
   </button>

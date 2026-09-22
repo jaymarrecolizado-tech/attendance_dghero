@@ -48,7 +48,7 @@
     if (stepperProgress) stepperProgress.style.width = pct + '%';
     if (stepperLabel) {
       const names = ['Personal details', 'Work information', 'Contact & submit'];
-      stepperLabel.textContent = 'Step ' + currentStep + ' of ' + totalSteps + ' — ' + (names[currentStep - 1] || '');
+      stepperLabel.textContent = 'Step ' + currentStep + ' of ' + totalSteps + ' - ' + (names[currentStep - 1] || '');
     }
     stepperTabs.forEach((tab) => {
       const step = parseInt(tab.dataset.step, 10);
@@ -75,14 +75,17 @@
     });
 
     if (isLast) updateReview();
+    setActionsEnabled();
   }
 
-  function getFieldsInStep(step) {
+  function getFieldsInStep(step, visibleOnly) {
     const fieldset = steps.find((fs) => parseInt(fs.dataset.step, 10) === step);
     if (!fieldset) return [];
-    return Array.from(fieldset.querySelectorAll('input, select, textarea')).filter(
-      (el) => !el.disabled && el.type !== 'hidden' && el.offsetParent !== null
-    );
+    return Array.from(fieldset.querySelectorAll('input, select, textarea')).filter((el) => {
+      if (el.disabled || el.type === 'hidden') return false;
+      if (visibleOnly && el.offsetParent === null) return false;
+      return true;
+    });
   }
 
   function validatePickerField(input, otherInput) {
@@ -92,19 +95,42 @@
     return true;
   }
 
+  function isStepComplete(step) {
+    const fields = getFieldsInStep(step, false);
+    for (const field of fields) {
+      if (field.hasAttribute('required') && !field.checkValidity()) return false;
+      if (field.type === 'email' && field.value.trim() && !field.checkValidity()) return false;
+    }
+    if (step === 2 && !validatePickerField(agencyInput, agencyOther)) return false;
+    return true;
+  }
+
+  function isFormComplete() {
+    for (let s = 1; s <= totalSteps; s++) {
+      if (!isStepComplete(s)) return false;
+    }
+    return true;
+  }
+
+  function setActionsEnabled() {
+    const stepOk = isStepComplete(currentStep);
+    [btnContinue, btnContinueSticky].forEach((btn) => {
+      if (!btn) return;
+      btn.disabled = !stepOk;
+      btn.setAttribute('aria-disabled', stepOk ? 'false' : 'true');
+    });
+    const canRegister = currentStep === totalSteps && isFormComplete();
+    [btnRegister, btnRegisterSticky].forEach((btn) => {
+      if (!btn) return;
+      btn.disabled = !canRegister;
+      btn.setAttribute('aria-disabled', canRegister ? 'false' : 'true');
+    });
+  }
+
   function validateStep(step) {
     hideStepError();
-    const fields = getFieldsInStep(step);
-    let valid = true;
-
-    fields.forEach((field) => {
-      if (!field.checkValidity()) valid = false;
-    });
-
-    if (step === 2) {
-      if (!validatePickerField(agencyInput, agencyOther)) valid = false;
-      if (agencyInput && !agencyInput.checkValidity()) valid = false;
-    }
+    const fields = getFieldsInStep(step, true);
+    const valid = isStepComplete(step);
 
     if (!valid) {
       form.classList.add('was-validated');
@@ -115,15 +141,8 @@
         firstInvalid.focus();
       } else if (step === 2 && agencyInput) {
         showStepError('Please select your agency. Choose Other if not listed.');
-        agencyInput.focus();
+        document.getElementById('agencyPickerBtn')?.focus();
       }
-      return false;
-    }
-
-    if (step === 2 && !validatePickerField(agencyInput, agencyOther)) {
-      form.classList.add('was-validated');
-      showStepError('Please select your agency. Choose Other if not listed.');
-      document.getElementById('agencyPickerBtn')?.focus();
       return false;
     }
 
@@ -142,12 +161,12 @@
     const last = form.querySelector('[name="last_name"]')?.value?.trim() || '';
     const email = form.querySelector('[name="email"]')?.value?.trim()
       || form.querySelector('[name="office_email"]')?.value?.trim()
-      || '—';
+      || '-';
     let agency = agencyInput?.value?.trim() || '';
     if (agency === 'other') agency = agencyOther?.value?.trim() || 'Other';
 
-    if (reviewName) reviewName.textContent = (first + ' ' + last).trim() || '—';
-    if (reviewAgency) reviewAgency.textContent = agency || '—';
+    if (reviewName) reviewName.textContent = (first + ' ' + last).trim() || '-';
+    if (reviewAgency) reviewAgency.textContent = agency || '-';
     if (reviewEmail) reviewEmail.textContent = email;
   }
 
@@ -185,7 +204,7 @@
   function setSubmitLoading(loading) {
     [btnRegister, btnRegisterSticky].forEach((btn) => {
       if (!btn) return;
-      btn.disabled = loading;
+      btn.disabled = loading || !isFormComplete();
       const label = btn.querySelector('.btn-label');
       const spinner = btn.querySelector('.spinner-border');
       if (loading) {
@@ -204,17 +223,22 @@
         event.preventDefault();
         event.stopPropagation();
         goToStep(s);
+        setActionsEnabled();
         return;
       }
     }
-    if (!form.checkValidity()) {
+    if (!form.checkValidity() || !isFormComplete()) {
       event.preventDefault();
       event.stopPropagation();
       form.classList.add('was-validated');
+      setActionsEnabled();
       return;
     }
     setSubmitLoading(true);
   });
+
+  form.addEventListener('input', setActionsEnabled);
+  form.addEventListener('change', setActionsEnabled);
 
   form.addEventListener('keydown', (event) => {
     if (event.key !== 'Enter' || currentStep >= totalSteps) return;
@@ -276,6 +300,7 @@
       toggleOther(value);
       closeSheet();
       hiddenInput.dispatchEvent(new Event('change', { bubbles: true }));
+      setActionsEnabled();
     }
 
     function renderList(filter) {
@@ -352,6 +377,9 @@
     sheetId: 'designationPickerSheet',
     title: 'Select Designation',
   });
+
+  const fallback = document.querySelector('.guest-submit-fallback');
+  if (fallback) fallback.hidden = true;
 
   updateStepper();
 })();

@@ -20,7 +20,7 @@ $eventGateEnabled = ($eventTheme['layout'] ?? '') === 'gate' && ($eventGate ?? t
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
   <link href="assets/app.css" rel="stylesheet">
   <?php if ($guestIncludeRegistrationAssets): ?>
-  <link href="assets/guest-registration.css" rel="stylesheet">
+  <link href="assets/guest-registration.css?v=20260922reg2" rel="stylesheet">
   <?php endif; ?>
   <?php if (!empty($eventTheme)): ?>
   <style>

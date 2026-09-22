@@ -131,13 +131,9 @@ class RegisterController
 
         $pdo = Database::pdo();
         try {
-            if (!empty($clean['email'])) {
-                $chk = $pdo->prepare('SELECT id FROM participants WHERE email = ? AND event_id = ?');
-                $chk->execute([$clean['email'], $eventId]);
-                if ($chk->fetch()) {
-                    $this->flashRegisterError(409, $slug, 'Email already registered');
-                    return;
-                }
+            if (ParticipantValidator::emailTaken($pdo, $eventId, (string)$clean['email'])) {
+                $this->flashRegisterError(409, $slug, 'This email is already registered for this event. Use a different address.');
+                return;
             }
             $attempts = 0;
             $max = 5;
@@ -164,6 +160,9 @@ class RegisterController
                     ]);
                     break;
                 } catch (\PDOException $e) {
+                    if ($e->getCode() === '23000') {
+                        throw $e;
+                    }
                     $attempts++;
                     if ($attempts >= $max) throw $e;
                 }
@@ -173,7 +172,12 @@ class RegisterController
             $up = $pdo->prepare('UPDATE participants SET qr_path=? WHERE uuid=?');
             $up->execute([$qrPath, $uuid]);
         } catch (\PDOException $e) {
-            $this->flashRegisterError(500, $slug, 'Registration failed');
+            $duplicate = $e->getCode() === '23000' || str_contains($e->getMessage(), 'uq_participants_event_email');
+            $this->flashRegisterError(
+                $duplicate ? 409 : 500,
+                $slug,
+                $duplicate ? 'This email is already registered for this event. Use a different address.' : 'Registration failed'
+            );
             return;
         }
 

@@ -14,8 +14,8 @@ final class ParticipantValidator
             'first_name' => self::clean($input['first_name'] ?? ''),
             'middle_name' => self::nullable(self::clean($input['middle_name'] ?? '')),
             'last_name' => self::clean($input['last_name'] ?? ''),
-            'email' => self::nullable(self::clean($input['email'] ?? '')),
-            'office_email' => self::nullable(self::clean($input['office_email'] ?? '')),
+            'email' => self::normalizeEmail($input['email'] ?? ''),
+            'office_email' => self::nullable(self::normalizeEmail($input['office_email'] ?? '')),
             'agency' => self::nullable(self::clean($input['agency'] ?? '')),
             'designation' => self::nullable(self::clean($input['designation'] ?? '')),
             'sector' => self::clean($input['sector'] ?? ''),
@@ -29,12 +29,15 @@ final class ParticipantValidator
         self::requireField($data['first_name'], 'first_name', 'First name is required', $errors);
         self::requireField($data['last_name'], 'last_name', 'Last name is required', $errors);
         self::requireField($data['sector'], 'sector', 'Sector is required', $errors);
+        self::requireField($data['agency'], 'agency', 'Agency is required', $errors);
+        self::requireField($data['email'], 'email', 'Email is required for your Certificate of Appearance', $errors);
 
         self::maxLength($data['first_name'], 80, 'first_name', $errors);
         self::maxLength($data['last_name'], 80, 'last_name', $errors);
         self::maxLength($data['agency'], 160, 'agency', $errors);
         self::maxLength($data['designation'], 160, 'designation', $errors);
         self::maxLength($data['nickname'], 80, 'nickname', $errors);
+        self::maxLength($data['email'], 191, 'email', $errors);
 
         if ($data['email'] && !filter_var($data['email'], FILTER_VALIDATE_EMAIL)) {
             $errors['email'] = 'Email format is invalid';
@@ -48,6 +51,22 @@ final class ParticipantValidator
         }
 
         return ['data' => $data, 'errors' => $errors];
+    }
+
+    public static function emailTaken(\PDO $pdo, int $eventId, string $email): bool
+    {
+        $email = self::normalizeEmail($email);
+        if ($email === '') {
+            return false;
+        }
+        $chk = $pdo->prepare('SELECT id FROM participants WHERE event_id = ? AND LOWER(email) = ? LIMIT 1');
+        $chk->execute([$eventId, $email]);
+        return (bool)$chk->fetch();
+    }
+
+    public static function normalizeEmail(string $value): string
+    {
+        return strtolower(self::clean($value));
     }
 
     private static function clean(string $value): string

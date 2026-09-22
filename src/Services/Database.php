@@ -150,17 +150,51 @@ class Database
         if (!self::tableExists($pdo, 'coa_batches') || !self::tableExists($pdo, 'coa_sends') || !self::tableExists($pdo, 'coa_templates')) {
             self::executeSqlFileTolerant($pdo, $base . '014_coa_monitor.sql');
         }
-        // 015_coa_facility (signatory library, template/event signatory refs,
-        // scheduled sends, batch template snapshot)
-        if (self::tableExists($pdo, 'coa_templates') && (
-            !self::tableExists($pdo, 'coa_signatories')
-            || !self::columnExists($pdo, 'coa_templates', 'signatory_id')
-            || !self::columnExists($pdo, 'events', 'coa_signatory_id')
-            || !self::columnExists($pdo, 'coa_sends', 'send_at')
-            || !self::columnExists($pdo, 'coa_batches', 'template_id')
-        )) {
-            self::executeSqlFileTolerant($pdo, $base . '015_coa_facility.sql');
+        // 015_coa_facility. Not gated on coa_templates: Events queries
+        // coa_signatories even when the template tables were never created.
+        self::ensureCoaFacility($pdo);
+    }
+
+    /**
+     * Create the signatory library and the columns Events / Certificates read.
+     * Safe to call on every request. Missing parent tables are skipped.
+     */
+    public static function ensureCoaFacility(PDO $pdo): void
+    {
+        try {
+            if (!self::tableExists($pdo, 'coa_signatories')) {
+                $pdo->exec("CREATE TABLE IF NOT EXISTS coa_signatories (
+                    id INT UNSIGNED NOT NULL AUTO_INCREMENT,
+                    name VARCHAR(120) NOT NULL,
+                    title VARCHAR(120) NULL,
+                    signature_path VARCHAR(255) NULL,
+                    created_at DATETIME NULL,
+                    updated_at DATETIME NULL,
+                    PRIMARY KEY (id)
+                ) ENGINE=MyISAM DEFAULT CHARSET=utf8mb4");
+            }
+            // Older live table used full_name and had no updated_at.
+            if (self::columnExists($pdo, 'coa_signatories', 'full_name') && !self::columnExists($pdo, 'coa_signatories', 'name')) {
+                $pdo->exec('ALTER TABLE `coa_signatories` ADD COLUMN `name` VARCHAR(120) NULL');
+                $pdo->exec('UPDATE `coa_signatories` SET `name` = `full_name` WHERE `name` IS NULL OR `name` = \'\'');
+            }
+            self::addColumnIfMissing($pdo, 'coa_signatories', 'name', 'VARCHAR(120) NULL');
+            self::addColumnIfMissing($pdo, 'coa_signatories', 'updated_at', 'DATETIME NULL');
+            self::addColumnIfMissing($pdo, 'events', 'coa_signatory_id', 'INT UNSIGNED NULL');
+            self::addColumnIfMissing($pdo, 'coa_templates', 'signatory_id', 'INT UNSIGNED NULL');
+            self::addColumnIfMissing($pdo, 'coa_sends', 'send_at', 'DATETIME NULL');
+            self::addColumnIfMissing($pdo, 'coa_batches', 'template_id', 'INT UNSIGNED NULL');
+        } catch (\Throwable $e) {
+            // Leave the caller to fall back to an empty list.
         }
+    }
+
+    private static function addColumnIfMissing(PDO $pdo, string $table, string $column, string $definition): void
+    {
+        if (!self::tableExists($pdo, $table) || self::columnExists($pdo, $table, $column)) {
+            return;
+        }
+        $pdo->exec('ALTER TABLE `' . $table . '` ADD COLUMN `' . $column . '` ' . $definition);
     }
 
     private static function migrate010(PDO $pdo): void

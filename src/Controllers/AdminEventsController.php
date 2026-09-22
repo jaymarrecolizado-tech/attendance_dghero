@@ -44,7 +44,12 @@ class AdminEventsController
         $pdo = Database::pdo();
         $rows = $pdo->query('SELECT * FROM events ORDER BY id DESC')->fetchAll();
         $staff = $pdo->query("SELECT id, username, display_name, role FROM admins WHERE is_active = 1 ORDER BY username ASC")->fetchAll();
-        $coaSignatories = $pdo->query('SELECT id, name, title, signature_path FROM coa_signatories ORDER BY name ASC')->fetchAll();
+        Database::ensureCoaFacility($pdo);
+        try {
+            $coaSignatories = $pdo->query('SELECT id, name, title, signature_path FROM coa_signatories ORDER BY name ASC')->fetchAll();
+        } catch (\Throwable $e) {
+            $coaSignatories = [];
+        }
         $assign = [];
         try {
             $assign = $pdo->query('SELECT a.*, m.username, m.display_name FROM event_assignments a JOIN admins m ON m.id = a.admin_id ORDER BY a.event_id DESC')->fetchAll();

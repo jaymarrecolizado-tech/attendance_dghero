@@ -4,7 +4,7 @@ Turn the app into a multi-event platform: All Father creates events, assigns peo
 
 **OpenCode + Muse Spark 13** on branch `attendance_accend`. Enforce [ponytail](https://github.com/dietrichgebert/ponytail) and [taste-skill](https://github.com/leonxlnx/taste-skill) (`design-taste-frontend` + `redesign-existing-projects`).
 
-**Status:** Multi-event is shipped. VPS is live. **Plan#4** through **Plan#10** are on production. **Plan#11** and **Plan#12** are done locally (deploy pending SSH).
+**Status:** Multi-event is shipped. VPS is live. **Plan#4** through **Plan#12** are on production (full sync 2026-09-22).
 
 **Audit:** 2026-09-14 closed multi-event leftovers. 2026-09-20 landed Settings merge, script gating, AuthService, flash plumbing, `env.example`. 2026-09-21 morning pass fixed door-scan CSRF, import-preview rotate, retry `e=` link, event-aware nav, main deploy docs. Same-day afternoon pass closed the five re-check nits (below).
 
@@ -12,7 +12,7 @@ Turn the app into a multi-event platform: All Father creates events, assigns peo
 
 ## Agent: start here
 
-Multi-event is **shipped**. VPS cutover **ran 2026-09-21**. **Plan#4** through **Plan#10** are live. **Plan#11** is done locally (deploy next). **Plan#12** is done locally (cron still needs Hostinger + VPS deploy). Do not rebuild EventContext. Do not commit `.env` / `.env.vps`.
+Multi-event is **shipped**. VPS cutover **ran 2026-09-21**. Full code+migration sync **ran 2026-09-22** (server `.env` and `storage/` uploads kept). **Plan#4** through **Plan#12** are live, including Hostinger cron for `scripts/coa_process_scheduled.php`. Do not rebuild EventContext. Do not commit `.env` / `.env.vps`.
 
 **Plan numbers**
 
@@ -25,11 +25,11 @@ Multi-event is **shipped**. VPS cutover **ran 2026-09-21**. **Plan#4** through *
 | Plan#5 | Hack for Gov 5 door gate | Live on digitalhero.dictr2.cloud |
 | Plan#6 | Door reveal and window particles | Live on digitalhero.dictr2.cloud |
 | Plan#7 | Hack for Gov mark and circuits on the form | Live on digitalhero.dictr2.cloud |
-| Plan#8 | Moving circuit background on the register page | Done locally; CSS/JS/markup deploy pending access |
-| Plan#9 | Richer door unlock animation | Done locally; CSS/JS deploy pending access |
+| Plan#8 | Moving circuit background on the register page | Live on digitalhero.dictr2.cloud |
+| Plan#9 | Richer door unlock animation | Live on digitalhero.dictr2.cloud |
 | Plan#10 | Restore Certificate of Appearance (auto-create + auto-send) | Live on digitalhero.dictr2.cloud; enable per event |
-| Plan#11 | Certificate send monitor, nav, and templates | Done locally; deploy pending SSH |
-| Plan#12 | CoA control center (templates, signatories, compose, schedule) | Done locally; deploy pending SSH |
+| Plan#11 | Certificate send monitor, nav, and templates | Live on digitalhero.dictr2.cloud |
+| Plan#12 | CoA control center (templates, signatories, compose, schedule) | Live on digitalhero.dictr2.cloud; cron installed |
 
 **Session contract**
 
@@ -60,7 +60,7 @@ All Father needs **one Certificates facility** to:
 - send **one person or many**, as chosen
 - **schedule** a send so it runs later (plus keep scan auto-send)
 
-Plan#11 (local) already has the nav item, monitor, named templates with typed paths, Send-all-missing, and Registrants Resend. It is **Not Found on prod** until deploy. It does not upload signatures, does not pick recipients, and does not schedule.
+Plan#11 is **live on prod** (`/?r=admin_coa_monitor` is a real route; signed-out requests go to admin login, not 404). Plan#12 is also live: signatory uploads, compose/schedule, and the Hostinger cron worker.
 
 Also include a live Attendance bug: the **In Vicinity Rate** card does not show the KPI its label describes (see below).
 
@@ -94,9 +94,7 @@ flowchart LR
 
 **0. Deploy Plan#11 first**
 
-Until this lands, prod `/?r=admin_coa_monitor` stays **Not Found**. Needs `dghero111` SSH password.
-
-Upload: [`AdminCoaMonitorController`](src/Controllers/AdminCoaMonitorController.php), [`CoaService`](src/Services/CoaService.php), [`Database.php`](src/Services/Database.php), monitor/templates views, [`admin_nav.php`](views/partials/admin_nav.php), [`routes.php`](config/routes.php), [`migrations/014_coa_monitor.sql`](migrations/014_coa_monitor.sql). Then `php scripts/run_migrations.php` and `mkdir storage/coa`.
+Deployed 2026-09-22 with the full sync. Prod `/?r=admin_coa_monitor` is routed (login-gated). `014`/`015` applied; `storage/coa` and `storage/coa/signatures` exist. Server `.env` was not overwritten.
 
 **1. Signatory library + e-signature upload**
 
@@ -144,7 +142,7 @@ On [`views/admin_coa_monitor.php`](views/admin_coa_monitor.php), a **Compose sen
 
 - [x] Compose datetime-local (`send_at`, Asia/Manila). Future time → insert `coa_sends` as `queued` with that `send_at`. Send now → process immediately.
 - [x] [`scripts/coa_process_scheduled.php`](scripts/coa_process_scheduled.php): due rows (`status=queued` AND (`send_at` IS NULL OR `send_at` <= now`)), cap 50, reuse `CoaService::resendRow`.
-- [x] Hostinger cron: `* * * * * cd /home/digitalhero/htdocs/digitalhero.dictr2.cloud && php scripts/coa_process_scheduled.php`
+- [x] Hostinger cron: `* * * * * cd /home/digitalhero/htdocs/digitalhero.dictr2.cloud && php scripts/coa_process_scheduled.php` (digitalhero crontab, 2026-09-22; one-shot run `processed=0 sent=0`)
 - [x] Monitor shows scheduled batches (source `scheduled`) and a **Cancel** for still-queued future rows.
 - [x] Scan auto-send remains the other automation switch on Events.
 
@@ -161,14 +159,14 @@ The SEO dashboard already splits these correctly in [`views/admin_seo_dashboard.
 
 **Checks**
 
-- [ ] Plan#11 URL on prod loads Certificates
+- [x] Plan#11 URL on prod loads Certificates (`/?r=admin_coa_monitor` is not 404; signed-out → `/?r=admin_login`)
 - [x] Upload e-sig → pick on template → Preview shows the signature
 - [x] Check 3 attendees, pick template, Send selected → 3 mails / 3 `coa_sends` using that venue/topic
 - [x] Schedule +2 minutes → cron marks sent without a second click
 - [x] Cancel a future batch before `send_at` → no mail
 - [x] Attendance **In Vicinity** card number matches vicinity people, not accounted rate
 - [x] `php scripts/test_coa.php` still ALL OK, plus compose/schedule cases
-- [ ] After local smoke, deploy `015` + views/controllers/script
+- [x] After local smoke, deploy `015` + views/controllers/script (full sync 2026-09-22)
 
 Leave alone: guest gate, registration fields, QR email, Report builder, EventContext. Do not add a frontend stack. Do not commit `.env`.
 
@@ -246,7 +244,7 @@ flowchart LR
 - [x] Template save → apply to event → preview shows venue and event title
 - [x] Scan creates send rows; batch detail shows title + venue; Preview opens PDF
 - [x] Send new batches missing attendees; failed rows can queue and resend
-- [ ] After it works locally, deploy migration `014` + controllers/views to `/home/digitalhero/htdocs/digitalhero.dictr2.cloud`
+- [x] After it works locally, deploy migration `014` + controllers/views to `/home/digitalhero/htdocs/digitalhero.dictr2.cloud` (full sync 2026-09-22; `coa_batches` / `coa_sends` / `coa_templates` present)
 
 Leave alone: scan CSRF, registration fields, QR email, guest gate, Report builder. Event admins keep Registrants **Resend COA**; the monitor, templates, and preview are All Father only.
 
@@ -307,7 +305,7 @@ flowchart LR
 - [x] Reduced motion: doors slide and fade, the circuit background is already still, and the form fades in. No 3D swing.
 - [x] A reload after unlock does not show the door again. Another event’s register link still has no door and no unlock sequence.
 - [x] Phone width: the doors still cover the screen, and the form is usable after the reveal.
-- [ ] After it works locally, deploy the gate CSS and JS to `/home/digitalhero/htdocs/digitalhero.dictr2.cloud` with a new `?v=`. No migration and no `.env` change. This can ship with the Plan#8 deploy.
+- [x] After it works locally, deploy the gate CSS and JS to `/home/digitalhero/htdocs/digitalhero.dictr2.cloud` with a new `?v=`. No migration and no `.env` change. Deployed 2026-09-22; Access System unlocks onto the register form.
 
 Leave alone: the logo file, `theme_layout`, slug `hack4gov-5-8`, and the 3-step fields.
 
@@ -334,7 +332,7 @@ flowchart LR
 - [x] Reduced motion: the background traces stay painted, with no traveling dash and no pointer chase. The static grid on other events stays as it is.
 - [x] Session skip, validation error, and Try again still reach this form, so the background is there too. A second event’s register link has no circuit background.
 - [x] Phone width: fewer traces, still behind the card, and the form remains the page.
-- [ ] After it works locally, deploy the gate CSS, JS, and the small markup change to `/home/digitalhero/htdocs/digitalhero.dictr2.cloud` with a new `?v=` on the stylesheet. No migration and no `.env` change.
+- [x] After it works locally, deploy the gate CSS, JS, and the small markup change to `/home/digitalhero/htdocs/digitalhero.dictr2.cloud` with a new `?v=` on the stylesheet. No migration and no `.env` change. Deployed 2026-09-22; `event-gate-page-circuits` is on `/?r=register&e=hack4gov-5-8`.
 
 Leave alone: the door, the logo file, `theme_layout`, slug `hack4gov-5-8`, and the 3-step fields.
 
@@ -487,7 +485,9 @@ flowchart LR
 - [x] [`TODODEPLOYMENT/SERVER_INFO.md`](TODODEPLOYMENT/SERVER_INFO.md) SSH user/path/DB source updated (no secrets)
 - [ ] Operator: log in as `allfather`, scan/attendance, SEO, send a test QR email
 
-Remote backup: `/home/dghero111/tmp/pred-site-bak-20260921-145717.tgz`
+Remote backups:
+- `/home/dghero111/tmp/pred-site-bak-20260921-145717.tgz` (cutover)
+- `/home/dghero111/tmp/prod-backup-20260922/` (`app-code.tgz` + `db.sql`, 2026-09-22 full sync; `.env` left on the live app only)
 
 ### Later — not this cutover
 

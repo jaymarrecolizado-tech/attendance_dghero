@@ -135,6 +135,34 @@ return [
         'POST' => [AdminCoaMonitorController::class, 'templateApply'],
         '_guards' => [$rolesAdmin],
     ],
+    'admin_coa_signatories' => [
+        'GET' => [AdminCoaMonitorController::class, 'signatories'],
+        '_guards' => [$rolesAdmin],
+    ],
+    'admin_coa_signatory_save' => [
+        'POST' => [AdminCoaMonitorController::class, 'signatorySave'],
+        '_guards' => [$rolesAdmin],
+    ],
+    'admin_coa_signatory_delete' => [
+        'POST' => [AdminCoaMonitorController::class, 'signatoryDelete'],
+        '_guards' => [$rolesAdmin],
+    ],
+    'admin_coa_signatory_image' => [
+        'GET' => [AdminCoaMonitorController::class, 'signatoryImage'],
+        '_guards' => [$rolesAdmin],
+    ],
+    'admin_coa_send_selected' => [
+        'POST' => [AdminCoaMonitorController::class, 'sendSelected'],
+        '_guards' => [$rolesAdmin],
+    ],
+    'admin_coa_cancel' => [
+        'POST' => [AdminCoaMonitorController::class, 'cancelBatch'],
+        '_guards' => [$rolesAdmin],
+    ],
+    'admin_coa_attendees' => [
+        'GET' => [AdminCoaMonitorController::class, 'attendees'],
+        '_guards' => [$rolesAdmin],
+    ],
     'admin_registrant_vip' => [
         'POST' => [AdminRegistrantsController::class, 'toggleVip'],
         '_guards' => [$eventManage],
