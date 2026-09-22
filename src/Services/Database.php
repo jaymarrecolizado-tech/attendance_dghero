@@ -146,6 +146,10 @@ class Database
         if (self::tableExists($pdo, 'events') && !self::columnExists($pdo, 'events', 'coa_enabled')) {
             self::executeSqlFileTolerant($pdo, $base . '013_event_coa.sql');
         }
+        // 014_coa_monitor (batches, send rows, templates)
+        if (!self::tableExists($pdo, 'coa_batches') || !self::tableExists($pdo, 'coa_sends') || !self::tableExists($pdo, 'coa_templates')) {
+            self::executeSqlFileTolerant($pdo, $base . '014_coa_monitor.sql');
+        }
     }
 
     private static function migrate010(PDO $pdo): void

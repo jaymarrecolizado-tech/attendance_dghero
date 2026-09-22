@@ -4,7 +4,7 @@ Turn the app into a multi-event platform: All Father creates events, assigns peo
 
 **OpenCode + Muse Spark 13** on branch `attendance_accend`. Enforce [ponytail](https://github.com/dietrichgebert/ponytail) and [taste-skill](https://github.com/leonxlnx/taste-skill) (`design-taste-frontend` + `redesign-existing-projects`).
 
-**Status:** Multi-event is shipped. VPS is live. **Plan#4** through **Plan#9** are done locally (Plan#8/#9 deploy boxes may still be open). **Current work is Plan#10** (restore Certificate of Appearance). Next new plan after that is **Plan#11**.
+**Status:** Multi-event is shipped. VPS is live. **Plan#4** through **Plan#10** are on production. **Plan#11** is done locally (deploy still open). Next new plan after that is **Plan#12**.
 
 **Audit:** 2026-09-14 closed multi-event leftovers. 2026-09-20 landed Settings merge, script gating, AuthService, flash plumbing, `env.example`. 2026-09-21 morning pass fixed door-scan CSRF, import-preview rotate, retry `e=` link, event-aware nav, main deploy docs. Same-day afternoon pass closed the five re-check nits (below).
 
@@ -12,7 +12,7 @@ Turn the app into a multi-event platform: All Father creates events, assigns peo
 
 ## Agent: start here
 
-Multi-event is **shipped**. VPS cutover **ran 2026-09-21**. **Plan#4** through **Plan#9** are in the tree (deploy checkboxes on #8/#9 still open). Current work is **Plan#10**. The next plan after that is **Plan#11**. Do not rebuild EventContext. Do not commit `.env` / `.env.vps`.
+Multi-event is **shipped**. VPS cutover **ran 2026-09-21**. **Plan#4** through **Plan#10** are live. Current work is **Plan#11**. The next plan after that is **Plan#12**. Do not rebuild EventContext. Do not commit `.env` / `.env.vps`.
 
 **Plan numbers**
 
@@ -27,7 +27,8 @@ Multi-event is **shipped**. VPS cutover **ran 2026-09-21**. **Plan#4** through *
 | Plan#7 | Hack for Gov mark and circuits on the form | Live on digitalhero.dictr2.cloud |
 | Plan#8 | Moving circuit background on the register page | Done locally; CSS/JS/markup deploy pending access |
 | Plan#9 | Richer door unlock animation | Done locally; CSS/JS deploy pending access |
-| Plan#10 | Restore Certificate of Appearance (auto-create + auto-send) | Done locally; deploy + migration pending access |
+| Plan#10 | Restore Certificate of Appearance (auto-create + auto-send) | Live on digitalhero.dictr2.cloud; enable per event |
+| Plan#11 | Certificate send monitor, nav, and templates | Done locally; deploy pending access |
 
 **Session contract**
 
@@ -48,9 +49,87 @@ php scripts/test_csrf_lifecycle.php
 
 ## Left to do
 
+### Plan#11 — Certificate send monitor, nav, and templates
+
+Plan#10 already auto-generates and emails CoA PDFs via [`CoaService`](src/Services/CoaService.php), but outcomes only land in `action_logs` and files under `storage/coa/`. There is no list UI, no dedicated nav item, and no All Father preview. Target is the previous **Certificate send monitor**: KPIs, batches, venue + event title on the batch, recipient statuses, resend queue, and preview.
+
+Also required in this plan:
+
+1. Put **Certificates** on the main admin nav as its **own** item (not nested under Events or Report).
+2. Fix the arrangement of menus in the main navigation into a clear left-to-right workflow.
+3. Let All Father **edit the content / parts of the certificate** and **save them as named templates**, then apply a template to the current event and preview before send.
+
+Keep Plan#10 auto-send after scan. Event title = `events.name`. Venue = `events.coa_venue` (snapshotted onto each send so history stays stable if settings change).
+
+```mermaid
+flowchart LR
+  nav[Certificates_nav]
+  mon[Send_monitor]
+  tpl[CoA_templates]
+  prev[PDF_preview]
+  send[CoaService_send]
+  scan[Scan_or_Send_new]
+  nav --> mon
+  nav --> tpl
+  mon --> prev
+  tpl --> prev
+  scan --> send --> mon
+```
+
+**Navigation** ([`views/partials/admin_nav.php`](views/partials/admin_nav.php)):
+
+- [x] Add a separate link **Certificates** → `?r=admin_coa_monitor` (role `admin` / All Father only). Not nested under Events or Report.
+- [x] Reorder `$adminNavLinks` (role filters unchanged):
+  - Day-of ops: Registrants, Attendance, Scan, Gallery, Register
+  - Certificates: **Certificates** (All Father)
+  - Data: Import, Export, Report
+  - Insights: SEO Dashboard
+  - Platform: Events (All Father), Event Links (event_admin), Users, Logs, Settings
+
+**Data** — migration `014_coa_monitor.sql` (MyISAM-safe, no FKs; wire in [`Database::runMigrations`](src/Services/Database.php) like `013`):
+
+- [x] **`coa_batches`**: `id`, `event_id`, `created_at`, `inclusive_date`, `signatory_name`, `venue_snapshot`, `event_name_snapshot`, `source` (`auto` | `manual`)
+- [x] **`coa_sends`**: `id`, `batch_id`, `event_id`, `participant_id`, `attendance_date`, `email`, `status` (`sent` | `failed` | `queued` | `skipped`), `error`, `pdf_path`, `event_name_snapshot`, `venue_snapshot`, `signatory_snapshot`, `created_at`, `updated_at`
+- [x] **`coa_templates`**: `id`, `name`, `venue`, `purpose`, `particulars`, `signatory_name`, `signatory_title`, `signatory_path`, `logo_path`, `created_at`, `updated_at`
+- [x] [`CoaService`](src/Services/CoaService.php) writes `coa_sends` on every auto-send and resend; attaches to today’s auto-batch for that event + attendance date (create batch if missing). Snapshot event title and venue on each row.
+
+**Monitor** (All Father) — [`views/admin_coa_monitor.php`](views/admin_coa_monitor.php) + [`AdminCoaMonitorController`](src/Controllers/AdminCoaMonitorController.php):
+
+- [x] KPI strip: Sent / Failed / Queued / Batches (scoped to current event when one is selected, else all events)
+- [x] Actions: Send new (manual batch from attendees missing a successful CoA for a chosen attendance date), Queue failed for resend, Resend queued (cap 50), Refresh, link to **Templates**, **Preview template**
+- [x] Recent batches table: #, When, Inclusive dates, Signatory, Sent/Failed/Queued/Skipped, Open
+- [x] Batch detail header shows **event title** + **venue** + inclusive date + issued date; filters All/Sent/Failed/Queued/Skipped; recipient rows Name, Agency, Email, Status, Error, **Preview**
+
+**Templates** (All Father edits certificate parts) — `?r=admin_coa_templates`:
+
+- [x] Form fields: template name, venue, purpose line, particulars (one line per row), signatory name/title, optional logo/signature paths
+- [x] **Save as template** / **Update template**
+- [x] **Apply to current event** copies template fields onto that event’s Plan#10 CoA columns (`coa_venue`, purpose, particulars, signatory, logos)
+- [x] **Preview** renders a sample PDF from the template (placeholder participant name)
+- [x] Event-level CoA block on Events stays for per-event overrides; templates are the reusable library
+
+**Preview** (All Father only, never emails):
+
+- [x] Route `admin_coa_preview` — for a `send_id` or `participant_id`+`date`: generate (or reuse file) and stream PDF inline (`Content-Disposition: inline`)
+- [x] Route `admin_coa_preview_template` — sample PDF from current event CoA settings or a saved `template_id`
+
+**Routes** (add to [`config/routes.php`](config/routes.php); all `_guards` All Father / `admin`):
+
+- [x] `admin_coa_monitor`, `admin_coa_send_new`, `admin_coa_queue_failed`, `admin_coa_resend_queued`, `admin_coa_preview`, `admin_coa_preview_template`, `admin_coa_templates` (+ save / apply actions)
+
+**Checks**
+
+- [x] Certificates appears as its own nav item in the new menu order
+- [x] Template save → apply to event → preview shows venue and event title
+- [x] Scan creates send rows; batch detail shows title + venue; Preview opens PDF
+- [x] Send new batches missing attendees; failed rows can queue and resend
+- [ ] After it works locally, deploy migration `014` + controllers/views to `/home/digitalhero/htdocs/digitalhero.dictr2.cloud`
+
+Leave alone: scan CSRF, registration fields, QR email, guest gate, Report builder. Event admins keep Registrants **Resend COA**; the monitor, templates, and preview are All Father only.
+
 ### Plan#10 — restore Certificate of Appearance (auto-create + auto-send)
 
-The previous app version generated a dual-copy DICT Certificate of Appearance PDF and emailed it after attendance. This repo has **no CoA code** left (no `coa_*` files, no graphify node). Rebuild from the old PDF/email samples.
+The previous app version generated a dual-copy DICT Certificate of Appearance PDF and emailed it after attendance. Restored in this tree and deployed 2026-09-22.
 
 Reuse what already works: TCPDF (see [ReportController](src/Controllers/ReportController.php)), [`Mailer::send`](src/Services/Mailer.php) with attachment path, and the signed attendance hook in [AttendanceController::submit](src/Controllers/AttendanceController.php) (today it saves the row and returns JSON only). A static `ca/CERT OF APPEARANCE.pdf` once sat on production docroot; that was not the generator and was removed.
 
@@ -77,7 +156,7 @@ Defaults for this restore:
 - [x] After attendance insert succeeds, if CoA is enabled and the participant has an email: generate PDF → `Mailer::send`. Wire the same path from `submitJsonForTest` for tests.
 - [x] Admin resend route (e.g. `admin_coa_send`) on the registrants or attendance list.
 - [x] Ship DICT / Bagong Pilipinas logos under `assets/` (or reuse uploaded branding). Do not commit the old Reference HTML.
-- [ ] After it works locally, deploy to `/home/digitalhero/htdocs/digitalhero.dictr2.cloud`, run the migration, smoke one scan → inbox PDF.
+- [x] After it works locally, deploy to `/home/digitalhero/htdocs/digitalhero.dictr2.cloud`, run the migration, smoke one scan → inbox PDF. Deployed 2026-09-22: migration `013` applied (`coa_enabled` present), `CoaService` and routes live, `storage/coa` created. Events still have `coa_enabled=0` until All Father turns CoA on per event.
 
 Leave alone: registration field names, CSRF, QR email on register, and the bulk attendance report builder.
 

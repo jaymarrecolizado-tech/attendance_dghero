@@ -1,0 +1,177 @@
+<?php
+declare(strict_types=1);
+
+use App\Services\AuthService;
+
+/**
+ * Plan#11: Certificate send monitor (All Father). KPIs, manual batches,
+ * queue/resend actions, recent batches, and per-recipient status detail.
+ */
+$flash = $flash ?? null;
+$scopeEventId = (int)($_GET['event_id'] ?? 0);
+$statusFilter = (string)($_GET['status'] ?? 'all');
+$activeNav = 'admin_coa_monitor';
+$token = function_exists('csrf_token') ? csrf_token() : '';
+?>
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Certificates</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link href="assets/app.css" rel="stylesheet">
+</head>
+<body>
+<?php require __DIR__ . DIRECTORY_SEPARATOR . 'partials' . DIRECTORY_SEPARATOR . 'admin_nav.php'; ?>
+<div class="container py-4">
+  <div class="d-flex justify-content-between align-items-center mb-3">
+    <h1 class="h5 mb-0">Certificates</h1>
+    <div class="d-flex gap-2">
+      <a class="btn btn-sm btn-outline-primary" href="?r=admin_coa_templates">Templates</a>
+      <?php $previewHref = '?r=admin_coa_preview_template'; ?>
+      <a class="btn btn-sm btn-outline-secondary" href="<?= $previewHref ?>" target="_blank" rel="noopener">Preview template</a>
+      <a class="btn btn-sm btn-outline-secondary" href="?r=admin_coa_monitor<?= $scopeEventId > 0 ? '&event_id=' . $scopeEventId : '' ?>">Refresh</a>
+    </div>
+  </div>
+
+  <?php if ($flash): ?>
+  <div class="alert alert-<?= htmlspecialchars($flash['type'], ENT_QUOTES) ?> py-2"><?= htmlspecialchars($flash['message'], ENT_QUOTES) ?></div>
+  <?php endif; ?>
+
+  <div class="row g-2 mb-3">
+    <?php foreach (['sent' => 'Sent', 'failed' => 'Failed', 'queued' => 'Queued', 'skipped' => 'Skipped', 'batches' => 'Batches'] as $key => $label): ?>
+    <div class="col-6 col-md">
+      <div class="card h-100"><div class="card-body py-2 text-center">
+        <div class="h4 mb-0"><?= (int)($kpis[$key] ?? 0) ?></div>
+        <div class="text-muted small text-uppercase" style="letter-spacing:.08em;"><?= $label ?></div>
+      </div></div>
+    </div>
+    <?php endforeach; ?>
+  </div>
+
+  <div class="row g-3 mb-3">
+    <div class="col-12 col-lg-6">
+      <div class="card h-100"><div class="card-body">
+        <h2 class="h6">Send new (manual batch)</h2>
+        <p class="text-muted small mb-2">Generates and emails Certificates for attendees of the chosen date who do not have a successful send yet.</p>
+        <form method="post" action="?r=admin_coa_send_new" class="row g-2 align-items-end">
+          <input type="hidden" name="csrf" value="<?= htmlspecialchars($token, ENT_QUOTES) ?>">
+          <div class="col-12 col-md-5">
+            <label class="form-label small mb-1">Event</label>
+            <select name="event_id" class="form-select form-select-sm" required>
+              <?php foreach (($events ?? []) as $ev): ?>
+              <option value="<?= (int)$ev['id'] ?>" <?= $scopeEventId === (int)$ev['id'] ? 'selected' : '' ?>><?= htmlspecialchars((string)$ev['name'], ENT_QUOTES) ?></option>
+              <?php endforeach; ?>
+            </select>
+          </div>
+          <div class="col-12 col-md-4">
+            <label class="form-label small mb-1">Attendance date</label>
+            <input type="date" name="attendance_date" class="form-control form-control-sm" value="<?= date('Y-m-d') ?>" required>
+          </div>
+          <div class="col-12 col-md-3">
+            <button class="btn btn-primary btn-sm w-100">Send new</button>
+          </div>
+        </form>
+      </div></div>
+    </div>
+    <div class="col-12 col-lg-6">
+      <div class="card h-100"><div class="card-body">
+        <h2 class="h6">Resend queue</h2>
+        <p class="text-muted small mb-2">Queue the failed sends, then process up to 50 queued rows per run.</p>
+        <form method="post" action="?r=admin_coa_queue_failed" class="d-inline">
+          <input type="hidden" name="csrf" value="<?= htmlspecialchars($token, ENT_QUOTES) ?>">
+          <input type="hidden" name="event_id" value="<?= $scopeEventId > 0 ? $scopeEventId : '' ?>">
+          <button class="btn btn-sm btn-outline-warning">Queue failed</button>
+        </form>
+        <form method="post" action="?r=admin_coa_resend_queued" class="d-inline">
+          <input type="hidden" name="csrf" value="<?= htmlspecialchars($token, ENT_QUOTES) ?>">
+          <input type="hidden" name="event_id" value="<?= $scopeEventId > 0 ? $scopeEventId : '' ?>">
+          <button class="btn btn-sm btn-outline-primary">Resend queued (max 50)</button>
+        </form>
+      </div></div>
+    </div>
+  </div>
+
+  <div class="d-flex justify-content-between align-items-center mb-2">
+    <h2 class="h6 mb-0">Recent batches</h2>
+    <form method="get" action="?r=admin_coa_monitor" class="d-flex gap-2 align-items-center">
+      <label class="small text-muted mb-0">Scope</label>
+      <select name="event_id" class="form-select form-select-sm" onchange="this.form.submit()">
+        <option value="">All events</option>
+        <?php foreach (($events ?? []) as $ev): ?>
+        <option value="<?= (int)$ev['id'] ?>" <?= $scopeEventId === (int)$ev['id'] ? 'selected' : '' ?>><?= htmlspecialchars((string)$ev['name'], ENT_QUOTES) ?></option>
+        <?php endforeach; ?>
+      </select>
+      <noscript><button class="btn btn-sm btn-outline-secondary">Apply</button></noscript>
+    </form>
+  </div>
+  <div class="table-responsive table-modern mb-4">
+    <table class="table table-sm align-middle mb-0">
+      <thead><tr><th>#</th><th>When</th><th>Inclusive date</th><th>Signatory</th><th>Source</th><th>Sent</th><th>Failed</th><th>Queued</th><th>Skipped</th><th></th></tr></thead>
+      <tbody>
+        <?php if (!($batches ?? [])): ?>
+        <tr><td colspan="10" class="text-center text-muted py-3">No batches yet. They appear after a scan with CoA enabled, or a manual send.</td></tr>
+        <?php endif; ?>
+        <?php foreach (($batches ?? []) as $b): ?>
+        <tr>
+          <td><?= (int)$b['id'] ?></td>
+          <td class="small"><?= htmlspecialchars((string)$b['created_at'], ENT_QUOTES) ?></td>
+          <td class="small"><?= htmlspecialchars((string)$b['inclusive_date'], ENT_QUOTES) ?></td>
+          <td class="small"><?= htmlspecialchars((string)($b['signatory_name'] ?? ''), ENT_QUOTES) ?></td>
+          <td class="small"><?= htmlspecialchars((string)($b['source'] ?? ''), ENT_QUOTES) ?></td>
+          <td><span class="badge text-bg-success"><?= (int)$b['sent_count'] ?></span></td>
+          <td><span class="badge text-bg-danger"><?= (int)$b['failed_count'] ?></span></td>
+          <td><span class="badge text-bg-secondary"><?= (int)$b['queued_count'] ?></span></td>
+          <td><span class="badge text-bg-light text-dark"><?= (int)$b['skipped_count'] ?></span></td>
+          <td><a class="btn btn-sm btn-outline-primary py-0" href="?r=admin_coa_monitor&batch_id=<?= (int)$b['id'] ?>&event_id=<?= (int)$b['event_id'] ?>">Open</a></td>
+        </tr>
+        <?php endforeach; ?>
+      </tbody>
+    </table>
+  </div>
+
+  <?php if (!empty($batchDetail)): ?>
+  <div class="d-flex justify-content-between align-items-center mb-2">
+    <h2 class="h6 mb-0">
+      Batch #<?= (int)$batchDetail['id'] ?> - <?= htmlspecialchars((string)$batchDetail['event_name_snapshot'], ENT_QUOTES) ?>
+      <span class="text-muted">at <?= htmlspecialchars((string)$batchDetail['venue_snapshot'], ENT_QUOTES) ?></span>
+    </h2>
+    <a class="btn btn-sm btn-outline-secondary" href="?r=admin_coa_monitor<?= $scopeEventId > 0 ? '&event_id=' . $scopeEventId : '' ?>">Close</a>
+  </div>
+  <p class="text-muted small mb-2">
+    Inclusive date: <?= htmlspecialchars((string)$batchDetail['inclusive_date'], ENT_QUOTES) ?>
+    - Issued: <?= htmlspecialchars((string)$batchDetail['created_at'], ENT_QUOTES) ?>
+    - Signatory: <?= htmlspecialchars((string)($batchDetail['signatory_name'] ?? ''), ENT_QUOTES) ?>
+  </p>
+  <div class="d-flex gap-1 mb-2">
+    <?php foreach (['all', 'sent', 'failed', 'queued', 'skipped'] as $f): ?>
+    <a class="btn btn-sm <?= $statusFilter === $f ? 'btn-primary' : 'btn-outline-secondary' ?>" href="?r=admin_coa_monitor&batch_id=<?= (int)$batchDetail['id'] ?>&status=<?= $f ?>&event_id=<?= (int)$batchDetail['event_id'] ?>"><?= ucfirst($f) ?></a>
+    <?php endforeach; ?>
+  </div>
+  <div class="table-responsive table-modern">
+    <table class="table table-sm align-middle mb-0">
+      <thead><tr><th>#</th><th>Name</th><th>Agency</th><th>Email</th><th>Status</th><th>Error</th><th>Preview</th></tr></thead>
+      <tbody>
+        <?php if (!($recipients ?? [])): ?>
+        <tr><td colspan="7" class="text-center text-muted py-3">No recipients match this filter.</td></tr>
+        <?php endif; ?>
+        <?php foreach (($recipients ?? []) as $s): ?>
+        <tr>
+          <td><?= (int)$s['id'] ?></td>
+          <td class="small"><?= htmlspecialchars(trim((string)($s['first_name'] ?? '') . ' ' . (string)($s['last_name'] ?? '')), ENT_QUOTES) ?></td>
+          <td class="small"><?= htmlspecialchars((string)($s['agency'] ?? ''), ENT_QUOTES) ?></td>
+          <td class="small"><?= htmlspecialchars((string)($s['email'] ?? ''), ENT_QUOTES) ?></td>
+          <td><span class="badge text-bg-<?= ['sent' => 'success', 'failed' => 'danger', 'queued' => 'secondary', 'skipped' => 'light'][$s['status']] ?? 'light' ?>"><?= htmlspecialchars((string)$s['status'], ENT_QUOTES) ?></span></td>
+          <td class="small text-danger"><?= htmlspecialchars((string)($s['error'] ?? ''), ENT_QUOTES) ?></td>
+          <td><a class="btn btn-sm btn-outline-secondary py-0" href="?r=admin_coa_preview&send_id=<?= (int)$s['id'] ?>" target="_blank" rel="noopener">Preview</a></td>
+        </tr>
+        <?php endforeach; ?>
+      </tbody>
+    </table>
+  </div>
+  <?php endif; ?>
+</div>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

@@ -53,31 +53,138 @@
   /* ---------- Page-level circuit background ------------------------------ */
 
   function initPageCircuits() {
-    if (reduceMotion) return; // Static background: no pointer chase.
-    var svg = document.getElementById('eventGatePageCircuits');
-    if (!svg) return;
-    var groups = Array.prototype.slice.call(svg.querySelectorAll('[data-page-circuit]'));
-    if (!groups.length) return;
+    var canvas = document.getElementById('eventGatePageCircuits');
+    if (!canvas || !canvas.getContext) return;
+    var ctx = canvas.getContext('2d');
+    var traces = [];
+    var raf = 0;
+    var w = 0;
+    var h = 0;
+    var dpr = Math.min(window.devicePixelRatio || 1, 2);
+    var pointerX = -9999;
+    var pointerY = -9999;
+    var colors = ['252,209,22', '46,196,255', '0,140,255', '255,150,48'];
 
-    var clear = function () {
-      groups.forEach(function (g) { g.classList.remove('is-lit'); });
-    };
+    function clamp(n, max) {
+      return Math.max(0, Math.min(max, n));
+    }
 
-    // The layer itself is pointer-events none; the page listens for it.
+    function sizeCanvas() {
+      w = window.innerWidth;
+      h = window.innerHeight;
+      canvas.width = Math.floor(w * dpr);
+      canvas.height = Math.floor(h * dpr);
+      ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    }
+
+    function buildTraces() {
+      var step = w < 720 ? 72 : 56;
+      var count = w < 720 ? 36 : 84;
+      traces = [];
+      for (var i = 0; i < count; i++) {
+        var horiz = Math.random() < 0.5;
+        var x = clamp(Math.round(Math.random() * w / step) * step, w);
+        var y = clamp(Math.round(Math.random() * h / step) * step, h);
+        var len = (2 + Math.floor(Math.random() * 4)) * step;
+        var dir = Math.random() < 0.5 ? 1 : -1;
+        var x2 = clamp(horiz ? x + dir * len : x, w);
+        var y2 = clamp(horiz ? y : y + dir * len, h);
+        var bend = (1 + Math.floor(Math.random() * 3)) * step;
+        var color = colors[i % colors.length];
+        var phase = Math.random();
+        traces.push({ x1: x, y1: y, x2: x2, y2: y2, color: color, phase: phase });
+        traces.push({
+          x1: x2,
+          y1: y2,
+          x2: clamp(horiz ? x2 : x2 + (Math.random() < 0.5 ? bend : -bend), w),
+          y2: clamp(horiz ? y2 + (Math.random() < 0.5 ? bend : -bend) : y2, h),
+          color: color,
+          phase: phase
+        });
+      }
+    }
+
+    function distToSeg(px, py, t) {
+      var dx = t.x2 - t.x1;
+      var dy = t.y2 - t.y1;
+      var l2 = dx * dx + dy * dy || 1;
+      var u = Math.max(0, Math.min(1, ((px - t.x1) * dx + (py - t.y1) * dy) / l2));
+      var sx = t.x1 + u * dx;
+      var sy = t.y1 + u * dy;
+      return Math.sqrt((px - sx) * (px - sx) + (py - sy) * (py - sy));
+    }
+
+    function drawTrace(t, now, lit) {
+      var dx = t.x2 - t.x1;
+      var dy = t.y2 - t.y1;
+      ctx.save();
+      ctx.lineCap = 'round';
+      ctx.strokeStyle = 'rgba(' + t.color + ',' + (lit ? '0.55' : '0.28') + ')';
+      ctx.lineWidth = lit ? 1.8 : 1.15;
+      ctx.beginPath();
+      ctx.moveTo(t.x1, t.y1);
+      ctx.lineTo(t.x2, t.y2);
+      ctx.stroke();
+
+      if (!reduceMotion) {
+        var speed = lit ? 0.00062 : 0.0002;
+        var u = ((now * speed) + t.phase) % 1;
+        var span = lit ? 0.36 : 0.2;
+        var u0 = u - span;
+        ctx.strokeStyle = 'rgba(' + t.color + ',1)';
+        ctx.lineWidth = lit ? 2.8 : 2;
+        ctx.shadowColor = 'rgba(' + t.color + ',1)';
+        ctx.shadowBlur = lit ? 22 : 14;
+        ctx.beginPath();
+        if (u0 < 0) {
+          ctx.moveTo(t.x1, t.y1);
+          ctx.lineTo(t.x1 + dx * u, t.y1 + dy * u);
+          ctx.moveTo(t.x1 + dx * (1 + u0), t.y1 + dy * (1 + u0));
+          ctx.lineTo(t.x2, t.y2);
+        } else {
+          ctx.moveTo(t.x1 + dx * u0, t.y1 + dy * u0);
+          ctx.lineTo(t.x1 + dx * u, t.y1 + dy * u);
+        }
+        ctx.stroke();
+        ctx.fillStyle = '#fff';
+        ctx.beginPath();
+        ctx.arc(t.x1 + dx * u, t.y1 + dy * u, lit ? 3.6 : 2.4, 0, Math.PI * 2);
+        ctx.fill();
+      }
+
+      ctx.shadowColor = 'rgba(' + t.color + ',0.95)';
+      ctx.shadowBlur = lit ? 16 : 8;
+      ctx.fillStyle = 'rgba(' + t.color + ',' + (lit ? '1' : '0.85') + ')';
+      ctx.beginPath();
+      ctx.arc(t.x1, t.y1, lit ? 3.5 : 2.2, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.restore();
+    }
+
+    function frame(now) {
+      ctx.clearRect(0, 0, w, h);
+      for (var i = 0; i < traces.length; i++) {
+        var t = traces[i];
+        var lit = !reduceMotion && distToSeg(pointerX, pointerY, t) < 150;
+        drawTrace(t, now || 0, lit);
+      }
+      if (!reduceMotion) raf = window.requestAnimationFrame(frame);
+    }
+
+    function start() {
+      sizeCanvas();
+      buildTraces();
+      if (raf) window.cancelAnimationFrame(raf);
+      raf = window.requestAnimationFrame(frame);
+    }
+
     document.addEventListener('pointermove', function (e) {
-      var near = [];
-      groups.forEach(function (g) {
-        var r = g.getBoundingClientRect();
-        if (r.width === 0 && r.height === 0) return; // capped/hidden trace
-        var cx = r.left + r.width / 2;
-        var cy = r.top + r.height / 2;
-        var d = Math.sqrt((cx - e.clientX) * (cx - e.clientX) + (cy - e.clientY) * (cy - e.clientY));
-        if (d < 170) near.push([d, g]);
-      });
-      clear();
-      near.sort(function (a, b) { return a[0] - b[0]; });
-      near.slice(0, 3).forEach(function (pair) { pair[1].classList.add('is-lit'); });
-    });
+      pointerX = e.clientX;
+      pointerY = e.clientY;
+    }, { passive: true });
+
+    window.addEventListener('resize', start);
+    start();
   }
 
   /* ---------- Door gate (only when the overlay rendered) ----------------- */
@@ -148,12 +255,12 @@
     openGate();
   });
 
-  /* ---------- Particle window (gold, white, sparse flag specks) ---------- */
+  /* ---------- Circuit window behind the doors --------------------------- */
 
   if (!canvas || !canvas.getContext) return;
 
   var ctx = canvas.getContext('2d');
-  var particles = [];
+  var traces = [];
   var raf = 0;
   var running = false;
   var w = 0;
@@ -161,14 +268,11 @@
   var dpr = Math.min(window.devicePixelRatio || 1, 2);
   var pointerX = -9999;
   var pointerY = -9999;
+  var COLORS = ['252,209,22', '46,196,255', '0,140,255', '255,150,48'];
 
-  // Flag palette: mostly gold and white, a few blue and red specks.
-  var COLORS = [
-    '252, 209, 22', '252, 209, 22', '252, 209, 22', '252, 209, 22',
-    '242, 244, 249', '242, 244, 249',
-    '0, 56, 168',
-    '206, 17, 38'
-  ];
+  function clamp(n, max) {
+    return Math.max(0, Math.min(max, n));
+  }
 
   function sizeCanvas() {
     w = window.innerWidth;
@@ -179,63 +283,105 @@
   }
 
   function spawn() {
-    // Cap by viewport area so phones get a light field.
-    var count = Math.min(130, Math.max(30, Math.round((w * h) / 13000)));
-    particles = [];
+    var step = w < 720 ? 70 : 54;
+    var count = w < 720 ? 28 : 64;
+    traces = [];
     for (var i = 0; i < count; i++) {
-      particles.push({
-        x: Math.random() * w,
-        y: Math.random() * h,
-        r: 0.8 + Math.random() * 1.7,
-        vx: (Math.random() - 0.5) * 0.24,
-        vy: (Math.random() - 0.5) * 0.24 - 0.06,
-        color: COLORS[Math.floor(Math.random() * COLORS.length)],
-        alpha: 0.3 + Math.random() * 0.5,
-        phase: Math.random() * Math.PI * 2
+      var horiz = Math.random() < 0.5;
+      var x = clamp(Math.round(Math.random() * w / step) * step, w);
+      var y = clamp(Math.round(Math.random() * h / step) * step, h);
+      var len = (2 + Math.floor(Math.random() * 5)) * step;
+      var dir = Math.random() < 0.5 ? 1 : -1;
+      var x2 = clamp(horiz ? x + dir * len : x, w);
+      var y2 = clamp(horiz ? y : y + dir * len, h);
+      var bend = (1 + Math.floor(Math.random() * 3)) * step;
+      var color = COLORS[i % COLORS.length];
+      var phase = Math.random();
+      traces.push({ x1: x, y1: y, x2: x2, y2: y2, color: color, phase: phase });
+      traces.push({
+        x1: x2,
+        y1: y2,
+        x2: clamp(horiz ? x2 : x2 + (Math.random() < 0.5 ? bend : -bend), w),
+        y2: clamp(horiz ? y2 + (Math.random() < 0.5 ? bend : -bend) : y2, h),
+        color: color,
+        phase: phase
       });
     }
   }
 
-  function drawParticle(p, t) {
-    var twinkle = reduceMotion ? 1 : 0.72 + 0.28 * Math.sin(t * 0.0016 + p.phase);
-    ctx.beginPath();
-    ctx.arc(p.x, p.y, p.r, 0, Math.PI * 2);
-    ctx.fillStyle = 'rgba(' + p.color + ',' + (p.alpha * twinkle).toFixed(3) + ')';
-    ctx.fill();
+  function distToSeg(px, py, t) {
+    var dx = t.x2 - t.x1;
+    var dy = t.y2 - t.y1;
+    var l2 = dx * dx + dy * dy || 1;
+    var u = Math.max(0, Math.min(1, ((px - t.x1) * dx + (py - t.y1) * dy) / l2));
+    var sx = t.x1 + u * dx;
+    var sy = t.y1 + u * dy;
+    return Math.sqrt((px - sx) * (px - sx) + (py - sy) * (py - sy));
   }
 
-  function step(t) {
+  function drawTrace(t, now, lit) {
+    var dx = t.x2 - t.x1;
+    var dy = t.y2 - t.y1;
+    ctx.save();
+    ctx.lineCap = 'round';
+    ctx.strokeStyle = 'rgba(' + t.color + ',' + (lit ? '0.7' : '0.38') + ')';
+    ctx.lineWidth = lit ? 2 : 1.3;
+    ctx.beginPath();
+    ctx.moveTo(t.x1, t.y1);
+    ctx.lineTo(t.x2, t.y2);
+    ctx.stroke();
+    if (!reduceMotion) {
+      var speed = lit ? 0.0007 : 0.00028;
+      var u = ((now * speed) + t.phase) % 1;
+      var span = lit ? 0.34 : 0.18;
+      var u0 = u - span;
+      ctx.strokeStyle = 'rgba(' + t.color + ',1)';
+      ctx.lineWidth = lit ? 3 : 2.1;
+      ctx.shadowColor = 'rgba(' + t.color + ',1)';
+      ctx.shadowBlur = lit ? 20 : 12;
+      ctx.beginPath();
+      if (u0 < 0) {
+        ctx.moveTo(t.x1, t.y1);
+        ctx.lineTo(t.x1 + dx * u, t.y1 + dy * u);
+        ctx.moveTo(t.x1 + dx * (1 + u0), t.y1 + dy * (1 + u0));
+        ctx.lineTo(t.x2, t.y2);
+      } else {
+        ctx.moveTo(t.x1 + dx * u0, t.y1 + dy * u0);
+        ctx.lineTo(t.x1 + dx * u, t.y1 + dy * u);
+      }
+      ctx.stroke();
+      ctx.fillStyle = '#fff';
+      ctx.beginPath();
+      ctx.arc(t.x1 + dx * u, t.y1 + dy * u, lit ? 3.4 : 2.3, 0, Math.PI * 2);
+      ctx.fill();
+    }
+    ctx.shadowColor = 'rgba(' + t.color + ',0.9)';
+    ctx.shadowBlur = lit ? 14 : 7;
+    ctx.fillStyle = 'rgba(' + t.color + ',' + (lit ? '1' : '0.85') + ')';
+    ctx.beginPath();
+    ctx.arc(t.x1, t.y1, lit ? 3.2 : 2.1, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.restore();
+  }
+
+  function step(now) {
     if (!running) return;
     ctx.clearRect(0, 0, w, h);
-    for (var i = 0; i < particles.length; i++) {
-      var p = particles[i];
-      p.x += p.vx;
-      p.y += p.vy;
-      if (p.x < -8) p.x = w + 8; else if (p.x > w + 8) p.x = -8;
-      if (p.y < -8) p.y = h + 8; else if (p.y > h + 8) p.y = -8;
-      // Pointer and touch nudge nearby specks, gently.
-      var dx = p.x - pointerX;
-      var dy = p.y - pointerY;
-      var d2 = dx * dx + dy * dy;
-      if (d2 < 14400 && d2 > 0.01) {
-        var d = Math.sqrt(d2);
-        var push = (120 - d) / 120 * 0.55;
-        p.x += (dx / d) * push;
-        p.y += (dy / d) * push;
-      }
-      drawParticle(p, t);
+    for (var i = 0; i < traces.length; i++) {
+      var t = traces[i];
+      var lit = !reduceMotion && distToSeg(pointerX, pointerY, t) < 140;
+      drawTrace(t, now || 0, lit);
     }
-    raf = window.requestAnimationFrame(step);
+    if (!reduceMotion) raf = window.requestAnimationFrame(step);
   }
 
   function startParticles() {
-    if (running) return;
+    if (running && !reduceMotion) return;
     running = true;
     sizeCanvas();
     spawn();
     if (reduceMotion) {
-      // Still field: one painted frame, no drift, no pointer chase.
-      for (var i = 0; i < particles.length; i++) drawParticle(particles[i], 0);
+      for (var i = 0; i < traces.length; i++) drawTrace(traces[i], 0, false);
       return;
     }
     raf = window.requestAnimationFrame(step);
@@ -265,7 +411,8 @@
     sizeCanvas();
     spawn();
     if (reduceMotion) {
-      for (var i = 0; i < particles.length; i++) drawParticle(particles[i], 0);
+      ctx.clearRect(0, 0, w, h);
+      for (var i = 0; i < traces.length; i++) drawTrace(traces[i], 0, false);
     }
   });
 

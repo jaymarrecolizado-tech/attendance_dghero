@@ -27,18 +27,21 @@ $withEvent = static fn(string $route): string => $navSlug !== '' && in_array($ro
     ? $route . '&e=' . urlencode($navSlug)
     : $route;
 
+// Plan#11: left-to-right workflow order - day-of ops, certificates, data,
+// insights, platform.
 $adminNavLinks = [
-    ['label' => 'SEO Dashboard', 'route' => 'admin_seo_dashboard', 'roles' => ['admin', 'event_admin', 'seo_viewer']],
-    ['label' => 'Register', 'route' => 'register', 'roles' => ['admin', 'event_admin', 'checker']],
     ['label' => 'Registrants', 'route' => 'admin_registrants', 'roles' => ['admin', 'event_admin', 'checker']],
     ['label' => 'Attendance', 'route' => 'admin_attendance', 'roles' => ['admin', 'event_admin', 'checker']],
     ['label' => 'Scan', 'route' => 'scan', 'roles' => ['admin', 'event_admin', 'checker']],
     ['label' => 'Gallery', 'route' => 'admin_attendance_gallery', 'roles' => ['admin', 'event_admin']],
-    ['label' => 'Events', 'route' => 'admin_events', 'roles' => ['admin']],
-    ['label' => 'Event Links', 'route' => 'admin_event_links', 'roles' => ['event_admin']],
+    ['label' => 'Register', 'route' => 'register', 'roles' => ['admin', 'event_admin', 'checker']],
+    ['label' => 'Certificates', 'route' => 'admin_coa_monitor', 'roles' => ['admin']],
     ['label' => 'Import', 'route' => 'admin_import', 'roles' => ['admin', 'event_admin']],
     ['label' => 'Export', 'route' => 'admin_export', 'roles' => ['admin', 'event_admin']],
     ['label' => 'Report', 'route' => 'admin_report', 'roles' => ['admin', 'event_admin']],
+    ['label' => 'SEO Dashboard', 'route' => 'admin_seo_dashboard', 'roles' => ['admin', 'event_admin', 'seo_viewer']],
+    ['label' => 'Events', 'route' => 'admin_events', 'roles' => ['admin']],
+    ['label' => 'Event Links', 'route' => 'admin_event_links', 'roles' => ['event_admin']],
     ['label' => 'Users', 'route' => 'admin_users', 'roles' => ['admin']],
     ['label' => 'Logs', 'route' => 'admin_logs', 'roles' => ['admin']],
     ['label' => 'Settings', 'route' => 'admin_settings', 'roles' => ['admin']],

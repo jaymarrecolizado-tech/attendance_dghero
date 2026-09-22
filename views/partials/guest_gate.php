@@ -14,24 +14,7 @@ $gateSlug = isset($event) && isset($event['slug']) ? (string)$event['slug'] : ''
 ?>
 <!-- Page-level circuit background: lives outside #eventGate so it survives
      the session skip and stays behind the panel and form after the reveal. -->
-<svg class="event-gate-page-circuits" id="eventGatePageCircuits" viewBox="0 0 1440 900" preserveAspectRatio="xMidYMid slice" aria-hidden="true">
-  <g data-page-circuit data-tone="gold"><polyline points="60,24 60,64 150,64"/><circle cx="60" cy="24" r="3"/></g>
-  <g data-page-circuit data-tone="blue"><polyline points="300,40 380,40 380,80"/><circle cx="300" cy="40" r="3"/></g>
-  <g data-page-circuit data-tone="gold"><polyline points="1100,26 1180,26 1180,66 1260,66"/><circle cx="1100" cy="26" r="3"/></g>
-  <g data-page-circuit data-tone="gold"><polyline points="30,180 30,280 70,280"/><circle cx="30" cy="180" r="3"/></g>
-  <g data-page-circuit data-tone="gold"><polyline points="100,860 100,800 200,800"/><circle cx="100" cy="860" r="3"/></g>
-  <g data-page-circuit data-tone="blue"><polyline points="480,870 480,810 560,810"/><circle cx="480" cy="870" r="3"/></g>
-  <g data-page-circuit data-tone="gold"><polyline points="900,866 980,866 980,806"/><circle cx="900" cy="866" r="3"/></g>
-  <g data-page-circuit data-tone="gold"><polyline points="1410,300 1410,400 1370,400"/><circle cx="1410" cy="300" r="3"/></g>
-  <g data-page-circuit data-tone="blue" class="event-gate-page-circuit-extra"><polyline points="24,420 70,420 70,500"/><circle cx="24" cy="420" r="3"/></g>
-  <g data-page-circuit data-tone="red" class="event-gate-page-circuit-extra"><polyline points="1330,40 1400,40 1400,90"/><circle cx="1330" cy="40" r="3"/></g>
-  <g data-page-circuit data-tone="red" class="event-gate-page-circuit-extra"><polyline points="1300,870 1370,870 1370,810"/><circle cx="1300" cy="870" r="3"/></g>
-  <g data-page-circuit data-tone="blue" class="event-gate-page-circuit-extra"><polyline points="1400,560 1400,640 1350,640"/><circle cx="1400" cy="560" r="3"/></g>
-  <g data-page-circuit data-tone="gold" class="event-gate-page-circuit-extra"><polyline points="640,880 640,830 720,830"/><circle cx="640" cy="880" r="3"/></g>
-  <g data-page-circuit data-tone="blue" class="event-gate-page-circuit-extra"><polyline points="1050,30 1050,80 1120,80"/><circle cx="1050" cy="30" r="3"/></g>
-  <g data-page-circuit data-tone="gold" class="event-gate-page-circuit-extra"><polyline points="200,300 260,300 260,360"/><circle cx="200" cy="300" r="3"/></g>
-  <g data-page-circuit data-tone="red" class="event-gate-page-circuit-extra"><polyline points="1180,760 1240,760 1240,700"/><circle cx="1180" cy="760" r="3"/></g>
-</svg>
+<canvas class="event-gate-page-circuits" id="eventGatePageCircuits" aria-hidden="true"></canvas>
 <div class="event-gate" id="eventGate" role="dialog" aria-modal="true" aria-label="Event entrance" data-event-slug="<?= htmlspecialchars($gateSlug, ENT_QUOTES) ?>">
   <canvas class="event-gate-window" id="eventGateWindow" aria-hidden="true"></canvas>
   <div class="event-gate-door event-gate-door-l">

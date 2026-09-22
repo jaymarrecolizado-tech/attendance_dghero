@@ -11,6 +11,7 @@ use App\Controllers\AdminSignatureController;
 use App\Controllers\AdminSeoController;
 use App\Controllers\AdminUsersController;
 use App\Controllers\AdvancedExportController;
+use App\Controllers\AdminCoaMonitorController;
 use App\Controllers\AttendanceController;
 use App\Controllers\AuthController;
 use App\Controllers\EventBrandingController;
@@ -97,6 +98,42 @@ return [
     'admin_coa_send' => [
         'POST' => [AdminRegistrantsController::class, 'resendCoa'],
         '_guards' => [$eventOps],
+    ],
+    'admin_coa_monitor' => [
+        'GET' => [AdminCoaMonitorController::class, 'monitor'],
+        '_guards' => [$rolesAdmin],
+    ],
+    'admin_coa_send_new' => [
+        'POST' => [AdminCoaMonitorController::class, 'sendNew'],
+        '_guards' => [$rolesAdmin],
+    ],
+    'admin_coa_queue_failed' => [
+        'POST' => [AdminCoaMonitorController::class, 'queueFailed'],
+        '_guards' => [$rolesAdmin],
+    ],
+    'admin_coa_resend_queued' => [
+        'POST' => [AdminCoaMonitorController::class, 'resendQueued'],
+        '_guards' => [$rolesAdmin],
+    ],
+    'admin_coa_preview' => [
+        'GET' => [AdminCoaMonitorController::class, 'preview'],
+        '_guards' => [$rolesAdmin],
+    ],
+    'admin_coa_preview_template' => [
+        'GET' => [AdminCoaMonitorController::class, 'previewTemplate'],
+        '_guards' => [$rolesAdmin],
+    ],
+    'admin_coa_templates' => [
+        'GET' => [AdminCoaMonitorController::class, 'templates'],
+        '_guards' => [$rolesAdmin],
+    ],
+    'admin_coa_template_save' => [
+        'POST' => [AdminCoaMonitorController::class, 'templateSave'],
+        '_guards' => [$rolesAdmin],
+    ],
+    'admin_coa_template_apply' => [
+        'POST' => [AdminCoaMonitorController::class, 'templateApply'],
+        '_guards' => [$rolesAdmin],
     ],
     'admin_registrant_vip' => [
         'POST' => [AdminRegistrantsController::class, 'toggleVip'],

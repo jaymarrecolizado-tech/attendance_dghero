@@ -17,12 +17,11 @@
   z-index: 2000;
   perspective: 1500px;
   -webkit-perspective: 1500px;
-  background: var(--gate-trench);
+  /* Let the page circuit field show through the trench while locked. */
+  background: radial-gradient(ellipse 80% 70% at 50% 48%, rgba(7, 20, 44, 0.55) 0%, rgba(4, 10, 24, 0.82) 100%);
   transform-style: preserve-3d;
   font-family: inherit;
-  /* Plan#9: the trench backdrop clears as the doors swing, so the opening
-     frames the real page and its circuit field instead of a flat color. */
-  transition: background-color 0.9s ease 0.45s;
+  transition: background-color 0.9s ease 0.45s, background 0.9s ease 0.45s;
 }
 
 .event-gate.open {
@@ -107,14 +106,14 @@ main,
   transform: rotateY(104deg) translateZ(0);
 }
 
-/* Particle window behind the doors: visible through the seam, then in the
-   gap once the doors swing. Canvas sizing is set by the script. */
+/* Particle / circuit window behind the doors. */
 .event-gate-window {
   position: absolute;
   inset: 0;
   width: 100%;
   height: 100%;
   display: block;
+  opacity: 0.95;
 }
 
 .event-gate-face {
@@ -123,38 +122,83 @@ main,
   overflow: hidden;
   backface-visibility: hidden;
   -webkit-backface-visibility: hidden;
+  /* Frosted vault plate: circuits glow through; the plaque holds the mark. */
   background:
-    linear-gradient(90deg, rgba(252, 209, 22, 0.14), transparent 18% 82%, rgba(252, 209, 22, 0.14)),
-    linear-gradient(160deg, #16356f 0%, #0B1B45 52%, #07122e 100%);
-  box-shadow: inset 0 0 0 1px rgba(252, 209, 22, 0.28);
+    radial-gradient(ellipse 58% 48% at 50% 50%, rgba(5, 12, 28, 0.35) 0%, rgba(5, 12, 28, 0.88) 72%, rgba(4, 10, 24, 0.96) 100%),
+    linear-gradient(160deg, rgba(22, 53, 111, 0.72) 0%, rgba(11, 27, 69, 0.78) 55%, rgba(7, 18, 46, 0.9) 100%);
+  backdrop-filter: blur(1.5px);
+  -webkit-backdrop-filter: blur(1.5px);
+  box-shadow: inset 0 0 0 1px rgba(252, 209, 22, 0.35);
 }
 
 .event-gate-door-l .event-gate-face {
-  border-right: 1px solid rgba(252, 209, 22, 0.55);
-  box-shadow: inset -18px 0 28px -20px rgba(0, 0, 0, 0.55), inset 0 0 0 1px rgba(252, 209, 22, 0.28);
+  border-right: 1px solid rgba(252, 209, 22, 0.7);
+  box-shadow:
+    inset -22px 0 40px -18px rgba(0, 0, 0, 0.7),
+    inset 0 0 0 1px rgba(252, 209, 22, 0.3);
 }
 
 .event-gate-door-r .event-gate-face {
-  border-left: 1px solid rgba(252, 209, 22, 0.55);
-  box-shadow: inset 18px 0 28px -20px rgba(0, 0, 0, 0.55), inset 0 0 0 1px rgba(252, 209, 22, 0.28);
+  border-left: 1px solid rgba(252, 209, 22, 0.7);
+  box-shadow:
+    inset 22px 0 40px -18px rgba(0, 0, 0, 0.7),
+    inset 0 0 0 1px rgba(252, 209, 22, 0.3);
 }
 
+/* Gold plaque frame that sits around the logo. */
 .event-gate-face::before {
   content: "";
   position: absolute;
-  inset: 16px;
-  border: 1px solid rgba(252, 209, 22, 0.16);
+  top: 50%;
+  width: min(470px, 52vw);
+  height: min(370px, 58vh);
+  transform: translateY(-50%);
+  border: 1px solid rgba(252, 209, 22, 0.55);
+  box-shadow:
+    0 0 0 8px rgba(5, 12, 28, 0.55),
+    0 0 40px rgba(252, 209, 22, 0.18),
+    inset 0 0 30px rgba(0, 0, 0, 0.45);
   pointer-events: none;
+  z-index: 1;
+}
+
+.event-gate-door-l .event-gate-face::before {
+  right: 0;
+  border-right: 0;
+  border-radius: 10px 0 0 10px;
+}
+
+.event-gate-door-r .event-gate-face::before {
+  left: 0;
+  border-left: 0;
+  border-radius: 0 10px 10px 0;
+}
+
+/* Soft circuit mesh on the empty plate around the plaque. */
+.event-gate-face::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  opacity: 0.35;
+  background-image:
+    linear-gradient(rgba(252, 209, 22, 0.12) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(46, 196, 255, 0.1) 1px, transparent 1px);
+  background-size: 48px 48px;
+  mask-image: radial-gradient(ellipse 55% 50% at 50% 50%, transparent 42%, #000 78%);
+  -webkit-mask-image: radial-gradient(ellipse 55% 50% at 50% 50%, transparent 42%, #000 78%);
 }
 
 /* One logo image, split across the two doors at native size (900px). */
 .event-gate-mark {
   position: absolute;
   top: 50%;
-  width: min(900px, 100vw);
+  width: min(900px, 92vw);
   height: auto;
   max-width: none;
   pointer-events: none;
+  z-index: 2;
+  filter: drop-shadow(0 10px 28px rgba(0, 0, 0, 0.55));
 }
 
 .event-gate-door-l .event-gate-mark {
@@ -588,10 +632,17 @@ main,
 
 
 /*
- * Page-level circuit background (gate register form only). Sits at z -1 so
- * the navbar, side panel, and white form card cover it; only the open page
- * space shows the field. Tones match the logo palette.
+ * Page-level circuit board (gate register form only). The canvas paints
+ * gold and cyan traces; the form card and side panel stay opaque on top.
  */
+
+body.guest-page:has(.event-gate-page-circuits) {
+  background: #07142c;
+}
+
+body.guest-page:has(.event-gate-page-circuits)::before {
+  display: none;
+}
 
 .event-gate-page-circuits {
   position: fixed;
@@ -600,75 +651,4 @@ main,
   height: 100%;
   z-index: -1;
   pointer-events: none;
-}
-
-[data-page-circuit] polyline {
-  fill: none;
-  stroke: #fcd116;
-  stroke-width: 1.6;
-  stroke-linecap: round;
-  stroke-linejoin: round;
-  stroke-dasharray: 5 9;
-  opacity: 0.45;
-  animation: event-gate-trace 3.8s linear infinite;
-}
-
-[data-page-circuit] circle {
-  fill: #fcd116;
-  opacity: 0.6;
-}
-
-[data-page-circuit][data-tone="blue"] polyline {
-  stroke: #0038a8;
-}
-
-[data-page-circuit][data-tone="blue"] circle {
-  fill: #0038a8;
-}
-
-[data-page-circuit][data-tone="red"] polyline {
-  stroke: #ce1126;
-}
-
-[data-page-circuit][data-tone="red"] circle {
-  fill: #ce1126;
-}
-
-[data-page-circuit]:nth-of-type(2n) polyline {
-  animation-duration: 4.6s;
-  animation-direction: reverse;
-}
-
-[data-page-circuit]:nth-of-type(3n) polyline {
-  animation-duration: 3s;
-}
-
-[data-page-circuit].is-lit polyline {
-  opacity: 0.95;
-  filter: drop-shadow(0 0 4px rgba(252, 209, 22, 0.85));
-}
-
-[data-page-circuit].is-lit circle {
-  opacity: 1;
-  filter: drop-shadow(0 0 5px rgba(252, 209, 22, 0.9));
-}
-
-@media (max-width: 640px) {
-  .event-gate-page-circuit-extra {
-    display: none;
-  }
-
-  .event-gate-page-circuits {
-    opacity: 0.55;
-  }
-}
-
-@media (prefers-reduced-motion: reduce) {
-  [data-page-circuit] polyline {
-    animation: none;
-  }
-
-  [data-page-circuit].is-lit polyline {
-    animation: none;
-  }
 }
