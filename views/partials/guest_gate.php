@@ -4,14 +4,16 @@ declare(strict_types=1);
 /**
  * Door entrance for gate-layout events (e.g. Hack for Gov 5). Rendered by
  * guest_head.php before the nav when the event theme_layout is 'gate' and
- * the page is the register form (never on success or error pages). The
- * inline script below skips the gate for the rest of the browser session
- * and locks page scroll only when the gate actually shows; without JS the
- * gate is removed entirely so the form stays reachable.
+ * the page is the register form (never on success or error pages). A canvas
+ * window behind the doors hosts the particle field. The inline script below
+ * skips the gate for the rest of the browser session, locks page scroll and
+ * dims the page while the gate shows; without JS the gate is removed
+ * entirely so the form stays reachable.
  */
 $gateSlug = isset($event) && isset($event['slug']) ? (string)$event['slug'] : '';
 ?>
 <div class="event-gate" id="eventGate" role="dialog" aria-modal="true" aria-label="Event entrance" data-event-slug="<?= htmlspecialchars($gateSlug, ENT_QUOTES) ?>">
+  <canvas class="event-gate-window" id="eventGateWindow" aria-hidden="true"></canvas>
   <div class="event-gate-door event-gate-door-l">
     <div class="event-gate-face">
       <div class="event-gate-logo" aria-hidden="true"></div>
@@ -60,7 +62,8 @@ $gateSlug = isset($event) && isset($event['slug']) ? (string)$event['slug'] : ''
     gate.parentNode.removeChild(gate);
     return;
   }
-  document.body.classList.add('gate-locked');
+  // Page beneath starts dimmed and low; the reveal script lets it rise.
+  document.body.classList.add('gate-locked', 'gate-pending');
 })();
 </script>
 <noscript><style>.event-gate{display:none!important}</style></noscript>

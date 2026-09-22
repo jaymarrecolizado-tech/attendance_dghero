@@ -23,12 +23,37 @@
 }
 
 .event-gate.done {
-  visibility: hidden;
+  opacity: 0;
   pointer-events: none;
+  visibility: hidden;
+  transition: opacity 0.8s ease, visibility 0s linear 0.8s;
 }
 
 body.gate-locked {
   overflow: hidden;
+}
+
+/* Page beneath the gate: dimmed and low while locked, rises on reveal. */
+body.gate-pending .guest-navbar,
+body.gate-pending main,
+body.gate-pending .guest-actions-sticky {
+  opacity: 0;
+  transform: translateY(26px);
+}
+
+.guest-navbar,
+main,
+.guest-actions-sticky {
+  transition: opacity 0.8s ease, transform 0.8s ease;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  /* Reduced motion: the form fades in, it does not rise. */
+  body.gate-pending .guest-navbar,
+  body.gate-pending main,
+  body.gate-pending .guest-actions-sticky {
+    transform: none;
+  }
 }
 
 .event-gate:focus-visible {
@@ -67,26 +92,37 @@ body.gate-locked {
   transform: rotateY(104deg) translateZ(0);
 }
 
+/* Particle window behind the doors: visible through the seam, then in the
+   gap once the doors swing. Canvas sizing is set by the script. */
+.event-gate-window {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  display: block;
+}
+
 .event-gate-face {
   position: absolute;
   inset: 0;
   overflow: hidden;
   backface-visibility: hidden;
   -webkit-backface-visibility: hidden;
+  /* Deep navy face around the logo; no gray wash across it. */
   background:
-    repeating-linear-gradient(90deg, rgba(255, 255, 255, 0.022) 0 2px, transparent 2px 6px),
-    linear-gradient(160deg, #0e2150 0%, #081430 55%, #060f24 100%);
-  box-shadow: inset 0 0 90px rgba(0, 0, 0, 0.65);
+    repeating-linear-gradient(90deg, rgba(255, 255, 255, 0.02) 0 2px, transparent 2px 6px),
+    linear-gradient(160deg, #0e2150 0%, #0a183a 55%, #060f24 100%);
+  box-shadow: inset 0 0 30px rgba(0, 0, 0, 0.3);
 }
 
 .event-gate-door-l .event-gate-face {
   border-right: 1px solid rgba(252, 209, 22, 0.55);
-  box-shadow: inset -22px 0 34px -18px #000, inset 0 0 90px rgba(0, 0, 0, 0.65);
+  box-shadow: inset -26px 0 40px -22px #000, inset 0 0 30px rgba(0, 0, 0, 0.3);
 }
 
 .event-gate-door-r .event-gate-face {
   border-left: 1px solid rgba(252, 209, 22, 0.55);
-  box-shadow: inset 22px 0 34px -18px #000, inset 0 0 90px rgba(0, 0, 0, 0.65);
+  box-shadow: inset 26px 0 40px -22px #000, inset 0 0 30px rgba(0, 0, 0, 0.3);
 }
 
 .event-gate-face::before {
@@ -95,14 +131,6 @@ body.gate-locked {
   inset: 16px;
   border: 1px solid rgba(252, 209, 22, 0.16);
   pointer-events: none;
-}
-
-.event-gate-face::after {
-  content: "";
-  position: absolute;
-  inset: 0;
-  pointer-events: none;
-  background: linear-gradient(180deg, rgba(4, 10, 24, 0.5), transparent 16% 84%, rgba(4, 10, 24, 0.55));
 }
 
 /* One logo image, split across the two doors. */
@@ -123,13 +151,14 @@ body.gate-locked {
   background-position: right center;
 }
 
-/* Vault bolts */
+/* Vault bolts: brass cylinders with a lit edge, retracted on unlock */
 .event-gate-bolts i {
   position: absolute;
   width: 30px;
-  height: 9px;
-  background: linear-gradient(180deg, #fcd116, #8f760a);
-  box-shadow: 0 0 10px rgba(252, 209, 22, 0.5);
+  height: 10px;
+  background: linear-gradient(180deg, #ffe98a 0%, #fcd116 38%, #8f760a 100%);
+  border-radius: 2px;
+  box-shadow: 0 0 12px rgba(252, 209, 22, 0.75), inset 0 1px 0 rgba(255, 255, 255, 0.65);
   transition: transform 0.5s cubic-bezier(0.6, 0, 0.2, 1) 0.05s;
 }
 
@@ -153,16 +182,19 @@ body.gate-locked {
   transform: translateX(110%);
 }
 
-/* Seam glow + flare */
+/* Seam glow: a lit metal seam that breathes */
 .event-gate-seam {
   position: absolute;
   left: 50%;
   top: 0;
   bottom: 0;
-  width: 2px;
+  width: 3px;
   transform: translateX(-50%);
-  background: linear-gradient(180deg, transparent, var(--gate-gold) 18% 82%, transparent);
-  box-shadow: 0 0 22px rgba(252, 209, 22, 0.8);
+  background: linear-gradient(180deg, transparent, #ffe98a 12% 50%, var(--gate-gold) 50% 88%, transparent);
+  box-shadow:
+    0 0 6px rgba(252, 209, 22, 0.95),
+    0 0 26px rgba(252, 209, 22, 0.7),
+    0 0 60px rgba(252, 209, 22, 0.35);
   animation: event-gate-pulse 2.2s ease-in-out infinite;
 }
 
@@ -198,7 +230,7 @@ body.gate-locked {
   100% { opacity: 0; transform: translate(-50%, -50%) scale(90); }
 }
 
-/* Central seal */
+/* Central seal: medal with a lit rim */
 .event-gate-seal {
   position: absolute;
   left: 50%;
@@ -207,11 +239,14 @@ body.gate-locked {
   width: 104px;
   height: 104px;
   border-radius: 50%;
-  background: #050b1a;
+  background: radial-gradient(circle at 50% 38%, #12245a 0%, #050b1a 70%);
   border: 2px solid var(--gate-gold);
   display: grid;
   place-items: center;
-  box-shadow: 0 0 0 6px rgba(252, 209, 22, 0.12), 0 18px 40px -12px #000;
+  box-shadow:
+    0 0 0 6px rgba(252, 209, 22, 0.12),
+    0 0 26px rgba(252, 209, 22, 0.35),
+    0 18px 40px -12px #000;
   transition: 0.5s cubic-bezier(0.5, 0, 0.2, 1);
 }
 

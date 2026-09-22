@@ -4,7 +4,7 @@ Turn the app into a multi-event platform: All Father creates events, assigns peo
 
 **OpenCode + Muse Spark 13** on branch `attendance_accend`. Enforce [ponytail](https://github.com/dietrichgebert/ponytail) and [taste-skill](https://github.com/leonxlnx/taste-skill) (`design-taste-frontend` + `redesign-existing-projects`).
 
-**Status:** Multi-event is shipped. VPS is live. **Plan#4** is done. **Current work is Plan#5** (Hack for Gov 5 door gate). Next new plan after that is **Plan#6**.
+**Status:** Multi-event is shipped. VPS is live. **Plan#4** and **Plan#5** are done. **Current work is Plan#6** (door reveal and particles). Next new plan after that is **Plan#7**.
 
 **Audit:** 2026-09-14 closed multi-event leftovers. 2026-09-20 landed Settings merge, script gating, AuthService, flash plumbing, `env.example`. 2026-09-21 morning pass fixed door-scan CSRF, import-preview rotate, retry `e=` link, event-aware nav, main deploy docs. Same-day afternoon pass closed the five re-check nits (below).
 
@@ -12,7 +12,7 @@ Turn the app into a multi-event platform: All Father creates events, assigns peo
 
 ## Agent: start here
 
-Multi-event is **shipped**. VPS cutover **ran 2026-09-21**. **Plan#4** is done. Current work is **Plan#5**. The next plan after that is **Plan#6**. Do not rebuild EventContext. Do not commit `.env` / `.env.vps`.
+Multi-event is **shipped**. VPS cutover **ran 2026-09-21**. **Plan#4** and **Plan#5** are live. Current work is **Plan#6**. The next plan after that is **Plan#7**. Do not rebuild EventContext. Do not commit `.env` / `.env.vps`.
 
 **Plan numbers**
 
@@ -22,7 +22,8 @@ Multi-event is **shipped**. VPS cutover **ran 2026-09-21**. **Plan#4** is done. 
 | Plan#2 | Production hardening, guest polish, deploy docs | Done |
 | Plan#3 | VPS go-live | Live; operator smoke still open |
 | Plan#4 | Per-event registration branding | Done (code + browser-verified 2026-09-22) |
-| Plan#5 | Hack for Gov 5 door gate | Done locally; VPS deploy pending access |
+| Plan#5 | Hack for Gov 5 door gate | Live on digitalhero.dictr2.cloud |
+| Plan#6 | Door reveal and window particles | Done locally; three-file deploy pending access |
 
 **Session contract**
 
@@ -42,6 +43,35 @@ php scripts/test_csrf_lifecycle.php
 ---
 
 ## Left to do
+
+### Plan#6 — richer door, reveal into registration, window particles
+
+Reading this as: a public-sector event entrance for Hack for Gov 5 guests, with the existing vault-door language, leaning toward flag navy `#0B1B45`, gold `#FCD116`, and red `#CE1126` — richer light and a pointer-reactive particle field in the opening, not a new visual system.
+
+The live gate looks pale because [assets/hack4gov-gate.css](assets/hack4gov-gate.css) paints a 50% black vignette (`.event-gate-face::after`) over the full-color logo. After unlock, the doors swing and then `.event-gate.done` sets `visibility: hidden` at 2100ms, so the registration page pops in with no handoff. There is no window and no particle field.
+
+Stay inside the gate files. No new library, no migration, no change to field names, CSRF, or `?r=register&e=`. Other events stay door-free. `prefers-reduced-motion` keeps the short slide and shows a still particle field (no drift, no pointer chase). Without JS the gate stays hidden, as it does now.
+
+```mermaid
+flowchart LR
+  locked[Closed_doors]
+  bolts[Bolts_and_flare]
+  swing[Doors_swing]
+  window[Particle_window_and_form_rise]
+  form[Registration_form]
+  locked --> bolts --> swing --> window --> form
+```
+
+- [x] Lift the vignette off the logo so the flag blocks stay saturated. Keep a thin gold inner frame and a deeper navy face around the logo, not a gray wash across it.
+- [x] Strengthen the seam, bolts, and seal so the unlock reads as metal and light: gold glow on the seam, bolts retract, flare, then the doors swing. Same timing family as today (bolts, then swing). Do not add a second animation library.
+- [x] Add a window layer behind the doors in [views/partials/guest_gate.php](views/partials/guest_gate.php): a canvas (or one lightweight particle layer) scoped under `.event-gate`. Particles are small gold, white, and a few blue/red specks. They drift, and the pointer (and touch) nudges nearby particles. The Access System button and keyboard Enter stay on top and clickable. Cap the count on narrow screens.
+- [x] Stage the handoff in [assets/hack4gov-gate.js](assets/hack4gov-gate.js) and the CSS: doors finish open, the particle window is visible in the gap, the registration page fades and rises into place, then the gate overlay fades out and scroll unlocks. Remove the hard `visibility` cut. Focus still moves to `first_name` after the reveal.
+- [x] Reduced motion: doors slide and fade, particles stay still, the form fades in. No 3D swing and no pointer-driven motion.
+- [x] Session skip, validation error, and Try again still skip the gate. A second event’s register link still has no door, no canvas, and no particle script.
+- [x] Phone width: doors still cover the screen; particles stay behind the button; the form is usable after the reveal.
+- [ ] After it works locally, deploy the three gate files to `/home/digitalhero/htdocs/digitalhero.dictr2.cloud`. No migration and no `.env` change.
+
+Leave alone: the extracted logo file, `theme_layout`, slug `hack4gov-5-8`, and the 3-step form behind the door.
 
 ### Plan#5 — Hack for Gov 5 door gate
 
@@ -66,7 +96,7 @@ flowchart LR
 - [x] Reload after unlock does not trap the guest behind the door again.
 - [x] Another event’s register link has no door.
 - [x] Phone width: doors cover the screen; the form is usable after open.
-- [ ] After it works locally, deploy to `/home/digitalhero/htdocs/digitalhero.dictr2.cloud` and set that event’s name and `theme_layout`.
+- [x] After it works locally, deploy to `/home/digitalhero/htdocs/digitalhero.dictr2.cloud` and set that event’s name and `theme_layout`. Deployed 2026-09-22: event 8 is **Hack for Gov 5**, slug `hack4gov-5-8`, `theme_layout=gate`.
 
 Leave alone: field names, CSRF, `?r=register&e=`, other events, and the sample username/password form. Do not commit the raw Reference HTML; ship the extracted logo and CSS.
 
