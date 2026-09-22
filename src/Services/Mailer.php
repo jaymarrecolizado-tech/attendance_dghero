@@ -5,14 +5,15 @@ namespace App\Services;
 
 class Mailer
 {
-    public static function send(string $to, string $subject, string $body, ?string $attachmentPath = null): bool
+    public static function send(string $to, string $subject, string $body, ?string $attachmentPath = null, ?string $fromName = null): bool
     {
         $mode = getenv('MAIL_MODE') ?: 'log';
         if ($mode === 'log') {
             $dir = dirname(__DIR__, 2) . DIRECTORY_SEPARATOR . 'logs' . DIRECTORY_SEPARATOR . 'outbox';
             if (!is_dir($dir)) mkdir($dir, 0775, true);
             $name = $dir . DIRECTORY_SEPARATOR . time() . '_' . preg_replace('/[^a-z0-9]+/i','_', $to) . '.eml';
-            $content = "To: {$to}\nSubject: {$subject}\n\n{$body}\n";
+            $fromLine = ($fromName !== null && $fromName !== '') ? 'From: ' . $fromName . ' <' . $fromName . '@local>' . "\n" : '';
+            $content = "To: {$to}\nSubject: {$subject}\n{$fromLine}\n{$body}\n";
             if ($attachmentPath && is_file($attachmentPath)) {
                 $content .= "\nAttachment: {$attachmentPath}\n";
             }
@@ -36,7 +37,7 @@ class Mailer
                     $mail->Username = $user;
                     $mail->Password = $pass;
                     $mail->SMTPSecure = $secure === 'ssl' ? 'ssl' : 'tls';
-                    $mail->setFrom($from);
+                    $mail->setFrom($from, $fromName ?? '');
                     $mail->addAddress($to);
                     $mail->isHTML(true);
                     $mail->Subject = $subject;
@@ -87,7 +88,7 @@ class Mailer
             $date = gmdate('D, d M Y H:i:s') . ' +0000';
             $msgId = bin2hex(random_bytes(8)) . '@localhost';
             $headers = [];
-            $headers[] = 'From: ' . $from;
+            $headers[] = 'From: ' . (($fromName !== null && $fromName !== '') ? $fromName . ' <' . $from . '>' : $from);
             $headers[] = 'To: ' . $to;
             $headers[] = 'Subject: ' . $subject;
             $headers[] = 'Date: ' . $date;

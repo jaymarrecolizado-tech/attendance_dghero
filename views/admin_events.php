@@ -100,6 +100,36 @@ $token = function_exists('csrf_token') ? csrf_token() : '';
                 </div>
               </form>
             </details>
+            <?php
+              $coaEnabled = (int)($r['coa_enabled'] ?? 0) === 1;
+              $coaVenue = trim((string)($r['coa_venue'] ?? ''));
+              $coaPurpose = trim((string)($r['coa_purpose'] ?? ''));
+              $coaParticulars = trim((string)($r['coa_particulars'] ?? ''));
+              $coaSigName = trim((string)($r['coa_signatory_name'] ?? ''));
+              $coaSigTitle = trim((string)($r['coa_signatory_title'] ?? ''));
+              $coaSigPath = trim((string)($r['coa_signatory_path'] ?? ''));
+              $coaLogoPath = trim((string)($r['coa_logo_path'] ?? ''));
+              $coaActive = $coaEnabled || $coaVenue !== '' || $coaPurpose !== '' || $coaParticulars !== '' || $coaSigName !== '' || $coaSigTitle !== '';
+            ?>
+            <details class="event-coa mt-1">
+              <summary class="small <?= $coaActive ? 'fw-semibold text-primary' : 'text-muted' ?>">CoA<?= $coaActive ? ' (' . ($coaEnabled ? 'on' : 'settings') . ')' : '' ?></summary>
+              <form method="post" action="?r=admin_event_coa" class="d-flex flex-column gap-1 mt-1">
+                <input type="hidden" name="csrf" value="<?= htmlspecialchars($token, ENT_QUOTES) ?>">
+                <input type="hidden" name="id" value="<?= (int)$r['id'] ?>">
+                <div class="form-check">
+                  <input class="form-check-input" type="checkbox" name="coa_enabled" id="coaEnabled<?= (int)$r['id'] ?>" <?= $coaEnabled ? 'checked' : '' ?>>
+                  <label class="form-check-label small" for="coaEnabled<?= (int)$r['id'] ?>">Auto-send Certificate of Appearance after scan</label>
+                </div>
+                <input name="coa_venue" maxlength="255" class="form-control form-control-sm" placeholder="Venue" aria-label="CoA venue" value="<?= htmlspecialchars($coaVenue, ENT_QUOTES) ?>">
+                <input name="coa_purpose" maxlength="255" class="form-control form-control-sm" placeholder="Purpose line (e.g. for the Hack for Gov 5 roadmap briefing)" aria-label="CoA purpose" value="<?= htmlspecialchars($coaPurpose, ENT_QUOTES) ?>">
+                <textarea name="coa_particulars" class="form-control form-control-sm" rows="3" placeholder="Particulars, one line per row (Label - Value). Empty = defaults." aria-label="CoA particulars"><?= htmlspecialchars($coaParticulars, ENT_QUOTES) ?></textarea>
+                <input name="coa_signatory_name" maxlength="120" class="form-control form-control-sm" placeholder="Signatory name" aria-label="CoA signatory name" value="<?= htmlspecialchars($coaSigName, ENT_QUOTES) ?>">
+                <input name="coa_signatory_title" maxlength="120" class="form-control form-control-sm" placeholder="Signatory title" aria-label="CoA signatory title" value="<?= htmlspecialchars($coaSigTitle, ENT_QUOTES) ?>">
+                <input name="coa_signatory_path" class="form-control form-control-sm" placeholder="Signature image path (optional)" aria-label="CoA signature image path" value="<?= htmlspecialchars($coaSigPath, ENT_QUOTES) ?>">
+                <input name="coa_logo_path" class="form-control form-control-sm" placeholder="Left logo image path (optional)" aria-label="CoA logo image path" value="<?= htmlspecialchars($coaLogoPath, ENT_QUOTES) ?>">
+                <button class="btn btn-sm btn-outline-primary" aria-label="Save CoA settings">Save CoA</button>
+              </form>
+            </details>
           </td>
           <td class="small">
             <?php foreach ($assigned as $a): ?>

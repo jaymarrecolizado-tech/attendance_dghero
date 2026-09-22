@@ -63,8 +63,25 @@ class AttendanceController
         }
         $ins = $pdo->prepare("INSERT INTO attendance (participant_id, attendance_date, time_in, signature_path, event_id, status) VALUES (?,?,?,?,?,'present')");
         $ins->execute([(int)$row['id'], $date, $time, $path, $eventId]);
+        $this->triggerCoa($eventId, (int)$row['id'], $date);
         if (function_exists('csrf_rotate')) csrf_rotate();
         echo json_encode(['ok'=>true]);
+    }
+
+    /**
+     * Plan#10: Certificate of Appearance after a signed scan. Failures are
+     * logged and never block the scan JSON response.
+     */
+    private function triggerCoa(int $eventId, int $participantId, string $date): void
+    {
+        try {
+            \App\Services\CoaService::maybeSendFor($eventId, $participantId, $date);
+        } catch (\Throwable $e) {
+            \App\Services\Logger::log(null, 'coa_failed', [
+                'participant_id' => $participantId,
+                'error' => $e->getMessage(),
+            ], $eventId);
+        }
     }
 
     public function submitJsonForTest(array $payload, string $csrf): array
@@ -103,6 +120,7 @@ class AttendanceController
         }
         $ins = $pdo->prepare("INSERT INTO attendance (participant_id, attendance_date, time_in, signature_path, event_id, status) VALUES (?,?,?,?,?,'present')");
         $ins->execute([(int)$row['id'], $date, $time, $path, $eventId]);
+        $this->triggerCoa($eventId, (int)$row['id'], $date);
         if (function_exists('csrf_rotate')) csrf_rotate();
         return ['ok'=>true];
     }

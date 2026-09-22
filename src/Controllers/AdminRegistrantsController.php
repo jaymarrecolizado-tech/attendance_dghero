@@ -215,6 +215,51 @@ class AdminRegistrantsController
         readfile($path);
     }
 
+    /**
+     * Plan#10: regenerate and email the Certificate of Appearance for a
+     * participant's latest attendance on the current event.
+     */
+    public function resendCoa(): void
+    {
+        $pdo = Database::pdo();
+        $event = $this->requireEventContext($pdo, ['event_admin', 'checker']);
+        if (!$event) return;
+        $eventId = (int)$event['id'];
+
+        $redirect = static function (string $type, string $message): void {
+            $_SESSION['flash'] = ['type' => $type, 'message' => $message];
+            header('Location: ?r=admin_registrants');
+        };
+
+        if (!isset($_POST['csrf']) || !function_exists('csrf_check') || !csrf_check($_POST['csrf'])) {
+            $redirect('danger', 'Invalid CSRF');
+            return;
+        }
+        $participantId = (int)($_POST['participant_id'] ?? 0);
+        if ($participantId <= 0) {
+            $redirect('danger', 'Missing participant');
+            return;
+        }
+        $chk = $pdo->prepare('SELECT id FROM participants WHERE id = ? AND event_id = ?');
+        $chk->execute([$participantId, $eventId]);
+        if (!$chk->fetch()) {
+            $redirect('danger', 'Participant not found');
+            return;
+        }
+        $att = $pdo->prepare('SELECT attendance_date FROM attendance WHERE participant_id = ? AND event_id = ? ORDER BY attendance_date DESC, id DESC LIMIT 1');
+        $att->execute([$participantId, $eventId]);
+        $date = (string)($att->fetchColumn() ?: '');
+        if ($date === '') {
+            $redirect('warning', 'No attendance record for this participant yet.');
+            return;
+        }
+        $sent = \App\Services\CoaService::maybeSendFor($eventId, $participantId, $date);
+        Logger::log(AuthService::id(), $sent ? 'coa_resent' : 'coa_resend_failed', ['participant_id' => $participantId], $eventId);
+        $redirect($sent ? 'success' : 'danger', $sent
+            ? 'Certificate of Appearance sent.'
+            : 'Could not send the Certificate of Appearance (CoA disabled, participant has no email, or mail failure).');
+    }
+
     private function ensureQrPath(\PDO $pdo, array $participant): string
     {
         $path = $participant['qr_path'];

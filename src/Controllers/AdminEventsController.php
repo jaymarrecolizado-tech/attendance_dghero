@@ -168,6 +168,42 @@ class AdminEventsController
     }
 
     /**
+     * Plan#10: per-event Certificate of Appearance settings (All Father).
+     * Empty values fall back to the CoaService defaults.
+     */
+    public function coa(): void
+    {
+        if (!$this->requireAllFather()) return;
+        if (!$this->csrfOk()) return;
+        $id = (int)($_POST['id'] ?? 0);
+        if ($id <= 0) { http_response_code(422); echo 'Invalid'; return; }
+        $enabled = isset($_POST['coa_enabled']) ? 1 : 0;
+        $venue = trim((string)($_POST['coa_venue'] ?? ''));
+        $purpose = trim(strip_tags((string)($_POST['coa_purpose'] ?? '')));
+        $particulars = trim((string)($_POST['coa_particulars'] ?? ''));
+        $sigName = trim(strip_tags((string)($_POST['coa_signatory_name'] ?? '')));
+        $sigTitle = trim(strip_tags((string)($_POST['coa_signatory_title'] ?? '')));
+        $sigPath = trim((string)($_POST['coa_signatory_path'] ?? ''));
+        $logoPath = trim((string)($_POST['coa_logo_path'] ?? ''));
+        $pdo = Database::pdo();
+        $stmt = $pdo->prepare('UPDATE events SET coa_enabled = ?, coa_venue = ?, coa_purpose = ?, coa_particulars = ?, coa_signatory_name = ?, coa_signatory_title = ?, coa_signatory_path = ?, coa_logo_path = ? WHERE id = ?');
+        $stmt->execute([
+            $enabled,
+            $venue !== '' ? mb_substr($venue, 0, 255) : null,
+            $purpose !== '' ? mb_substr($purpose, 0, 255) : null,
+            $particulars !== '' ? $particulars : null,
+            $sigName !== '' ? mb_substr($sigName, 0, 120) : null,
+            $sigTitle !== '' ? mb_substr($sigTitle, 0, 120) : null,
+            $sigPath !== '' ? $sigPath : null,
+            $logoPath !== '' ? $logoPath : null,
+            $id,
+        ]);
+        Logger::log(AuthService::id(), 'event_coa_updated', ['event_id' => $id, 'enabled' => $enabled], $id);
+        if (function_exists('csrf_rotate')) csrf_rotate();
+        header('Location: ?r=admin_events');
+    }
+
+    /**
      * Per-event appearance (structured branding): primary/accent hex colors,
      * a short welcome line, and optional logo/banner images. All Father only.
      */

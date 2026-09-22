@@ -90,6 +90,14 @@ return [
         'POST' => [AdminEventsController::class, 'theme'],
         '_guards' => [$rolesAdmin],
     ],
+    'admin_event_coa' => [
+        'POST' => [AdminEventsController::class, 'coa'],
+        '_guards' => [$rolesAdmin],
+    ],
+    'admin_coa_send' => [
+        'POST' => [AdminRegistrantsController::class, 'resendCoa'],
+        '_guards' => [$eventOps],
+    ],
     'admin_registrant_vip' => [
         'POST' => [AdminRegistrantsController::class, 'toggleVip'],
         '_guards' => [$eventManage],

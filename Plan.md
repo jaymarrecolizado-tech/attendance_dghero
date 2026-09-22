@@ -4,7 +4,7 @@ Turn the app into a multi-event platform: All Father creates events, assigns peo
 
 **OpenCode + Muse Spark 13** on branch `attendance_accend`. Enforce [ponytail](https://github.com/dietrichgebert/ponytail) and [taste-skill](https://github.com/leonxlnx/taste-skill) (`design-taste-frontend` + `redesign-existing-projects`).
 
-**Status:** Multi-event is shipped. VPS is live. **Plan#4** through **Plan#7** are done. **Plan#8** is done locally (deploy still open). **Current work is Plan#9** (richer unlock animation). Next new plan after that is **Plan#10**.
+**Status:** Multi-event is shipped. VPS is live. **Plan#4** through **Plan#9** are done locally (Plan#8/#9 deploy boxes may still be open). **Current work is Plan#10** (restore Certificate of Appearance). Next new plan after that is **Plan#11**.
 
 **Audit:** 2026-09-14 closed multi-event leftovers. 2026-09-20 landed Settings merge, script gating, AuthService, flash plumbing, `env.example`. 2026-09-21 morning pass fixed door-scan CSRF, import-preview rotate, retry `e=` link, event-aware nav, main deploy docs. Same-day afternoon pass closed the five re-check nits (below).
 
@@ -12,7 +12,7 @@ Turn the app into a multi-event platform: All Father creates events, assigns peo
 
 ## Agent: start here
 
-Multi-event is **shipped**. VPS cutover **ran 2026-09-21**. **Plan#4** through **Plan#7** are live. **Plan#8** is local only until its deploy box is checked. Current work is **Plan#9**. The next plan after that is **Plan#10**. Do not rebuild EventContext. Do not commit `.env` / `.env.vps`.
+Multi-event is **shipped**. VPS cutover **ran 2026-09-21**. **Plan#4** through **Plan#9** are in the tree (deploy checkboxes on #8/#9 still open). Current work is **Plan#10**. The next plan after that is **Plan#11**. Do not rebuild EventContext. Do not commit `.env` / `.env.vps`.
 
 **Plan numbers**
 
@@ -27,6 +27,7 @@ Multi-event is **shipped**. VPS cutover **ran 2026-09-21**. **Plan#4** through *
 | Plan#7 | Hack for Gov mark and circuits on the form | Live on digitalhero.dictr2.cloud |
 | Plan#8 | Moving circuit background on the register page | Done locally; CSS/JS/markup deploy pending access |
 | Plan#9 | Richer door unlock animation | Done locally; CSS/JS deploy pending access |
+| Plan#10 | Restore Certificate of Appearance (auto-create + auto-send) | Done locally; deploy + migration pending access |
 
 **Session contract**
 
@@ -46,6 +47,39 @@ php scripts/test_csrf_lifecycle.php
 ---
 
 ## Left to do
+
+### Plan#10 — restore Certificate of Appearance (auto-create + auto-send)
+
+The previous app version generated a dual-copy DICT Certificate of Appearance PDF and emailed it after attendance. This repo has **no CoA code** left (no `coa_*` files, no graphify node). Rebuild from the old PDF/email samples.
+
+Reuse what already works: TCPDF (see [ReportController](src/Controllers/ReportController.php)), [`Mailer::send`](src/Services/Mailer.php) with attachment path, and the signed attendance hook in [AttendanceController::submit](src/Controllers/AttendanceController.php) (today it saves the row and returns JSON only). A static `ca/CERT OF APPEARANCE.pdf` once sat on production docroot; that was not the generator and was removed.
+
+```mermaid
+flowchart LR
+  scan[Door_scan_plus_signature]
+  att[Save_attendance]
+  pdf[Generate_dual_COA_PDF]
+  mail[Email_with_attachment]
+  scan --> att --> pdf --> mail
+```
+
+**PDF** (two identical certificates side by side, cut line): DICT logo left, Bagong Pilipinas right; title CERTIFICATE OF APPEARANCE; name + agency, venue, date, event purpose; particulars table (lodging / meals / vehicle); issue date; signatory name/title + signature image; Region II footer.
+
+**Email:** From display = event name; subject `Certificate of Appearance — {Month D, YYYY}`; body Dear {Name}, attached CoA for **{date}**; attachment `coa_{participantId}_{YYYYMMDD}.pdf`.
+
+Defaults for this restore:
+
+1. **Trigger:** After a successful door scan + signature. Also an admin **Resend COA** on registrants/attendance. Skip if the participant has no email. Do not block the scan JSON if mail fails (log and continue).
+2. **Particulars / venue / signatory:** Per-event CoA settings (All Father), with defaults so an event works before settings are filled: DID NOT PROVIDE hotel/lodging, PROVIDED food and meals - Lunch, DID NOT PROVIDE VEHICLE; inclusive date = attendance date.
+
+- [x] Add [`src/Services/CoaService.php`](src/Services/CoaService.php): TCPDF dual-copy layout matching the DICT sample. Store under `storage/coa/{eventId}/` (not web-public).
+- [x] Per-event CoA settings (migration on `events`): enable flag, venue, purpose line, particulars text, signatory name/title, logo/signature paths. All Father UI to edit them.
+- [x] After attendance insert succeeds, if CoA is enabled and the participant has an email: generate PDF → `Mailer::send`. Wire the same path from `submitJsonForTest` for tests.
+- [x] Admin resend route (e.g. `admin_coa_send`) on the registrants or attendance list.
+- [x] Ship DICT / Bagong Pilipinas logos under `assets/` (or reuse uploaded branding). Do not commit the old Reference HTML.
+- [ ] After it works locally, deploy to `/home/digitalhero/htdocs/digitalhero.dictr2.cloud`, run the migration, smoke one scan → inbox PDF.
+
+Leave alone: registration field names, CSRF, QR email on register, and the bulk attendance report builder.
 
 ### Plan#9 — richer door unlock animation
 

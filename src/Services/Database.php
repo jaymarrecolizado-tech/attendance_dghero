@@ -142,6 +142,10 @@ class Database
         if (self::tableExists($pdo, 'events') && !self::columnExists($pdo, 'events', 'theme_layout')) {
             self::executeSqlFileTolerant($pdo, $base . '012_event_gate.sql');
         }
+        // 013_event_coa (per-event Certificate of Appearance settings)
+        if (self::tableExists($pdo, 'events') && !self::columnExists($pdo, 'events', 'coa_enabled')) {
+            self::executeSqlFileTolerant($pdo, $base . '013_event_coa.sql');
+        }
     }
 
     private static function migrate010(PDO $pdo): void

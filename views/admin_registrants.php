@@ -145,6 +145,11 @@ $defaultMessage = 'Thank you for joining and registering for the event. Please k
               <div class="d-flex flex-wrap gap-2">
                 <button type="button" class="btn btn-outline-primary btn-sm btn-view-qr" data-uuid="<?= htmlspecialchars($r['uuid'], ENT_QUOTES) ?>" data-name="<?= htmlspecialchars($r['first_name'].' '.$r['last_name'], ENT_QUOTES) ?>">View QR</button>
                 <button type="button" class="btn btn-outline-success btn-sm btn-send-email" data-id="<?= (int)$r['id'] ?>" data-name="<?= htmlspecialchars($r['first_name'].' '.$r['last_name'], ENT_QUOTES) ?>" data-email="<?= htmlspecialchars($displayEmail, ENT_QUOTES) ?>" <?= $displayEmail === '' ? 'disabled' : '' ?>>Send Email</button>
+                <form method="post" action="?r=admin_coa_send" class="d-inline">
+                  <input type="hidden" name="csrf" value="<?= htmlspecialchars($token, ENT_QUOTES) ?>">
+                  <input type="hidden" name="participant_id" value="<?= (int)$r['id'] ?>">
+                  <button class="btn btn-outline-dark btn-sm" type="submit" <?= $displayEmail === '' ? 'disabled' : '' ?> title="Generate and email the Certificate of Appearance for the latest attendance">Resend COA</button>
+                </form>
               </div>
             </td>
           </tr>
