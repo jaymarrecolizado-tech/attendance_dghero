@@ -4,7 +4,7 @@ Turn the app into a multi-event platform: All Father creates events, assigns peo
 
 **OpenCode + Muse Spark 13** on branch `attendance_accend`. Enforce [ponytail](https://github.com/dietrichgebert/ponytail) and [taste-skill](https://github.com/leonxlnx/taste-skill) (`design-taste-frontend` + `redesign-existing-projects`).
 
-**Status:** Multi-event is shipped. VPS is live. **Plan#4** and **Plan#5** are done. **Current work is Plan#6** (door reveal and particles). Next new plan after that is **Plan#7**.
+**Status:** Multi-event is shipped. VPS is live. **Plan#4** and **Plan#5** are done. **Plan#6** is done locally (deploy still open). **Current work is Plan#7** (Hack for Gov mark and circuits on the registration page). Next new plan after that is **Plan#8**.
 
 **Audit:** 2026-09-14 closed multi-event leftovers. 2026-09-20 landed Settings merge, script gating, AuthService, flash plumbing, `env.example`. 2026-09-21 morning pass fixed door-scan CSRF, import-preview rotate, retry `e=` link, event-aware nav, main deploy docs. Same-day afternoon pass closed the five re-check nits (below).
 
@@ -12,7 +12,7 @@ Turn the app into a multi-event platform: All Father creates events, assigns peo
 
 ## Agent: start here
 
-Multi-event is **shipped**. VPS cutover **ran 2026-09-21**. **Plan#4** and **Plan#5** are live. Current work is **Plan#6**. The next plan after that is **Plan#7**. Do not rebuild EventContext. Do not commit `.env` / `.env.vps`.
+Multi-event is **shipped**. VPS cutover **ran 2026-09-21**. **Plan#4** and **Plan#5** are live. **Plan#6** is local only until its deploy box is checked. Current work is **Plan#7**. The next plan after that is **Plan#8**. Do not rebuild EventContext. Do not commit `.env` / `.env.vps`.
 
 **Plan numbers**
 
@@ -24,6 +24,7 @@ Multi-event is **shipped**. VPS cutover **ran 2026-09-21**. **Plan#4** and **Pla
 | Plan#4 | Per-event registration branding | Done (code + browser-verified 2026-09-22) |
 | Plan#5 | Hack for Gov 5 door gate | Live on digitalhero.dictr2.cloud |
 | Plan#6 | Door reveal and window particles | Done locally; three-file deploy pending access |
+| Plan#7 | Hack for Gov mark and circuits on the form | Done locally; hero + gate assets deploy pending access |
 
 **Session contract**
 
@@ -43,6 +44,33 @@ php scripts/test_csrf_lifecycle.php
 ---
 
 ## Left to do
+
+### Plan#7 — Hack for Gov mark and moving circuits on the registration page
+
+Reading this as: the Hack for Gov 5 registration form for event guests, with the existing flag-block mark, leaning toward navy `#0B1B45`, gold `#FCD116`, blue `#0038A8`, and red `#CE1126` — the full logo on the form, with circuit traces that travel and answer the pointer.
+
+The door already splits [assets/hack4gov-door-logo.png](assets/hack4gov-door-logo.png). The form behind it does not. [views/partials/guest_hero.php](views/partials/guest_hero.php) still shows the generic “G” icon on phones and a text panel on desktop. The logo file is a raster, so the circuit lines inside the letters cannot be animated from the PNG. Draw a separate circuit layer over and around the mark.
+
+Only when `theme_layout` is `gate`. Other events keep the current hero. No new library, no migration, no change to field names, CSRF, or `?r=register&e=`. Reuse the same PNG the door uses. `prefers-reduced-motion` shows the logo and still traces. The circuit layer does not sit on top of inputs.
+
+```mermaid
+flowchart LR
+  door[Door_gate]
+  hero[Full_Hack_for_Gov_mark]
+  circuits[Moving_circuit_traces]
+  form[Existing_3_step_form]
+  door --> hero --> circuits --> form
+```
+
+- [x] On the gate register page, show the full `hack4gov-door-logo.png` in the hero in [views/partials/guest_hero.php](views/partials/guest_hero.php): above the title on desktop, and in place of the generic mobile icon. Alt text is the event name. The image scales inside the hero and does not cover the form.
+- [x] Add an inline SVG circuit field in that hero: traces and nodes in gold, blue, and red, using the same palette as the logo. A dash animation runs along the traces so the graphic reads as live circuitry. Scope the CSS under a gate-only class in [assets/hack4gov-gate.css](assets/hack4gov-gate.css), which already loads only for this layout.
+- [x] In [assets/hack4gov-gate.js](assets/hack4gov-gate.js), the pointer and touch brighten the nearest traces and nodes. The layer is `pointer-events: none` except for that listener on the hero, so typing and the stepper stay usable. Cap the trace count on narrow screens.
+- [x] Reduced motion: the logo and traces stay painted, with no traveling dash and no pointer chase.
+- [x] Session skip, validation error, and Try again still reach this same form, so the mark and circuits show there too. A second event’s register link has no Hack for Gov image and no circuit SVG.
+- [x] Phone width: the mark sits in the hero, the form remains the page, and circuits stay behind the card.
+- [ ] After it works locally, deploy the hero partial plus the gate CSS and JS to `/home/digitalhero/htdocs/digitalhero.dictr2.cloud`. No migration and no `.env` change.
+
+Leave alone: the door’s split use of the same PNG, `theme_layout`, slug `hack4gov-5-8`, and the 3-step fields.
 
 ### Plan#6 — richer door, reveal into registration, window particles
 

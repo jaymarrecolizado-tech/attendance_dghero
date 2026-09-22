@@ -1,11 +1,56 @@
 /*
- * Hack for Gov 5 door gate behavior: unlock sequence (bolts, flare, door
+ * Hack for Gov 5 gate assets: door unlock sequence (bolts, flare, door
  * swing), particle window behind the doors, staged handoff into the form,
- * and session skip. The gate partial renders server-side; this script only
- * enhances it and never blocks the form (guest_gate.php already removes the
- * gate without JS or when the session flag says it was unlocked before).
+ * session skip, and the hero circuit field that answers the pointer. The
+ * gate partial renders server-side; this script only enhances it and never
+ * blocks the form (guest_gate.php already removes the gate without JS or
+ * when the session flag says it was unlocked before).
  */
 (function () {
+  var reduceMotion = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+  /* ---------- Hero circuit field (independent of the gate overlay) ------- */
+
+  function initCircuits() {
+    if (reduceMotion) return; // Static traces: no pointer chase.
+    var svgs = Array.prototype.slice.call(document.querySelectorAll('.event-gate-circuits'));
+    if (!svgs.length) return;
+    svgs.forEach(function (svg) {
+      var host = svg.closest('.guest-hero-panel') || svg.closest('.guest-hero-mobile');
+      if (!host) return;
+      var groups = Array.prototype.slice.call(svg.querySelectorAll('[data-circuit]'));
+      if (!groups.length) return;
+
+      var clear = function () {
+        groups.forEach(function (g) { g.classList.remove('is-lit'); });
+      };
+
+      host.addEventListener('pointermove', function (e) {
+        var hostRect = host.getBoundingClientRect();
+        var x = e.clientX - hostRect.left;
+        var y = e.clientY - hostRect.top;
+        var near = [];
+        groups.forEach(function (g) {
+          var r = g.getBoundingClientRect();
+          if (r.width === 0 && r.height === 0) return; // capped/hidden trace
+          var cx = r.left + r.width / 2 - hostRect.left;
+          var cy = r.top + r.height / 2 - hostRect.top;
+          var d = Math.sqrt((cx - x) * (cx - x) + (cy - y) * (cy - y));
+          if (d < 150) near.push([d, g]);
+        });
+        clear();
+        near.sort(function (a, b) { return a[0] - b[0]; });
+        near.slice(0, 3).forEach(function (pair) { pair[1].classList.add('is-lit'); });
+      });
+
+      host.addEventListener('pointerleave', clear);
+    });
+  }
+
+  initCircuits();
+
+  /* ---------- Door gate (only when the overlay rendered) ----------------- */
+
   var gate = document.getElementById('eventGate');
   if (!gate) return;
 
@@ -13,7 +58,6 @@
   var hud = document.getElementById('eventGateHud');
   var unlockBtn = document.getElementById('eventGateUnlock');
   var canvas = document.getElementById('eventGateWindow');
-  var reduceMotion = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
   var opening = false;
   var released = false;
 

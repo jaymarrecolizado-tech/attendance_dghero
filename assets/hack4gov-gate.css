@@ -413,3 +413,125 @@ main,
     transition: none !important;
   }
 }
+
+/*
+ * Gate-layout hero: full Hack for Gov mark and live circuit traces.
+ * This file only loads on the gate register form, so these hero rules
+ * never reach other events.
+ */
+
+.guest-page .guest-hero-panel,
+.guest-page .guest-hero-mobile {
+  position: relative;
+  overflow: hidden;
+}
+
+.guest-page .guest-hero-content {
+  position: relative;
+}
+
+.event-gate-hero-logo {
+  display: block;
+  width: auto;
+  max-width: 210px;
+  max-height: 132px;
+  object-fit: contain;
+  margin: 0 0 1rem;
+}
+
+.guest-hero-mobile .event-gate-hero-logo {
+  width: 44px;
+  height: 44px;
+  max-width: none;
+  max-height: none;
+  border-radius: 8px;
+}
+
+.event-gate-circuits {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+}
+
+[data-circuit] polyline {
+  fill: none;
+  stroke: #fcd116;
+  stroke-width: 1.6;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  stroke-dasharray: 5 9;
+  opacity: 0.5;
+  animation: event-gate-trace 3.4s linear infinite;
+}
+
+[data-circuit] circle {
+  fill: #fcd116;
+  opacity: 0.75;
+}
+
+[data-circuit][data-tone="blue"] polyline {
+  stroke: #8fa9ce;
+}
+
+[data-circuit][data-tone="blue"] circle {
+  fill: #8fa9ce;
+}
+
+[data-circuit][data-tone="red"] polyline {
+  stroke: #ce1126;
+}
+
+[data-circuit][data-tone="red"] circle {
+  fill: #ce1126;
+}
+
+/* Organic timing: adjacent traces travel at different speeds. */
+[data-circuit]:nth-of-type(2n) polyline {
+  animation-duration: 4.1s;
+  animation-direction: reverse;
+}
+
+[data-circuit]:nth-of-type(3n) polyline {
+  animation-duration: 2.7s;
+}
+
+@keyframes event-gate-trace {
+  to {
+    stroke-dashoffset: -56;
+  }
+}
+
+/* Pointer/touch lights the nearest traces (class toggled in the gate JS). */
+[data-circuit].is-lit polyline {
+  opacity: 1;
+  filter: drop-shadow(0 0 4px rgba(252, 209, 22, 0.85));
+}
+
+[data-circuit].is-lit circle {
+  opacity: 1;
+  filter: drop-shadow(0 0 5px rgba(252, 209, 22, 0.9));
+}
+
+/* Cap the trace count on narrow screens. */
+@media (max-width: 640px) {
+  .event-gate-circuit-extra {
+    display: none;
+  }
+
+  .event-gate-circuits {
+    opacity: 0.6;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  /* Static circuitry: painted traces, no traveling dash. */
+  [data-circuit] polyline {
+    animation: none;
+  }
+
+  [data-circuit].is-lit polyline {
+    animation: none;
+  }
+}
