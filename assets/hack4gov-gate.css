@@ -20,6 +20,13 @@
   background: var(--gate-trench);
   transform-style: preserve-3d;
   font-family: inherit;
+  /* Plan#9: the trench backdrop clears as the doors swing, so the opening
+     frames the real page and its circuit field instead of a flat color. */
+  transition: background-color 0.9s ease 0.45s;
+}
+
+.event-gate.open {
+  background: transparent;
 }
 
 .event-gate.done {
@@ -27,6 +34,14 @@
   pointer-events: none;
   visibility: hidden;
   transition: opacity 0.8s ease, visibility 0s linear 0.8s;
+}
+
+/* Gate chrome (HUD, button, icons) leaves before the overlay does, so it
+   never ghosts over the form during the handoff. */
+.event-gate.done .event-gate-hud,
+.event-gate.done .event-gate-icons {
+  opacity: 0;
+  transition: opacity 0.25s ease;
 }
 
 body.gate-locked {
@@ -204,8 +219,16 @@ main,
 }
 
 .event-gate.opening .event-gate-seam {
+  width: 4px;
+  box-shadow:
+    0 0 10px rgba(252, 209, 22, 1),
+    0 0 40px rgba(252, 209, 22, 0.9),
+    0 0 90px rgba(252, 209, 22, 0.55);
+}
+
+.event-gate.open .event-gate-seam {
   opacity: 0;
-  transition: opacity 0.4s;
+  transition: opacity 0.5s ease 0.3s;
 }
 
 .event-gate-flare {
@@ -354,11 +377,6 @@ main,
   box-shadow: 0 18px 40px -12px rgba(252, 209, 22, 0.8);
 }
 
-.event-gate.opening .event-gate-hud {
-  opacity: 0;
-  transition: opacity 0.5s 0.9s;
-}
-
 @media (max-width: 640px) {
   .event-gate-icon {
     width: 36px;
@@ -383,6 +401,10 @@ main,
 
 /* Reduced motion: gentle slide instead of the 3D swing. */
 @media (prefers-reduced-motion: reduce) {
+  .event-gate {
+    transition: none;
+  }
+
   .event-gate-door {
     transition: transform 0.6s ease, opacity 0.6s ease !important;
   }

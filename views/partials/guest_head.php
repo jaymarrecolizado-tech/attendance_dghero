@@ -37,8 +37,8 @@ $eventGateEnabled = ($eventTheme['layout'] ?? '') === 'gate' && ($eventGate ?? t
   </style>
   <?php endif; ?>
   <?php if ($eventGateEnabled): ?>
-  <link href="assets/hack4gov-gate.css?v=20260922g" rel="stylesheet">
-  <script src="assets/hack4gov-gate.js?v=20260922f" defer></script>
+  <link href="assets/hack4gov-gate.css?v=20260922h" rel="stylesheet">
+  <script src="assets/hack4gov-gate.js?v=20260922g" defer></script>
   <?php endif; ?>
 </head>
 <body class="<?= htmlspecialchars($guestBodyClass, ENT_QUOTES) ?>">

@@ -4,7 +4,7 @@ Turn the app into a multi-event platform: All Father creates events, assigns peo
 
 **OpenCode + Muse Spark 13** on branch `attendance_accend`. Enforce [ponytail](https://github.com/dietrichgebert/ponytail) and [taste-skill](https://github.com/leonxlnx/taste-skill) (`design-taste-frontend` + `redesign-existing-projects`).
 
-**Status:** Multi-event is shipped. VPS is live. **Plan#4** through **Plan#7** are done. **Current work is Plan#8** (moving circuit background on the registration page). Next new plan after that is **Plan#9**.
+**Status:** Multi-event is shipped. VPS is live. **Plan#4** through **Plan#7** are done. **Plan#8** is done locally (deploy still open). **Current work is Plan#9** (richer unlock animation). Next new plan after that is **Plan#10**.
 
 **Audit:** 2026-09-14 closed multi-event leftovers. 2026-09-20 landed Settings merge, script gating, AuthService, flash plumbing, `env.example`. 2026-09-21 morning pass fixed door-scan CSRF, import-preview rotate, retry `e=` link, event-aware nav, main deploy docs. Same-day afternoon pass closed the five re-check nits (below).
 
@@ -12,7 +12,7 @@ Turn the app into a multi-event platform: All Father creates events, assigns peo
 
 ## Agent: start here
 
-Multi-event is **shipped**. VPS cutover **ran 2026-09-21**. **Plan#4** through **Plan#7** are live. Current work is **Plan#8**. The next plan after that is **Plan#9**. Do not rebuild EventContext. Do not commit `.env` / `.env.vps`.
+Multi-event is **shipped**. VPS cutover **ran 2026-09-21**. **Plan#4** through **Plan#7** are live. **Plan#8** is local only until its deploy box is checked. Current work is **Plan#9**. The next plan after that is **Plan#10**. Do not rebuild EventContext. Do not commit `.env` / `.env.vps`.
 
 **Plan numbers**
 
@@ -26,6 +26,7 @@ Multi-event is **shipped**. VPS cutover **ran 2026-09-21**. **Plan#4** through *
 | Plan#6 | Door reveal and window particles | Live on digitalhero.dictr2.cloud |
 | Plan#7 | Hack for Gov mark and circuits on the form | Live on digitalhero.dictr2.cloud |
 | Plan#8 | Moving circuit background on the register page | Done locally; CSS/JS/markup deploy pending access |
+| Plan#9 | Richer door unlock animation | Done locally; CSS/JS deploy pending access |
 
 **Session contract**
 
@@ -45,6 +46,34 @@ php scripts/test_csrf_lifecycle.php
 ---
 
 ## Left to do
+
+### Plan#9 — richer door unlock animation
+
+Reading this as: the Hack for Gov 5 entrance for event guests, with the sharp flag-block mark already on the doors, leaning toward navy `#0B1B45`, gold `#FCD116`, blue `#0038A8`, and red `#CE1126` — a staged unlock that opens onto the circuit background and the form, not a faster fade.
+
+Access System still runs the short sequence in [assets/hack4gov-gate.js](assets/hack4gov-gate.js): bolts, then the doors swing, then `.event-gate.done` fades the overlay. The mark stays sharp (it is no longer stretched). The opening still feels thin: the HUD disappears early, the particle window is only a brief gap, and the registration page arrives as a fade instead of a reveal of the Plan#8 circuit field.
+
+Stay in the gate files. No new library, no migration, no change to field names, CSRF, or `?r=register&e=`. Other events have no door. `prefers-reduced-motion` keeps the short slide and a still background. Session skip, validation error, and Try again still skip the door. Cache-bust the stylesheet with a new `?v=`.
+
+```mermaid
+flowchart LR
+  locked[Closed_doors]
+  bolts[Bolts_seam_and_seal]
+  swing[Doors_swing_with_the_mark]
+  reveal[Circuit_background_shows]
+  form[Registration_page_settles]
+  locked --> bolts --> swing --> reveal --> form
+```
+
+- [x] Stage the unlock in [assets/hack4gov-gate.css](assets/hack4gov-gate.css) and [assets/hack4gov-gate.js](assets/hack4gov-gate.js): bolts draw back, the gold seam brightens, the seal clears, then the doors swing with the sharp mark. Hold the open doors long enough to see the circuit background in the gap before the overlay leaves.
+- [x] Hand the page over: the Plan#8 circuit field is what shows through the opening, then the side panel and the form settle into place. Remove the feeling of a hard cut. Focus still moves to `first_name` after the reveal.
+- [x] Keep Access System and Enter as the only unlock controls. The button stays clickable until the sequence starts.
+- [x] Reduced motion: doors slide and fade, the circuit background is already still, and the form fades in. No 3D swing.
+- [x] A reload after unlock does not show the door again. Another event’s register link still has no door and no unlock sequence.
+- [x] Phone width: the doors still cover the screen, and the form is usable after the reveal.
+- [ ] After it works locally, deploy the gate CSS and JS to `/home/digitalhero/htdocs/digitalhero.dictr2.cloud` with a new `?v=`. No migration and no `.env` change. This can ship with the Plan#8 deploy.
+
+Leave alone: the logo file, `theme_layout`, slug `hack4gov-5-8`, and the 3-step fields.
 
 ### Plan#8 — moving circuit background on the registration page
 

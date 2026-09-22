@@ -124,8 +124,17 @@
       gate.classList.add('open');
       if (hud) hud.innerHTML = 'ACCESS GRANTED // <b>WELCOME</b>';
     }, 380);
-    // Doors finish their swing (1.55s) before the handoff starts.
-    window.setTimeout(release, reduceMotion ? 900 : 2150);
+    if (reduceMotion) {
+      window.setTimeout(release, 900);
+      return;
+    }
+    // Doors finish their swing (1.55s) while the trench backdrop clears,
+    // then the opening is held so the circuit field shows through; the
+    // page settles into place before the overlay leaves.
+    window.setTimeout(function () {
+      document.body.classList.remove('gate-pending');
+    }, 1700);
+    window.setTimeout(release, 2600);
   }
 
   if (unlockBtn) unlockBtn.addEventListener('click', openGate);
