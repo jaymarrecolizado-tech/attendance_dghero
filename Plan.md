@@ -4,7 +4,7 @@ Turn the app into a multi-event platform: All Father creates events, assigns peo
 
 **OpenCode + Muse Spark 13** on branch `attendance_accend`. Enforce [ponytail](https://github.com/dietrichgebert/ponytail) and [taste-skill](https://github.com/leonxlnx/taste-skill) (`design-taste-frontend` + `redesign-existing-projects`).
 
-**Status:** Multi-event is shipped. VPS is live at https://digitalhero.dictr2.cloud. **Per-event registration branding is implemented and verified** (below). PWA/Redis/SSE stay later.
+**Status:** Multi-event is shipped. VPS is live. **Plan#4** (per-event registration branding) is implemented in code. Next new plan is **Plan#5**. PWA/Redis/SSE stay later.
 
 **Audit:** 2026-09-14 closed multi-event leftovers. 2026-09-20 landed Settings merge, script gating, AuthService, flash plumbing, `env.example`. 2026-09-21 morning pass fixed door-scan CSRF, import-preview rotate, retry `e=` link, event-aware nav, main deploy docs. Same-day afternoon pass closed the five re-check nits (below).
 
@@ -12,7 +12,16 @@ Turn the app into a multi-event platform: All Father creates events, assigns peo
 
 ## Agent: start here
 
-Multi-event is **shipped**. VPS cutover **ran 2026-09-21**. Current work is **Per-event registration branding** under Left to do. Do not rebuild EventContext. Do not commit `.env` / `.env.vps`.
+Multi-event is **shipped**. VPS cutover **ran 2026-09-21**. **Plan#4** is implemented. Open item is the operator smoke under **Plan#3**. New work gets the next number (**Plan#5**, then **Plan#6**). Do not rebuild EventContext. Do not commit `.env` / `.env.vps`.
+
+**Plan numbers**
+
+| ID | Plan | State |
+|----|------|--------|
+| Plan#1 | Multi-event All Father | Done |
+| Plan#2 | Production hardening, guest polish, deploy docs | Done |
+| Plan#3 | VPS go-live | Live; operator smoke still open |
+| Plan#4 | Per-event registration branding | Done (code + browser-verified 2026-09-22) |
 
 **Session contract**
 
@@ -33,7 +42,9 @@ php scripts/test_csrf_lifecycle.php
 
 ## Left to do
 
-### Now — per-event registration branding
+### Plan#4 — per-event registration branding (implemented)
+
+Code check 2026-09-22: migration `011`, Appearance form, `admin_event_theme`, branding image route, and guest CSS variables are in the repo. Browser pass re-run 2026-09-22 (themed vs default event at desktop and phone widths; computed CSS variables read in-page: a full theme sets all four variables and paints navbar, buttons, and hero gradient; an accent-only theme overrides the accent while primary and hero stay default navy; branding route returns 200 image/png for logo and banner and 404 for unknown kind or event).
 
 Each event can look like its own registration page. **Structured branding only** — no custom CSS box. All Father sets logo, primary color, accent color, a short welcome line, and an optional banner. Layout, steps, and POST field names stay the same. No branding keeps Public Sans + federal navy in [`assets/app.css`](assets/app.css) and [`assets/guest-registration.css`](assets/guest-registration.css).
 
@@ -67,7 +78,7 @@ flowchart LR
 
 No new frontend stack. Keep `?r=register&e={slug}`.
 
-### Done — VPS go-live
+### Plan#3 — VPS go-live
 
 Target: `https://digitalhero.dictr2.cloud`.
 
