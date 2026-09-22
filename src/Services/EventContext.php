@@ -261,7 +261,7 @@ final class EventContext
     /**
      * Structured per-event branding, sanitized. Returns [] when the event has
      * no theme so guests keep the default Public Sans + federal navy look.
-     * @return array{primary:string,dark:string,accent:string,welcome:string,logo_url:string,banner_url:string}
+     * @return array{primary:string,dark:string,accent:string,welcome:string,layout:string,logo_url:string,banner_url:string}
      */
     public static function themeFor(?array $event): array
     {
@@ -277,7 +277,8 @@ final class EventContext
         $welcome = trim((string)($event['welcome_text'] ?? ''));
         $logoPath = trim((string)($event['logo_path'] ?? ''));
         $bannerPath = trim((string)($event['banner_path'] ?? ''));
-        if ($primary === '' && $accent === '' && $welcome === '' && $logoPath === '' && $bannerPath === '') {
+        $layout = trim((string)($event['theme_layout'] ?? '')) === 'gate' ? 'gate' : '';
+        if ($primary === '' && $accent === '' && $welcome === '' && $logoPath === '' && $bannerPath === '' && $layout === '') {
             return [];
         }
         $eventId = (int)$event['id'];
@@ -286,6 +287,7 @@ final class EventContext
             'dark' => $primary !== '' ? self::darkenHex($primary) : '',
             'accent' => $accent,
             'welcome' => mb_substr($welcome, 0, 180),
+            'layout' => $layout,
             'logo_url' => '',
             'banner_url' => '',
         ];

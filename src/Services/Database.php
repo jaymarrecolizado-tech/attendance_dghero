@@ -138,6 +138,10 @@ class Database
         )) {
             self::executeSqlFileTolerant($pdo, $base . '011_event_theme.sql');
         }
+        // 012_event_gate (add theme_layout + enable the gate on Hack for Gov 5)
+        if (self::tableExists($pdo, 'events') && !self::columnExists($pdo, 'events', 'theme_layout')) {
+            self::executeSqlFileTolerant($pdo, $base . '012_event_gate.sql');
+        }
     }
 
     private static function migrate010(PDO $pdo): void

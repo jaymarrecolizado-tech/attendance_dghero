@@ -4,7 +4,7 @@ Turn the app into a multi-event platform: All Father creates events, assigns peo
 
 **OpenCode + Muse Spark 13** on branch `attendance_accend`. Enforce [ponytail](https://github.com/dietrichgebert/ponytail) and [taste-skill](https://github.com/leonxlnx/taste-skill) (`design-taste-frontend` + `redesign-existing-projects`).
 
-**Status:** Multi-event is shipped. VPS is live. **Plan#4** (per-event registration branding) is implemented in code. Next new plan is **Plan#5**. PWA/Redis/SSE stay later.
+**Status:** Multi-event is shipped. VPS is live. **Plan#4** is done. **Current work is Plan#5** (Hack for Gov 5 door gate). Next new plan after that is **Plan#6**.
 
 **Audit:** 2026-09-14 closed multi-event leftovers. 2026-09-20 landed Settings merge, script gating, AuthService, flash plumbing, `env.example`. 2026-09-21 morning pass fixed door-scan CSRF, import-preview rotate, retry `e=` link, event-aware nav, main deploy docs. Same-day afternoon pass closed the five re-check nits (below).
 
@@ -12,7 +12,7 @@ Turn the app into a multi-event platform: All Father creates events, assigns peo
 
 ## Agent: start here
 
-Multi-event is **shipped**. VPS cutover **ran 2026-09-21**. **Plan#4** is implemented. Open item is the operator smoke under **Plan#3**. New work gets the next number (**Plan#5**, then **Plan#6**). Do not rebuild EventContext. Do not commit `.env` / `.env.vps`.
+Multi-event is **shipped**. VPS cutover **ran 2026-09-21**. **Plan#4** is done. Current work is **Plan#5**. The next plan after that is **Plan#6**. Do not rebuild EventContext. Do not commit `.env` / `.env.vps`.
 
 **Plan numbers**
 
@@ -22,6 +22,7 @@ Multi-event is **shipped**. VPS cutover **ran 2026-09-21**. **Plan#4** is implem
 | Plan#2 | Production hardening, guest polish, deploy docs | Done |
 | Plan#3 | VPS go-live | Live; operator smoke still open |
 | Plan#4 | Per-event registration branding | Done (code + browser-verified 2026-09-22) |
+| Plan#5 | Hack for Gov 5 door gate | Done locally; VPS deploy pending access |
 
 **Session contract**
 
@@ -41,6 +42,33 @@ php scripts/test_csrf_lifecycle.php
 ---
 
 ## Left to do
+
+### Plan#5 — Hack for Gov 5 door gate
+
+The sample in [Reference/hack4gov-login.html](Reference/hack4gov-login.html) is a **login mock** with a full-screen door. It is not a registration form. Use the door (split logo, gold seam, bolts, seal, “Access System”) as the entrance, then show the existing 3-step register form. Do not copy the 700KB HTML or its inline base64 into the app.
+
+Existing event is **HACK4GOV 5**, slug `hack4gov-5-8`. Rename the display name to **Hack for Gov 5**. Keep the slug so current links still work.
+
+```mermaid
+flowchart LR
+  link["register and e=hack4gov-5-8"]
+  gate[Door_gate]
+  form[Existing_3_step_form]
+  link --> gate --> form
+```
+
+- [x] Extract door CSS (navy `#0B1B45`, gold `#FCD116`, red `#CE1126`, 3D open, reduced-motion slide) into [assets/hack4gov-gate.css](assets/hack4gov-gate.css). Scope it so admin pages and other events stay unchanged.
+- [x] Extract the door logo **once** (both doors use the same image, split with `background-position`) into `assets/hack4gov-door-logo.png`.
+- [x] Add [views/partials/guest_gate.php](views/partials/guest_gate.php) and [assets/hack4gov-gate.js](assets/hack4gov-gate.js). Unlock opens the doors, then reveals the form. `prefers-reduced-motion` uses the simpler slide. Skip the gate for the rest of the browser session, and on validation error / Try again.
+- [x] Add `events.theme_layout` (`default` or `gate`) in `migrations/012_event_gate.sql`, wired like [011_event_theme.sql](migrations/011_event_theme.sql). Set `gate` on `hack4gov-5-8` only. [RegisterController](src/Controllers/RegisterController.php) passes that into [guest_head.php](views/partials/guest_head.php).
+- [x] Optional Plan#4 colors (accent set to #8A6D00, a darkened gold, so small text on white keeps WCAG AA; the door itself uses the flag gold #FCD116) for this event: primary navy, accent gold, so the form behind the door matches. The door is the layout, not a banner image.
+- [x] `/?r=register&e=hack4gov-5-8` shows closed doors, then the Hack for Gov 5 form after unlock.
+- [x] Reload after unlock does not trap the guest behind the door again.
+- [x] Another event’s register link has no door.
+- [x] Phone width: doors cover the screen; the form is usable after open.
+- [ ] After it works locally, deploy to `/home/digitalhero/htdocs/digitalhero.dictr2.cloud` and set that event’s name and `theme_layout`.
+
+Leave alone: field names, CSRF, `?r=register&e=`, other events, and the sample username/password form. Do not commit the raw Reference HTML; ship the extracted logo and CSS.
 
 ### Plan#4 — per-event registration branding (implemented)
 

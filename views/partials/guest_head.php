@@ -4,8 +4,11 @@ declare(strict_types=1);
 $guestTitle = $guestTitle ?? 'GovNet-Launching';
 $guestBodyClass = $guestBodyClass ?? 'guest-page';
 $guestIncludeRegistrationAssets = $guestIncludeRegistrationAssets ?? false;
-// Per-event branding (sanitized hex values from EventContext::themeFor).
+// Per-event branding (sanitized values from EventContext::themeFor).
 $eventTheme = $eventTheme ?? [];
+// Door-gate layout: only on the register form page. Success and error paths
+// set $eventGate = false so a guest is never trapped behind the door.
+$eventGateEnabled = ($eventTheme['layout'] ?? '') === 'gate' && ($eventGate ?? true);
 ?>
 <!doctype html>
 <html lang="en" class="no-js">
@@ -33,6 +36,13 @@ $eventTheme = $eventTheme ?? [];
     }
   </style>
   <?php endif; ?>
+  <?php if ($eventGateEnabled): ?>
+  <link href="assets/hack4gov-gate.css" rel="stylesheet">
+  <script src="assets/hack4gov-gate.js" defer></script>
+  <?php endif; ?>
 </head>
 <body class="<?= htmlspecialchars($guestBodyClass, ENT_QUOTES) ?>">
+<?php if ($eventGateEnabled) {
+    require __DIR__ . DIRECTORY_SEPARATOR . 'guest_gate.php';
+} ?>
 <?php require __DIR__ . DIRECTORY_SEPARATOR . 'guest_nav.php'; ?>

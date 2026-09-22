@@ -71,6 +71,7 @@ class RegisterController
         if (!isset($_SESSION['qr_allowed'])) $_SESSION['qr_allowed'] = [];
         $_SESSION['qr_allowed'][$uuid] = true;
         $eventTheme = $event ? EventContext::themeFor($event) : [];
+        $eventGate = false;
         require dirname(__DIR__, 2) . DIRECTORY_SEPARATOR . 'views' . DIRECTORY_SEPARATOR . 'register_success.php';
     }
 
@@ -205,6 +206,7 @@ class RegisterController
         http_response_code($code);
         $themeEvent = $slug !== '' ? EventContext::findBySlug(Database::pdo(), $slug) : null;
         $eventTheme = EventContext::themeFor($themeEvent);
+        $eventGate = false;
         $_SESSION['register_flash'] = ['slug' => $slug, 'fields' => [
             'first_name' => $_POST['first_name'] ?? '',
             'middle_name' => $_POST['middle_name'] ?? '',

@@ -1,0 +1,380 @@
+/*
+ * Hack for Gov 5 door gate — scoped entirely under .event-gate (and the
+ * body.gate-locked scroll lock) so admin pages and unthemed events are
+ * untouched. Extracted from Reference/hack4gov-login.html: navy #0B1B45,
+ * gold #FCD116, red #CE1126; doors split the same logo image via
+ * background-position. The gate is the only page this file may style.
+ */
+
+.event-gate {
+  --gate-trench: #060F24;
+  --gate-navy: #0B1B45;
+  --gate-gold: #FCD116;
+  --gate-muted: #9FB0D6;
+  --gate-mono: ui-monospace, 'Cascadia Mono', 'Segoe UI Mono', Menlo, Consolas, monospace;
+  position: fixed;
+  inset: 0;
+  z-index: 2000;
+  perspective: 1500px;
+  -webkit-perspective: 1500px;
+  background: var(--gate-trench);
+  transform-style: preserve-3d;
+  font-family: inherit;
+}
+
+.event-gate.done {
+  visibility: hidden;
+  pointer-events: none;
+}
+
+body.gate-locked {
+  overflow: hidden;
+}
+
+.event-gate:focus-visible {
+  outline: 2px solid var(--gate-gold);
+  outline-offset: 3px;
+}
+
+/* Doors */
+.event-gate-door {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  width: 50.5%;
+  transition: transform 1.55s cubic-bezier(0.72, 0, 0.18, 1);
+  transform-style: preserve-3d;
+  will-change: transform;
+  backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
+}
+
+.event-gate-door-l {
+  left: 0;
+  transform-origin: left center;
+}
+
+.event-gate-door-r {
+  right: 0;
+  transform-origin: right center;
+}
+
+.event-gate.open .event-gate-door-l {
+  transform: rotateY(-104deg) translateZ(0);
+}
+
+.event-gate.open .event-gate-door-r {
+  transform: rotateY(104deg) translateZ(0);
+}
+
+.event-gate-face {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
+  background:
+    repeating-linear-gradient(90deg, rgba(255, 255, 255, 0.022) 0 2px, transparent 2px 6px),
+    linear-gradient(160deg, #0e2150 0%, #081430 55%, #060f24 100%);
+  box-shadow: inset 0 0 90px rgba(0, 0, 0, 0.65);
+}
+
+.event-gate-door-l .event-gate-face {
+  border-right: 1px solid rgba(252, 209, 22, 0.55);
+  box-shadow: inset -22px 0 34px -18px #000, inset 0 0 90px rgba(0, 0, 0, 0.65);
+}
+
+.event-gate-door-r .event-gate-face {
+  border-left: 1px solid rgba(252, 209, 22, 0.55);
+  box-shadow: inset 22px 0 34px -18px #000, inset 0 0 90px rgba(0, 0, 0, 0.65);
+}
+
+.event-gate-face::before {
+  content: "";
+  position: absolute;
+  inset: 16px;
+  border: 1px solid rgba(252, 209, 22, 0.16);
+  pointer-events: none;
+}
+
+.event-gate-face::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background: linear-gradient(180deg, rgba(4, 10, 24, 0.5), transparent 16% 84%, rgba(4, 10, 24, 0.55));
+}
+
+/* One logo image, split across the two doors. */
+.event-gate-logo {
+  position: absolute;
+  inset: 0;
+  background-image: url('hack4gov-door-logo.png');
+  background-repeat: no-repeat;
+  background-size: 200% auto;
+  background-position: center center;
+}
+
+.event-gate-door-l .event-gate-logo {
+  background-position: left center;
+}
+
+.event-gate-door-r .event-gate-logo {
+  background-position: right center;
+}
+
+/* Vault bolts */
+.event-gate-bolts i {
+  position: absolute;
+  width: 30px;
+  height: 9px;
+  background: linear-gradient(180deg, #fcd116, #8f760a);
+  box-shadow: 0 0 10px rgba(252, 209, 22, 0.5);
+  transition: transform 0.5s cubic-bezier(0.6, 0, 0.2, 1) 0.05s;
+}
+
+.event-gate-door-l .event-gate-bolts i {
+  right: -1px;
+}
+
+.event-gate-door-r .event-gate-bolts i {
+  left: -1px;
+}
+
+.event-gate-bolts i:nth-child(1) { top: 22%; }
+.event-gate-bolts i:nth-child(2) { top: 50%; }
+.event-gate-bolts i:nth-child(3) { top: 78%; }
+
+.event-gate.opening .event-gate-door-l .event-gate-bolts i {
+  transform: translateX(-110%);
+}
+
+.event-gate.opening .event-gate-door-r .event-gate-bolts i {
+  transform: translateX(110%);
+}
+
+/* Seam glow + flare */
+.event-gate-seam {
+  position: absolute;
+  left: 50%;
+  top: 0;
+  bottom: 0;
+  width: 2px;
+  transform: translateX(-50%);
+  background: linear-gradient(180deg, transparent, var(--gate-gold) 18% 82%, transparent);
+  box-shadow: 0 0 22px rgba(252, 209, 22, 0.8);
+  animation: event-gate-pulse 2.2s ease-in-out infinite;
+}
+
+@keyframes event-gate-pulse {
+  50% { opacity: 0.45; }
+}
+
+.event-gate.opening .event-gate-seam {
+  opacity: 0;
+  transition: opacity 0.4s;
+}
+
+.event-gate-flare {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  opacity: 0;
+  transform: translate(-50%, -50%);
+  filter: blur(1px);
+  background: radial-gradient(circle, #fff 0%, var(--gate-gold) 42%, transparent 72%);
+}
+
+.event-gate.opening .event-gate-flare {
+  animation: event-gate-flare 1.15s ease-out 0.35s forwards;
+}
+
+@keyframes event-gate-flare {
+  0% { opacity: 0; transform: translate(-50%, -50%) scale(1); }
+  12% { opacity: 1; }
+  100% { opacity: 0; transform: translate(-50%, -50%) scale(90); }
+}
+
+/* Central seal */
+.event-gate-seal {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%);
+  width: 104px;
+  height: 104px;
+  border-radius: 50%;
+  background: #050b1a;
+  border: 2px solid var(--gate-gold);
+  display: grid;
+  place-items: center;
+  box-shadow: 0 0 0 6px rgba(252, 209, 22, 0.12), 0 18px 40px -12px #000;
+  transition: 0.5s cubic-bezier(0.5, 0, 0.2, 1);
+}
+
+.event-gate-seal::before {
+  content: "";
+  position: absolute;
+  inset: -12px;
+  border: 1px dashed rgba(252, 209, 22, 0.5);
+  border-radius: 50%;
+  animation: event-gate-spin 14s linear infinite;
+}
+
+@keyframes event-gate-spin {
+  to { transform: rotate(360deg); }
+}
+
+.event-gate-seal svg {
+  width: 46px;
+  height: 46px;
+}
+
+.event-gate-seal small {
+  position: absolute;
+  bottom: 12px;
+  font-family: var(--gate-mono);
+  font-size: 0.52rem;
+  letter-spacing: 0.28em;
+  color: var(--gate-gold);
+}
+
+.event-gate.opening .event-gate-seal {
+  transform: translate(-50%, -50%) scale(0.4) rotate(-24deg);
+  opacity: 0;
+}
+
+/* Security icons */
+.event-gate-icons {
+  position: absolute;
+  bottom: 40px;
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  gap: 20px;
+  z-index: 10;
+}
+
+.event-gate-icon {
+  width: 42px;
+  height: 42px;
+  background: rgba(11, 27, 69, 0.8);
+  border: 1px solid rgba(252, 209, 22, 0.4);
+  border-radius: 8px;
+  display: grid;
+  place-items: center;
+  color: var(--gate-gold);
+}
+
+.event-gate-icon svg {
+  width: 22px;
+  height: 22px;
+}
+
+/* HUD */
+.event-gate-hud {
+  position: absolute;
+  left: 50%;
+  bottom: 140px;
+  transform: translateX(-50%);
+  text-align: center;
+  width: min(92vw, 560px);
+}
+
+.event-gate-hud-line {
+  font-family: var(--gate-mono);
+  font-size: 0.72rem;
+  letter-spacing: 0.18em;
+  color: var(--gate-muted);
+  margin-bottom: 1.1em;
+}
+
+.event-gate-hud-line b {
+  color: var(--gate-gold);
+  font-weight: 600;
+}
+
+.event-gate-unlock {
+  font-family: inherit;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  font-size: 0.9rem;
+  background: var(--gate-gold);
+  color: var(--gate-trench);
+  border: 0;
+  padding: 1em 2.2em;
+  border-radius: 0;
+  cursor: pointer;
+  transition: transform 0.25s ease, box-shadow 0.25s ease;
+  box-shadow: 0 12px 34px -12px rgba(252, 209, 22, 0.65);
+}
+
+.event-gate-unlock:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 18px 40px -12px rgba(252, 209, 22, 0.8);
+}
+
+.event-gate.opening .event-gate-hud {
+  opacity: 0;
+  transition: opacity 0.5s 0.9s;
+}
+
+@media (max-width: 640px) {
+  .event-gate-icon {
+    width: 36px;
+    height: 36px;
+  }
+
+  .event-gate-icons {
+    bottom: 30px;
+    gap: 12px;
+  }
+
+  .event-gate-seal {
+    width: 82px;
+    height: 82px;
+  }
+
+  .event-gate-seal svg {
+    width: 34px;
+    height: 34px;
+  }
+}
+
+/* Reduced motion: gentle slide instead of the 3D swing. */
+@media (prefers-reduced-motion: reduce) {
+  .event-gate-door {
+    transition: transform 0.6s ease, opacity 0.6s ease !important;
+  }
+
+  .event-gate.open .event-gate-door-l {
+    transform: translateX(-40px);
+    opacity: 0;
+  }
+
+  .event-gate.open .event-gate-door-r {
+    transform: translateX(40px);
+    opacity: 0;
+  }
+
+  .event-gate-seal,
+  .event-gate-hud,
+  .event-gate-seam,
+  .event-gate-flare {
+    transition: opacity 0.5s ease !important;
+    animation: none !important;
+  }
+
+  .event-gate.opening .event-gate-seal {
+    transform: translate(-50%, -50%) scale(0.8) !important;
+    opacity: 0;
+  }
+
+  .event-gate-bolts i {
+    transition: none !important;
+  }
+}
