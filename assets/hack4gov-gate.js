@@ -48,6 +48,37 @@
   }
 
   initCircuits();
+  initPageCircuits();
+
+  /* ---------- Page-level circuit background ------------------------------ */
+
+  function initPageCircuits() {
+    if (reduceMotion) return; // Static background: no pointer chase.
+    var svg = document.getElementById('eventGatePageCircuits');
+    if (!svg) return;
+    var groups = Array.prototype.slice.call(svg.querySelectorAll('[data-page-circuit]'));
+    if (!groups.length) return;
+
+    var clear = function () {
+      groups.forEach(function (g) { g.classList.remove('is-lit'); });
+    };
+
+    // The layer itself is pointer-events none; the page listens for it.
+    document.addEventListener('pointermove', function (e) {
+      var near = [];
+      groups.forEach(function (g) {
+        var r = g.getBoundingClientRect();
+        if (r.width === 0 && r.height === 0) return; // capped/hidden trace
+        var cx = r.left + r.width / 2;
+        var cy = r.top + r.height / 2;
+        var d = Math.sqrt((cx - e.clientX) * (cx - e.clientX) + (cy - e.clientY) * (cy - e.clientY));
+        if (d < 170) near.push([d, g]);
+      });
+      clear();
+      near.sort(function (a, b) { return a[0] - b[0]; });
+      near.slice(0, 3).forEach(function (pair) { pair[1].classList.add('is-lit'); });
+    });
+  }
 
   /* ---------- Door gate (only when the overlay rendered) ----------------- */
 

@@ -108,21 +108,20 @@ main,
   overflow: hidden;
   backface-visibility: hidden;
   -webkit-backface-visibility: hidden;
-  /* Deep navy face around the logo; no gray wash across it. */
   background:
-    repeating-linear-gradient(90deg, rgba(255, 255, 255, 0.02) 0 2px, transparent 2px 6px),
-    linear-gradient(160deg, #0e2150 0%, #0a183a 55%, #060f24 100%);
-  box-shadow: inset 0 0 30px rgba(0, 0, 0, 0.3);
+    linear-gradient(90deg, rgba(252, 209, 22, 0.14), transparent 18% 82%, rgba(252, 209, 22, 0.14)),
+    linear-gradient(160deg, #16356f 0%, #0B1B45 52%, #07122e 100%);
+  box-shadow: inset 0 0 0 1px rgba(252, 209, 22, 0.28);
 }
 
 .event-gate-door-l .event-gate-face {
   border-right: 1px solid rgba(252, 209, 22, 0.55);
-  box-shadow: inset -26px 0 40px -22px #000, inset 0 0 30px rgba(0, 0, 0, 0.3);
+  box-shadow: inset -18px 0 28px -20px rgba(0, 0, 0, 0.55), inset 0 0 0 1px rgba(252, 209, 22, 0.28);
 }
 
 .event-gate-door-r .event-gate-face {
   border-left: 1px solid rgba(252, 209, 22, 0.55);
-  box-shadow: inset 26px 0 40px -22px #000, inset 0 0 30px rgba(0, 0, 0, 0.3);
+  box-shadow: inset 18px 0 28px -20px rgba(0, 0, 0, 0.55), inset 0 0 0 1px rgba(252, 209, 22, 0.28);
 }
 
 .event-gate-face::before {
@@ -133,22 +132,24 @@ main,
   pointer-events: none;
 }
 
-/* One logo image, split across the two doors. */
-.event-gate-logo {
+/* One logo image, split across the two doors at native size (900px). */
+.event-gate-mark {
   position: absolute;
-  inset: 0;
-  background-image: url('hack4gov-door-logo.png');
-  background-repeat: no-repeat;
-  background-size: 200% auto;
-  background-position: center center;
+  top: 50%;
+  width: min(900px, 100vw);
+  height: auto;
+  max-width: none;
+  pointer-events: none;
 }
 
-.event-gate-door-l .event-gate-logo {
-  background-position: left center;
+.event-gate-door-l .event-gate-mark {
+  right: 0;
+  transform: translate(50%, -50%);
 }
 
-.event-gate-door-r .event-gate-logo {
-  background-position: right center;
+.event-gate-door-r .event-gate-mark {
+  left: 0;
+  transform: translate(-50%, -50%);
 }
 
 /* Vault bolts: brass cylinders with a lit edge, retracted on unlock */
@@ -430,21 +431,40 @@ main,
   position: relative;
 }
 
-.event-gate-hero-logo {
-  display: block;
-  width: auto;
-  max-width: 210px;
-  max-height: 132px;
-  object-fit: contain;
-  margin: 0 0 1rem;
+.guest-hero-panel.is-gate {
+  background: linear-gradient(165deg, #16356f 0%, #0B1B45 58%, #07122e 100%);
 }
 
-.guest-hero-mobile .event-gate-hero-logo {
-  width: 44px;
-  height: 44px;
-  max-width: none;
-  max-height: none;
-  border-radius: 8px;
+.guest-hero-mobile.is-gate {
+  flex-direction: column;
+  align-items: stretch;
+  background: linear-gradient(165deg, #16356f 0%, #0B1B45 70%, #07122e 100%);
+  color: #fff;
+}
+
+.event-gate-hero-art {
+  position: relative;
+  overflow: hidden;
+  margin: 0 0 1.15rem;
+  padding: 18px 14px;
+  border-radius: 12px;
+  background: #050b18;
+}
+
+.event-gate-hero-art .event-gate-hero-mark {
+  margin: 0;
+}
+
+.guest-hero-mobile.is-gate .guest-hero-mobile-title,
+.guest-hero-mobile.is-gate .guest-hero-mobile-sub {
+  color: #fff;
+}
+
+.guest-hero-mobile .event-gate-hero-mark {
+  width: 100%;
+  max-width: 320px;
+  height: auto;
+  margin: 0 0 0.85rem;
 }
 
 .event-gate-circuits {
@@ -452,7 +472,15 @@ main,
   inset: 0;
   width: 100%;
   height: 100%;
+  display: block;
   pointer-events: none;
+  z-index: 0;
+}
+
+.guest-hero-mobile.is-gate > div,
+.event-gate-hero-mark {
+  position: relative;
+  z-index: 1;
 }
 
 [data-circuit] polyline {
@@ -472,11 +500,11 @@ main,
 }
 
 [data-circuit][data-tone="blue"] polyline {
-  stroke: #8fa9ce;
+  stroke: #0038A8;
 }
 
 [data-circuit][data-tone="blue"] circle {
-  fill: #8fa9ce;
+  fill: #0038A8;
 }
 
 [data-circuit][data-tone="red"] polyline {
@@ -532,6 +560,93 @@ main,
   }
 
   [data-circuit].is-lit polyline {
+    animation: none;
+  }
+}
+
+
+/*
+ * Page-level circuit background (gate register form only). Sits at z -1 so
+ * the navbar, side panel, and white form card cover it; only the open page
+ * space shows the field. Tones match the logo palette.
+ */
+
+.event-gate-page-circuits {
+  position: fixed;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  z-index: -1;
+  pointer-events: none;
+}
+
+[data-page-circuit] polyline {
+  fill: none;
+  stroke: #fcd116;
+  stroke-width: 1.6;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  stroke-dasharray: 5 9;
+  opacity: 0.45;
+  animation: event-gate-trace 3.8s linear infinite;
+}
+
+[data-page-circuit] circle {
+  fill: #fcd116;
+  opacity: 0.6;
+}
+
+[data-page-circuit][data-tone="blue"] polyline {
+  stroke: #0038a8;
+}
+
+[data-page-circuit][data-tone="blue"] circle {
+  fill: #0038a8;
+}
+
+[data-page-circuit][data-tone="red"] polyline {
+  stroke: #ce1126;
+}
+
+[data-page-circuit][data-tone="red"] circle {
+  fill: #ce1126;
+}
+
+[data-page-circuit]:nth-of-type(2n) polyline {
+  animation-duration: 4.6s;
+  animation-direction: reverse;
+}
+
+[data-page-circuit]:nth-of-type(3n) polyline {
+  animation-duration: 3s;
+}
+
+[data-page-circuit].is-lit polyline {
+  opacity: 0.95;
+  filter: drop-shadow(0 0 4px rgba(252, 209, 22, 0.85));
+}
+
+[data-page-circuit].is-lit circle {
+  opacity: 1;
+  filter: drop-shadow(0 0 5px rgba(252, 209, 22, 0.9));
+}
+
+@media (max-width: 640px) {
+  .event-gate-page-circuit-extra {
+    display: none;
+  }
+
+  .event-gate-page-circuits {
+    opacity: 0.55;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  [data-page-circuit] polyline {
+    animation: none;
+  }
+
+  [data-page-circuit].is-lit polyline {
     animation: none;
   }
 }
