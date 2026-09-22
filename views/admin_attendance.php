@@ -71,7 +71,7 @@ $token = function_exists('csrf_token') ? csrf_token() : '';
   
   <!-- KPI Dashboard -->
   <div class="row g-3 mb-4" id="kpiDashboard">
-    <div class="col-12 col-md-6 col-lg-3">
+    <div class="col-12 col-md-6 col-lg">
       <div class="card border-0 shadow-sm h-100 kpi-card" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);">
         <div class="card-body text-white">
           <div class="d-flex justify-content-between align-items-start">
@@ -85,12 +85,26 @@ $token = function_exists('csrf_token') ? csrf_token() : '';
         </div>
       </div>
     </div>
-    <div class="col-12 col-md-6 col-lg-3">
+    <div class="col-12 col-md-6 col-lg">
       <div class="card border-0 shadow-sm h-100 kpi-card" style="background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);">
         <div class="card-body text-white">
           <div class="d-flex justify-content-between align-items-start">
             <div>
-              <div class="text-white-50 small mb-1">In Vicinity Rate</div>
+              <div class="text-white-50 small mb-1">In Vicinity</div>
+              <div class="h3 mb-0 fw-bold" id="kpi-vicinity-count"><?= htmlspecialchars((string)($vicinityCount ?? 0), ENT_QUOTES) ?></div>
+              <div class="small mt-1">On site, not signed in yet</div>
+            </div>
+            <div class="fs-1 opacity-50">📍</div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="col-12 col-md-6 col-lg">
+      <div class="card border-0 shadow-sm h-100 kpi-card" style="background: linear-gradient(135deg, #fbc2eb 0%, #a6c1ee 100%);">
+        <div class="card-body text-white">
+          <div class="d-flex justify-content-between align-items-start">
+            <div>
+              <div class="text-white-50 small mb-1">Accounted rate</div>
               <div class="h3 mb-0 fw-bold" id="kpi-attendance-rate"><?= htmlspecialchars((string)($attendanceRate ?? 0), ENT_QUOTES) ?>%</div>
               <div class="small mt-1" id="kpi-rate-detail"><?= htmlspecialchars((string)(($totalRegistered ?? 0) - ($absentCount ?? 0)), ENT_QUOTES) ?> of <?= htmlspecialchars((string)($totalRegistered ?? 0), ENT_QUOTES) ?> (excl. absent)</div>
             </div>
@@ -99,7 +113,7 @@ $token = function_exists('csrf_token') ? csrf_token() : '';
         </div>
       </div>
     </div>
-    <div class="col-12 col-md-6 col-lg-3">
+    <div class="col-12 col-md-6 col-lg">
       <div class="card border-0 shadow-sm h-100 kpi-card" style="background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);">
         <div class="card-body text-white">
           <div class="d-flex justify-content-between align-items-start">
@@ -113,7 +127,7 @@ $token = function_exists('csrf_token') ? csrf_token() : '';
         </div>
       </div>
     </div>
-    <div class="col-12 col-md-6 col-lg-3">
+    <div class="col-12 col-md-6 col-lg">
       <div class="card border-0 shadow-sm h-100 kpi-card" style="background: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%);">
         <div class="card-body text-white">
           <div class="d-flex justify-content-between align-items-start">
@@ -378,6 +392,7 @@ $token = function_exists('csrf_token') ? csrf_token() : '';
   // Apply KPI data to dashboard cards
   function applyKpiData(data, date = currentDate) {
     const todayCountEl = document.getElementById('kpi-today-count');
+    const vicinityCountEl = document.getElementById('kpi-vicinity-count');
     const attendanceRateEl = document.getElementById('kpi-attendance-rate');
     const recentCountEl = document.getElementById('kpi-recent-count');
     const peakHourEl = document.getElementById('kpi-peak-hour');
@@ -391,6 +406,9 @@ $token = function_exists('csrf_token') ? csrf_token() : '';
         todayCountEl.style.transform = 'scale(1.1)';
         setTimeout(() => { todayCountEl.style.transform = 'scale(1)'; }, 300);
       }
+    }
+    if (vicinityCountEl) {
+      vicinityCountEl.textContent = data.vicinityCount || 0;
     }
     if (attendanceRateEl) {
       attendanceRateEl.textContent = (data.attendanceRate || 0) + '%';

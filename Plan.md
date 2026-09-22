@@ -4,7 +4,7 @@ Turn the app into a multi-event platform: All Father creates events, assigns peo
 
 **OpenCode + Muse Spark 13** on branch `attendance_accend`. Enforce [ponytail](https://github.com/dietrichgebert/ponytail) and [taste-skill](https://github.com/leonxlnx/taste-skill) (`design-taste-frontend` + `redesign-existing-projects`).
 
-**Status:** Multi-event is shipped. VPS is live. **Plan#4** through **Plan#10** are on production. **Plan#11** is done locally (deploy still open). Next new plan after that is **Plan#12**.
+**Status:** Multi-event is shipped. VPS is live. **Plan#4** through **Plan#10** are on production. **Plan#11** and **Plan#12** are done locally (deploy pending SSH).
 
 **Audit:** 2026-09-14 closed multi-event leftovers. 2026-09-20 landed Settings merge, script gating, AuthService, flash plumbing, `env.example`. 2026-09-21 morning pass fixed door-scan CSRF, import-preview rotate, retry `e=` link, event-aware nav, main deploy docs. Same-day afternoon pass closed the five re-check nits (below).
 
@@ -12,7 +12,7 @@ Turn the app into a multi-event platform: All Father creates events, assigns peo
 
 ## Agent: start here
 
-Multi-event is **shipped**. VPS cutover **ran 2026-09-21**. **Plan#4** through **Plan#10** are live. Current work is **Plan#11**. The next plan after that is **Plan#12**. Do not rebuild EventContext. Do not commit `.env` / `.env.vps`.
+Multi-event is **shipped**. VPS cutover **ran 2026-09-21**. **Plan#4** through **Plan#10** are live. **Plan#11** is done locally (deploy next). **Plan#12** is done locally (cron still needs Hostinger + VPS deploy). Do not rebuild EventContext. Do not commit `.env` / `.env.vps`.
 
 **Plan numbers**
 
@@ -28,7 +28,8 @@ Multi-event is **shipped**. VPS cutover **ran 2026-09-21**. **Plan#4** through *
 | Plan#8 | Moving circuit background on the register page | Done locally; CSS/JS/markup deploy pending access |
 | Plan#9 | Richer door unlock animation | Done locally; CSS/JS deploy pending access |
 | Plan#10 | Restore Certificate of Appearance (auto-create + auto-send) | Live on digitalhero.dictr2.cloud; enable per event |
-| Plan#11 | Certificate send monitor, nav, and templates | Done locally; deploy pending access |
+| Plan#11 | Certificate send monitor, nav, and templates | Done locally; deploy pending SSH |
+| Plan#12 | CoA control center (templates, signatories, compose, schedule) | Done locally; deploy pending SSH |
 
 **Session contract**
 
@@ -48,6 +49,128 @@ php scripts/test_csrf_lifecycle.php
 ---
 
 ## Left to do
+
+### Plan#12 — CoA control center (templates, signatories, compose, schedule)
+
+All Father needs **one Certificates facility** to:
+
+- save reusable CoA templates
+- edit **venue/location** and **topic**
+- pick a **signatory with an uploaded e-signature**
+- send **one person or many**, as chosen
+- **schedule** a send so it runs later (plus keep scan auto-send)
+
+Plan#11 (local) already has the nav item, monitor, named templates with typed paths, Send-all-missing, and Registrants Resend. It is **Not Found on prod** until deploy. It does not upload signatures, does not pick recipients, and does not schedule.
+
+Also include a live Attendance bug: the **In Vicinity Rate** card does not show the KPI its label describes (see below).
+
+```mermaid
+flowchart LR
+  tpl[Saved_template]
+  sig[Signatory_plus_esig]
+  compose[Compose_send]
+  now[Send_now]
+  later[Schedule_send_at]
+  worker[Cron_50_per_tick]
+  mail[CoaService_email]
+  kpi[Fix_vicinity_KPI_card]
+  tpl --> compose
+  sig --> compose
+  compose --> now --> mail
+  compose --> later --> worker --> mail
+```
+
+**Locked choices**
+
+- All Father only. Same `?r=` stack, [`CoaService`](src/Services/CoaService.php), Asia/Manila.
+- **Topic** = existing `purpose` / `coa_purpose` (relabel in UI). No extra title column. PDF event name stays `events.name`.
+- **Venue** = existing `venue` / `coa_venue`.
+- Send uses a **chosen template snapshot** for that batch (venue, topic, particulars, signatory). Applying a template to the event is still available, but not required to send.
+- Signatories live in **`coa_signatories`**. Templates/events pick by id; name/title/path are copied onto the template/event row so Plan#10 generate still works.
+- Schedule = **`coa_sends.send_at`** (no second schedule table). `queued` + future `send_at` waits; `send_at` null or past is due.
+- Scan auto-send (`coa_enabled`) stays. That is immediate automation after attendance. Scheduled compose is “send this list at 5pm.”
+- Cap **50** PDFs per HTTP action and per cron tick (same as Plan#11 resend).
+- One nav item **Certificates**. Page header links: Monitor | Templates | Signatories.
+
+**0. Deploy Plan#11 first**
+
+Until this lands, prod `/?r=admin_coa_monitor` stays **Not Found**. Needs `dghero111` SSH password.
+
+Upload: [`AdminCoaMonitorController`](src/Controllers/AdminCoaMonitorController.php), [`CoaService`](src/Services/CoaService.php), [`Database.php`](src/Services/Database.php), monitor/templates views, [`admin_nav.php`](views/partials/admin_nav.php), [`routes.php`](config/routes.php), [`migrations/014_coa_monitor.sql`](migrations/014_coa_monitor.sql). Then `php scripts/run_migrations.php` and `mkdir storage/coa`.
+
+**1. Signatory library + e-signature upload**
+
+Migration `015_coa_facility.sql` (MyISAM, no FKs; wire in [`Database::runMigrations`](src/Services/Database.php)):
+
+- [x] **`coa_signatories`**: `id`, `name`, `title`, `signature_path`, `created_at`, `updated_at`
+- [x] **`coa_templates.signatory_id`** INT NULL
+- [x] **`events.coa_signatory_id`** INT NULL
+- [x] **`coa_sends.send_at`** DATETIME NULL
+- [x] **`coa_batches.template_id`** INT NULL; `source` also allows `scheduled`
+
+UI `?r=admin_coa_signatories` (All Father, CSRF):
+
+- [x] Name, title, file upload PNG/JPG/WebP, max 1 MB
+- [x] Store under `storage/coa/signatures/{id}/` using the same checks as [`AdminEventsController::storeBrandingImage`](src/Controllers/AdminEventsController.php)
+- [x] Preview thumbnail via a small admin stream route (file is not web-public)
+- [x] Templates form and Events CoA block: **Signatory** dropdown instead of typing a path. Saving copies name/title/path onto the template/event columns.
+- [x] [`CoaService`](src/Services/CoaService.php) resolves relative `storage/...` paths against the project root so the e-sig actually prints on the PDF.
+
+**2. Templates (venue + topic)**
+
+Keep [`views/admin_coa_templates.php`](views/admin_coa_templates.php); relabel fields:
+
+- [x] Template name
+- [x] **Venue / location**
+- [x] **Topic** (stored as `purpose`)
+- [x] Particulars
+- [x] Signatory dropdown
+- [x] Save / Update / Apply to event / Preview
+
+**3. Compose: individual or bulk**
+
+On [`views/admin_coa_monitor.php`](views/admin_coa_monitor.php), a **Compose send** card:
+
+- [x] Event, attendance date, **template** (optional; event CoA settings as fallback)
+- [x] Table of attendees for that date: checkbox, name, agency, email, last CoA status
+- [x] No email → checkbox disabled
+- [x] **Send selected** (1 or many), **Send all missing** (existing Send new), **Schedule selected**
+- [x] POST `admin_coa_send_selected`: participant ids + template_id + event + date + optional `send_at`
+- [x] Create a batch, snapshot template/signatory/venue/topic, then `CoaService` send (or queue if scheduled)
+- [x] `CoaService::sendNow` optional overrides (venue, purpose, particulars, signatory) so compose does not have to mutate the event row
+- [x] Registrants **Resend COA** stays for a one-off from that list
+
+**4. Schedule + cron**
+
+- [x] Compose datetime-local (`send_at`, Asia/Manila). Future time → insert `coa_sends` as `queued` with that `send_at`. Send now → process immediately.
+- [x] [`scripts/coa_process_scheduled.php`](scripts/coa_process_scheduled.php): due rows (`status=queued` AND (`send_at` IS NULL OR `send_at` <= now`)), cap 50, reuse `CoaService::resendRow`.
+- [x] Hostinger cron: `* * * * * cd /home/digitalhero/htdocs/digitalhero.dictr2.cloud && php scripts/coa_process_scheduled.php`
+- [x] Monitor shows scheduled batches (source `scheduled`) and a **Cancel** for still-queued future rows.
+- [x] Scan auto-send remains the other automation switch on Events.
+
+**5. KPI card that does not match its label (Attendance)**
+
+On [`views/admin_attendance.php`](views/admin_attendance.php) the second gradient card is labeled **In Vicinity Rate** but the number is `attendanceRate` — accounted / not-absent percentage (`X of Y (excl. absent)`). That is not vicinity.
+
+The SEO dashboard already splits these correctly in [`views/admin_seo_dashboard.php`](views/admin_seo_dashboard.php): **In vicinity** = `vicinityCount` (“On site, not signed”); **Accounted rate** = `attendanceRate`.
+
+- [x] Make the Attendance card show the KPI its label describes: the number must be **in-vicinity** (`vicinityCount`, people on site who have not signed in).
+- [x] If accounted rate is still needed on Attendance, add a **separate** card labeled **Accounted rate** (same meaning as SEO). Do not keep one card whose title says vicinity and whose figure is attendance rate.
+- [x] Keep the other Attendance cards honest: **Signed In** = present for the selected date; **Last Hour** = sign-ins in the past 60 minutes (or N/A on a past date); **Busiest hour** = peak window.
+- [x] Certificates monitor KPI strip must stay equally honest: Sent / Failed / Queued / Skipped / Batches each count only that status (scoped to the selected event). Add a one-line hint under each so a number is not mistaken for another (especially Queued vs Scheduled).
+
+**Checks**
+
+- [ ] Plan#11 URL on prod loads Certificates
+- [x] Upload e-sig → pick on template → Preview shows the signature
+- [x] Check 3 attendees, pick template, Send selected → 3 mails / 3 `coa_sends` using that venue/topic
+- [x] Schedule +2 minutes → cron marks sent without a second click
+- [x] Cancel a future batch before `send_at` → no mail
+- [x] Attendance **In Vicinity** card number matches vicinity people, not accounted rate
+- [x] `php scripts/test_coa.php` still ALL OK, plus compose/schedule cases
+- [ ] After local smoke, deploy `015` + views/controllers/script
+
+Leave alone: guest gate, registration fields, QR email, Report builder, EventContext. Do not add a frontend stack. Do not commit `.env`.
 
 ### Plan#11 — Certificate send monitor, nav, and templates
 

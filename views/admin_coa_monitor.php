@@ -27,12 +27,7 @@ $token = function_exists('csrf_token') ? csrf_token() : '';
 <div class="container py-4">
   <div class="d-flex justify-content-between align-items-center mb-3">
     <h1 class="h5 mb-0">Certificates</h1>
-    <div class="d-flex gap-2">
-      <a class="btn btn-sm btn-outline-primary" href="?r=admin_coa_templates">Templates</a>
-      <?php $previewHref = '?r=admin_coa_preview_template'; ?>
-      <a class="btn btn-sm btn-outline-secondary" href="<?= $previewHref ?>" target="_blank" rel="noopener">Preview template</a>
-      <a class="btn btn-sm btn-outline-secondary" href="?r=admin_coa_monitor<?= $scopeEventId > 0 ? '&event_id=' . $scopeEventId : '' ?>">Refresh</a>
-    </div>
+    <?php $coaPage = 'monitor'; require __DIR__ . DIRECTORY_SEPARATOR . 'partials' . DIRECTORY_SEPARATOR . 'coa_subnav.php'; ?>
   </div>
 
   <?php if ($flash): ?>
@@ -45,10 +40,88 @@ $token = function_exists('csrf_token') ? csrf_token() : '';
       <div class="card h-100"><div class="card-body py-2 text-center">
         <div class="h4 mb-0"><?= (int)($kpis[$key] ?? 0) ?></div>
         <div class="text-muted small text-uppercase" style="letter-spacing:.08em;"><?= $label ?></div>
+        <div class="text-muted" style="font-size:.68rem;">
+          <?= ['sent' => 'emailed OK', 'failed' => 'generation or mail error', 'queued' => 'waiting (scheduled or retry)', 'skipped' => 'no email / cancelled', 'batches' => 'send runs'][$key] ?? '' ?>
+        </div>
       </div></div>
     </div>
     <?php endforeach; ?>
   </div>
+
+  <?php $monitorTemplates = $templates ?? []; $monitorSignatories = $signatories ?? []; ?>
+  <div class="card mb-3"><div class="card-body">
+    <h2 class="h6 mb-2">Compose send</h2>
+    <form method="get" action="?r=admin_coa_monitor" class="row g-2 align-items-end">
+      <input type="hidden" name="r" value="admin_coa_monitor">
+      <input type="hidden" name="compose" value="1">
+      <div class="col-12 col-md-3">
+        <label class="form-label small mb-1">Event</label>
+        <select name="compose_event_id" class="form-select form-select-sm" required>
+          <?php foreach (($events ?? []) as $ev): ?>
+          <option value="<?= (int)$ev['id'] ?>" <?= $composeEventId === (int)$ev['id'] ? 'selected' : '' ?>><?= htmlspecialchars((string)$ev['name'], ENT_QUOTES) ?></option>
+          <?php endforeach; ?>
+        </select>
+      </div>
+      <div class="col-12 col-md-3">
+        <label class="form-label small mb-1">Attendance date</label>
+        <input type="date" name="compose_date" class="form-control form-control-sm" value="<?= htmlspecialchars($composeDate, ENT_QUOTES) ?>" required>
+      </div>
+      <div class="col-12 col-md-4">
+        <label class="form-label small mb-1">Template</label>
+        <select name="template" class="form-select form-select-sm">
+          <option value="0">Use event CoA settings</option>
+          <?php foreach ($monitorTemplates as $t): ?>
+          <option value="<?= (int)$t['id'] ?>" <?= $composeTemplateId === (int)$t['id'] ? 'selected' : '' ?>><?= htmlspecialchars((string)$t['name'], ENT_QUOTES) ?></option>
+          <?php endforeach; ?>
+        </select>
+      </div>
+      <div class="col-12 col-md-2">
+        <button class="btn btn-sm btn-outline-primary w-100">Load attendees</button>
+      </div>
+    </form>
+
+    <?php if ($composeEventId > 0): ?>
+    <?php $composeAttendees = $composeAttendees ?? []; ?>
+    <form method="post" action="?r=admin_coa_send_selected" class="mt-3">
+      <input type="hidden" name="csrf" value="<?= htmlspecialchars($token, ENT_QUOTES) ?>">
+      <input type="hidden" name="event_id" value="<?= $composeEventId ?>">
+      <input type="hidden" name="attendance_date" value="<?= htmlspecialchars($composeDate, ENT_QUOTES) ?>">
+      <input type="hidden" name="template_id" value="<?= $composeTemplateId ?>">
+      <div class="table-responsive">
+        <table class="table table-sm align-middle mb-2">
+          <thead><tr><th></th><th>Name</th><th>Agency</th><th>Email</th><th>Last CoA status</th></tr></thead>
+          <tbody>
+            <?php if (!count($composeAttendees)): ?>
+            <tr><td colspan="5" class="text-center text-muted py-2">No attendees with attendance on <?= htmlspecialchars($composeDate, ENT_QUOTES) ?>.</td></tr>
+            <?php endif; ?>
+            <?php foreach ($composeAttendees as $a): ?>
+            <tr>
+              <td>
+                <input class="form-check-input" type="checkbox" name="participant_ids[]" value="<?= (int)$a['id'] ?>"
+                  <?= (string)$a['email'] === '' ? 'disabled' : 'checked' ?>>
+              </td>
+              <td class="small"><?= htmlspecialchars((string)$a['name'], ENT_QUOTES) ?></td>
+              <td class="small"><?= htmlspecialchars((string)$a['agency'], ENT_QUOTES) ?></td>
+              <td class="small"><?= htmlspecialchars((string)$a['email'], ENT_QUOTES) ?></td>
+              <td class="small"><?= htmlspecialchars((string)($a['last_status'] ?? 'none'), ENT_QUOTES) ?></td>
+            </tr>
+            <?php endforeach; ?>
+          </tbody>
+        </table>
+      </div>
+      <div class="row g-2 align-items-end">
+        <div class="col-12 col-md-4">
+          <label class="form-label small mb-1">Schedule (optional, Asia/Manila)</label>
+          <input type="datetime-local" name="send_at" class="form-control form-control-sm">
+        </div>
+        <div class="col-12 col-md-8 d-flex gap-2">
+          <button class="btn btn-primary btn-sm" name="do" value="send">Send selected now</button>
+          <button class="btn btn-outline-primary btn-sm" name="do" value="schedule">Schedule selected</button>
+        </div>
+      </div>
+    </form>
+    <?php endif; ?>
+  </div></div>
 
   <div class="row g-3 mb-3">
     <div class="col-12 col-lg-6">
@@ -124,7 +197,16 @@ $token = function_exists('csrf_token') ? csrf_token() : '';
           <td><span class="badge text-bg-danger"><?= (int)$b['failed_count'] ?></span></td>
           <td><span class="badge text-bg-secondary"><?= (int)$b['queued_count'] ?></span></td>
           <td><span class="badge text-bg-light text-dark"><?= (int)$b['skipped_count'] ?></span></td>
-          <td><a class="btn btn-sm btn-outline-primary py-0" href="?r=admin_coa_monitor&batch_id=<?= (int)$b['id'] ?>&event_id=<?= (int)$b['event_id'] ?>">Open</a></td>
+          <td>
+            <a class="btn btn-sm btn-outline-primary py-0" href="?r=admin_coa_monitor&batch_id=<?= (int)$b['id'] ?>&event_id=<?= (int)$b['event_id'] ?>">Open</a>
+            <?php if ((int)$b['queued_count'] > 0 && (string)($b['source'] ?? '') === 'scheduled'): ?>
+            <form method="post" action="?r=admin_coa_cancel" class="d-inline mt-1" onsubmit="return confirm('Cancel this scheduled batch? Queued rows will be removed and no mail will be sent.');">
+              <input type="hidden" name="csrf" value="<?= htmlspecialchars($token, ENT_QUOTES) ?>">
+              <input type="hidden" name="batch_id" value="<?= (int)$b['id'] ?>">
+              <button class="btn btn-sm btn-outline-danger py-0">Cancel</button>
+            </form>
+            <?php endif; ?>
+          </td>
         </tr>
         <?php endforeach; ?>
       </tbody>
@@ -137,7 +219,16 @@ $token = function_exists('csrf_token') ? csrf_token() : '';
       Batch #<?= (int)$batchDetail['id'] ?> - <?= htmlspecialchars((string)$batchDetail['event_name_snapshot'], ENT_QUOTES) ?>
       <span class="text-muted">at <?= htmlspecialchars((string)$batchDetail['venue_snapshot'], ENT_QUOTES) ?></span>
     </h2>
-    <a class="btn btn-sm btn-outline-secondary" href="?r=admin_coa_monitor<?= $scopeEventId > 0 ? '&event_id=' . $scopeEventId : '' ?>">Close</a>
+    <div class="d-flex gap-2">
+      <?php if ((int)($batchDetail['queued_left'] ?? 0) > 0): ?>
+      <form method="post" action="?r=admin_coa_cancel" class="d-inline">
+        <input type="hidden" name="csrf" value="<?= htmlspecialchars($token, ENT_QUOTES) ?>">
+        <input type="hidden" name="batch_id" value="<?= (int)$batchDetail['id'] ?>">
+        <button class="btn btn-sm btn-outline-danger">Cancel queued</button>
+      </form>
+      <?php endif; ?>
+      <a class="btn btn-sm btn-outline-secondary" href="?r=admin_coa_monitor<?= $scopeEventId > 0 ? '&event_id=' . $scopeEventId : '' ?>">Close</a>
+    </div>
   </div>
   <p class="text-muted small mb-2">
     Inclusive date: <?= htmlspecialchars((string)$batchDetail['inclusive_date'], ENT_QUOTES) ?>

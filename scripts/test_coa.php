@@ -121,8 +121,14 @@ $batchId = (int)$sendRow['batch_id'];
 $pdo->prepare("UPDATE coa_sends SET status = 'failed' WHERE id = ?")->execute([$sendId]);
 $adminId2 = (int)$pdo->query("SELECT id FROM admins WHERE role = 'admin' AND is_active = 1 ORDER BY id LIMIT 1")->fetchColumn();
 AuthService::establishSession(['id' => $adminId2, 'username' => '_coa_admin_probe', 'role' => 'admin', 'display_name' => 'Probe']);
+$_SESSION['current_event_id'] = $eventIdOn;
 $mon = new \App\Controllers\AdminCoaMonitorController();
-$_POST = ['event_id' => (string)$eventIdOn];
+$freshCsrf = static function (): string {
+    $t = function_exists('csrf_token') ? csrf_token() : bin2hex(random_bytes(16));
+    $_SESSION['csrf'] = $t;
+    return $t;
+};
+$_POST = ['event_id' => (string)$eventIdOn, 'csrf' => $freshCsrf()];
 ob_start();
 $mon->queueFailed();
 ob_end_clean();
@@ -131,6 +137,7 @@ $st->execute([$sendId]);
 assertTrue((string)$st->fetchColumn() === 'queued', 'queue-failed moves the row to queued');
 
 // Resend queued through the monitor action; the row comes back as sent.
+$_POST = ['event_id' => (string)$eventIdOn, 'csrf' => $freshCsrf()];
 ob_start();
 $mon->resendQueued();
 ob_end_clean();
@@ -144,7 +151,7 @@ $pdo->prepare('INSERT INTO participants (event_id, uuid, email, first_name, last
 $pid2 = (int)$pdo->lastInsertId();
 $pdo->prepare('INSERT INTO attendance (participant_id, attendance_date, time_in, signature_path, event_id, status) VALUES (?,?,?,?,?,?)')
     ->execute([$pid2, date('Y-m-d'), date('H:i:s'), '', $eventIdOn, 'present']);
-$_POST = ['event_id' => (string)$eventIdOn, 'attendance_date' => date('Y-m-d')];
+$_POST = ['event_id' => (string)$eventIdOn, 'attendance_date' => date('Y-m-d'), 'csrf' => $freshCsrf()];
 ob_start();
 $mon->sendNew();
 ob_end_clean();
@@ -154,30 +161,110 @@ $row2 = $st->fetch();
 assertTrue($row2 && $row2['status'] === 'sent' && $row2['source'] === 'manual', 'send-new batches the missing attendee (manual source)');
 
 // Templates: save, apply to event, and list.
+$pdo->prepare('INSERT INTO coa_signatories (name, title, signature_path, created_at, updated_at) VALUES (?,?,?,?,?)')
+    ->execute(['_CoA Signatory', 'Director', '', date('Y-m-d H:i:s'), date('Y-m-d H:i:s')]);
+$sigId = (int)$pdo->lastInsertId();
+assertTrue($sigId > 0, 'signatory row created');
+
 $_POST = [
     'name' => '_CoA Test Template',
     'venue' => 'Template Hall',
     'purpose' => 'Template purpose',
     'particulars' => "Lodging - PROVIDED dorm\nMeals - PROVIDED full board",
-    'signatory_name' => 'Template Signatory',
-    'signatory_title' => 'Director',
-    'signatory_path' => '',
-    'logo_path' => '',
+    'signatory_id' => (string)$sigId,
+    'csrf' => $freshCsrf(),
 ];
 ob_start();
 $mon->templateSave();
 ob_end_clean();
 $tplId = (int)$pdo->query("SELECT id FROM coa_templates WHERE name = '_CoA Test Template' ORDER BY id DESC LIMIT 1")->fetchColumn();
 assertTrue($tplId > 0, 'template saved');
+$tplRow = $pdo->prepare('SELECT signatory_id, signatory_name FROM coa_templates WHERE id = ?');
+$tplRow->execute([$tplId]);
+$tplRow = $tplRow->fetch();
+assertTrue((int)$tplRow['signatory_id'] === $sigId && $tplRow['signatory_name'] === '_CoA Signatory', 'template copies signatory name from library');
 
-$_POST = ['template_id' => (string)$tplId, 'event_id' => (string)$eventIdOn];
+$_POST = ['template_id' => (string)$tplId, 'event_id' => (string)$eventIdOn, 'csrf' => $freshCsrf()];
 ob_start();
 $mon->templateApply();
 ob_end_clean();
 $evRow = $pdo->prepare('SELECT coa_venue, coa_signatory_name FROM events WHERE id = ?');
 $evRow->execute([$eventIdOn]);
 $evRow = $evRow->fetch();
-assertTrue($evRow['coa_venue'] === 'Template Hall' && $evRow['coa_signatory_name'] === 'Template Signatory', 'template applied to the event');
+assertTrue($evRow['coa_venue'] === 'Template Hall' && $evRow['coa_signatory_name'] === '_CoA Signatory', 'template applied to the event');
+
+$uuid3 = $mkUuid();
+$pdo->prepare('INSERT INTO participants (event_id, uuid, email, first_name, last_name) VALUES (?,?,?,?,?)')
+    ->execute([$eventIdOn, $uuid3, '_coa_third@test.local', 'Apolinario', 'Mabini']);
+$pid3 = (int)$pdo->lastInsertId();
+$pdo->prepare('INSERT INTO attendance (participant_id, attendance_date, time_in, signature_path, event_id, status) VALUES (?,?,?,?,?,?)')
+    ->execute([$pid3, date('Y-m-d'), date('H:i:s'), '', $eventIdOn, 'present']);
+$future = date('Y-m-d\TH:i', time() + 3600);
+$_POST = [
+    'event_id' => (string)$eventIdOn,
+    'attendance_date' => date('Y-m-d'),
+    'template_id' => (string)$tplId,
+    'participant_ids' => [(string)$pid3],
+    'send_at' => $future,
+    'do' => 'schedule',
+    'csrf' => $freshCsrf(),
+];
+ob_start();
+$mon->sendSelected();
+ob_end_clean();
+$st = $pdo->prepare('SELECT s.status, s.send_at, b.source FROM coa_sends s JOIN coa_batches b ON b.id = s.batch_id WHERE s.participant_id = ? ORDER BY s.id DESC LIMIT 1');
+$st->execute([$pid3]);
+$sched = $st->fetch();
+assertTrue($sched && $sched['status'] === 'queued' && $sched['source'] === 'scheduled' && (string)$sched['send_at'] !== '', 'schedule selected queues a future send');
+$schedId = (int)$pdo->query('SELECT id FROM coa_sends WHERE participant_id = ' . $pid3 . ' ORDER BY id DESC LIMIT 1')->fetchColumn();
+$pdo->prepare("UPDATE coa_sends SET send_at = ? WHERE id = ?")->execute([date('Y-m-d H:i:s', time() - 60), $schedId]);
+$due = \App\Services\CoaService::processDue(50);
+assertTrue($due['processed'] >= 1, 'processDue picks the due queued row');
+$st->execute([$pid3]);
+$afterDue = $st->fetch();
+assertTrue($afterDue && $afterDue['status'] === 'sent', 'processDue sends the due row');
+
+$uuid4 = $mkUuid();
+$pdo->prepare('INSERT INTO participants (event_id, uuid, email, first_name, last_name) VALUES (?,?,?,?,?)')
+    ->execute([$eventIdOn, $uuid4, '_coa_fourth@test.local', 'Gabriela', 'Silang']);
+$pid4 = (int)$pdo->lastInsertId();
+$pdo->prepare('INSERT INTO attendance (participant_id, attendance_date, time_in, signature_path, event_id, status) VALUES (?,?,?,?,?,?)')
+    ->execute([$pid4, date('Y-m-d'), date('H:i:s'), '', $eventIdOn, 'present']);
+$_POST = [
+    'event_id' => (string)$eventIdOn,
+    'attendance_date' => date('Y-m-d'),
+    'template_id' => '0',
+    'participant_ids' => [(string)$pid4],
+    'do' => 'send',
+    'csrf' => $freshCsrf(),
+];
+ob_start();
+$mon->sendSelected();
+ob_end_clean();
+$st = $pdo->prepare('SELECT status FROM coa_sends WHERE participant_id = ? ORDER BY id DESC LIMIT 1');
+$st->execute([$pid4]);
+assertTrue((string)$st->fetchColumn() === 'sent', 'compose send selected without a template uses event CoA settings');
+
+$_POST = [
+    'event_id' => (string)$eventIdOn,
+    'attendance_date' => date('Y-m-d'),
+    'template_id' => (string)$tplId,
+    'participant_ids' => [(string)$pid4],
+    'send_at' => date('Y-m-d\TH:i', time() + 7200),
+    'do' => 'schedule',
+    'csrf' => $freshCsrf(),
+];
+ob_start();
+$mon->sendSelected();
+ob_end_clean();
+$batchToCancel = (int)$pdo->query("SELECT batch_id FROM coa_sends WHERE participant_id = $pid4 AND status = 'queued' ORDER BY id DESC LIMIT 1")->fetchColumn();
+assertTrue($batchToCancel > 0, 'second schedule created a queued batch');
+$_POST = ['batch_id' => (string)$batchToCancel, 'csrf' => $freshCsrf()];
+ob_start();
+$mon->cancelBatch();
+ob_end_clean();
+$left = (int)$pdo->query("SELECT COUNT(*) FROM coa_sends WHERE batch_id = $batchToCancel AND status = 'queued'")->fetchColumn();
+assertTrue($left === 0, 'cancel queued removes still-queued rows');
 
 // Preview: a sample PDF renders from the template.
 $sample = \App\Services\CoaService::generatePreview(
@@ -191,6 +278,7 @@ unset($_SESSION['staff']);
 $pdo->exec("DELETE FROM coa_sends WHERE event_id IN ($eventIdOn, $eventIdOff)");
 $pdo->exec("DELETE FROM coa_batches WHERE event_id IN ($eventIdOn, $eventIdOff)");
 $pdo->exec("DELETE FROM coa_templates WHERE name = '_CoA Test Template'");
+$pdo->exec("DELETE FROM coa_signatories WHERE name = '_CoA Signatory'");
 $pdo->exec("DELETE FROM attendance WHERE participant_id IN (SELECT id FROM participants WHERE email LIKE '_coa_%@test.local')");
 $pdo->exec("DELETE FROM participants WHERE email LIKE '_coa_%@test.local'");
 $pdo->exec("DELETE FROM events WHERE slug LIKE '_coa-test-%'");

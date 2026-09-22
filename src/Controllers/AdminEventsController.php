@@ -44,6 +44,7 @@ class AdminEventsController
         $pdo = Database::pdo();
         $rows = $pdo->query('SELECT * FROM events ORDER BY id DESC')->fetchAll();
         $staff = $pdo->query("SELECT id, username, display_name, role FROM admins WHERE is_active = 1 ORDER BY username ASC")->fetchAll();
+        $coaSignatories = $pdo->query('SELECT id, name, title, signature_path FROM coa_signatories ORDER BY name ASC')->fetchAll();
         $assign = [];
         try {
             $assign = $pdo->query('SELECT a.*, m.username, m.display_name FROM event_assignments a JOIN admins m ON m.id = a.admin_id ORDER BY a.event_id DESC')->fetchAll();
@@ -181,17 +182,33 @@ class AdminEventsController
         $venue = trim((string)($_POST['coa_venue'] ?? ''));
         $purpose = trim(strip_tags((string)($_POST['coa_purpose'] ?? '')));
         $particulars = trim((string)($_POST['coa_particulars'] ?? ''));
+        $logoPath = trim((string)($_POST['coa_logo_path'] ?? ''));
+
+        // Plan#12: signatory dropdown - copy name/title/signature from the
+        // library row so Plan#10 generation keeps working unchanged.
+        $signatoryId = (int)($_POST['coa_signatory_id'] ?? 0);
         $sigName = trim(strip_tags((string)($_POST['coa_signatory_name'] ?? '')));
         $sigTitle = trim(strip_tags((string)($_POST['coa_signatory_title'] ?? '')));
         $sigPath = trim((string)($_POST['coa_signatory_path'] ?? ''));
-        $logoPath = trim((string)($_POST['coa_logo_path'] ?? ''));
+        if ($signatoryId > 0) {
+            $pdo0 = Database::pdo();
+            $stmt = $pdo0->prepare('SELECT name, title, signature_path FROM coa_signatories WHERE id = ? LIMIT 1');
+            $stmt->execute([$signatoryId]);
+            $sig = $stmt->fetch();
+            if (!$sig) { http_response_code(422); echo 'Signatory not found'; return; }
+            $sigName = (string)$sig['name'];
+            $sigTitle = (string)($sig['title'] ?? '');
+            $sigPath = (string)($sig['signature_path'] ?? '');
+        }
+
         $pdo = Database::pdo();
-        $stmt = $pdo->prepare('UPDATE events SET coa_enabled = ?, coa_venue = ?, coa_purpose = ?, coa_particulars = ?, coa_signatory_name = ?, coa_signatory_title = ?, coa_signatory_path = ?, coa_logo_path = ? WHERE id = ?');
+        $stmt = $pdo->prepare('UPDATE events SET coa_enabled = ?, coa_venue = ?, coa_purpose = ?, coa_particulars = ?, coa_signatory_id = ?, coa_signatory_name = ?, coa_signatory_title = ?, coa_signatory_path = ?, coa_logo_path = ? WHERE id = ?');
         $stmt->execute([
             $enabled,
             $venue !== '' ? mb_substr($venue, 0, 255) : null,
             $purpose !== '' ? mb_substr($purpose, 0, 255) : null,
             $particulars !== '' ? $particulars : null,
+            $signatoryId > 0 ? $signatoryId : null,
             $sigName !== '' ? mb_substr($sigName, 0, 120) : null,
             $sigTitle !== '' ? mb_substr($sigTitle, 0, 120) : null,
             $sigPath !== '' ? $sigPath : null,

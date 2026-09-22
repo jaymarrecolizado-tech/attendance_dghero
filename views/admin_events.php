@@ -123,10 +123,15 @@ $token = function_exists('csrf_token') ? csrf_token() : '';
                 <input name="coa_venue" maxlength="255" class="form-control form-control-sm" placeholder="Venue" aria-label="CoA venue" value="<?= htmlspecialchars($coaVenue, ENT_QUOTES) ?>">
                 <input name="coa_purpose" maxlength="255" class="form-control form-control-sm" placeholder="Purpose line (e.g. for the Hack for Gov 5 roadmap briefing)" aria-label="CoA purpose" value="<?= htmlspecialchars($coaPurpose, ENT_QUOTES) ?>">
                 <textarea name="coa_particulars" class="form-control form-control-sm" rows="3" placeholder="Particulars, one line per row (Label - Value). Empty = defaults." aria-label="CoA particulars"><?= htmlspecialchars($coaParticulars, ENT_QUOTES) ?></textarea>
-                <input name="coa_signatory_name" maxlength="120" class="form-control form-control-sm" placeholder="Signatory name" aria-label="CoA signatory name" value="<?= htmlspecialchars($coaSigName, ENT_QUOTES) ?>">
-                <input name="coa_signatory_title" maxlength="120" class="form-control form-control-sm" placeholder="Signatory title" aria-label="CoA signatory title" value="<?= htmlspecialchars($coaSigTitle, ENT_QUOTES) ?>">
-                <input name="coa_signatory_path" class="form-control form-control-sm" placeholder="Signature image path (optional)" aria-label="CoA signature image path" value="<?= htmlspecialchars($coaSigPath, ENT_QUOTES) ?>">
-                <input name="coa_logo_path" class="form-control form-control-sm" placeholder="Left logo image path (optional)" aria-label="CoA logo image path" value="<?= htmlspecialchars($coaLogoPath, ENT_QUOTES) ?>">
+                <label class="form-label small text-muted mb-0 mt-1">Signatory</label>
+                <select name="coa_signatory_id" class="form-select form-select-sm" aria-label="CoA signatory">
+                  <option value="">Select a signatory</option>
+                  <?php foreach (($coaSignatories ?? []) as $cs): ?>
+                  <option value="<?= (int)$cs['id'] ?>" <?= (int)($r['coa_signatory_id'] ?? 0) === (int)$cs['id'] ? 'selected' : '' ?>>
+                    <?= htmlspecialchars((string)$cs['name'], ENT_QUOTES) ?><?= (string)($cs['title'] ?? '') !== '' ? ' - ' . htmlspecialchars((string)$cs['title'], ENT_QUOTES) : '' ?><?= (string)($cs['signature_path'] ?? '') === '' ? ' (no e-sig)' : '' ?>
+                  </option>
+                  <?php endforeach; ?>
+                </select>
                 <button class="btn btn-sm btn-outline-primary" aria-label="Save CoA settings">Save CoA</button>
               </form>
             </details>

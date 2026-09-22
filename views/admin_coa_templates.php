@@ -34,10 +34,7 @@ if (!function_exists('coaTpl')) {
 <div class="container py-4">
   <div class="d-flex justify-content-between align-items-center mb-3">
     <h1 class="h5 mb-0">Certificate templates</h1>
-    <div class="d-flex gap-2">
-      <a class="btn btn-sm btn-outline-secondary" href="?r=admin_coa_monitor">Back to monitor</a>
-      <a class="btn btn-sm btn-outline-primary" href="?r=admin_coa_preview_template<?= $editing ? '&template_id=' . (int)$editing['id'] : '' ?>" target="_blank" rel="noopener">Preview <?= $editing ? 'saved template' : 'current settings' ?></a>
-    </div>
+    <?php $coaPage = 'templates'; $previewHref = '?r=admin_coa_preview_template' . ($editing ? '&template_id=' . (int)$editing['id'] : ''); require __DIR__ . DIRECTORY_SEPARATOR . 'partials' . DIRECTORY_SEPARATOR . 'coa_subnav.php'; ?>
   </div>
 
   <?php if ($flash): ?>
@@ -56,32 +53,28 @@ if (!function_exists('coaTpl')) {
             <input name="name" class="form-control form-control-sm" maxlength="120" required value="<?= htmlspecialchars(coaTpl($editing ?? [], 'name'), ENT_QUOTES) ?>">
           </div>
           <div class="col-12 col-md-6">
-            <label class="form-label small mb-1">Venue</label>
+            <label class="form-label small mb-1">Venue / location</label>
             <input name="venue" maxlength="255" class="form-control form-control-sm" value="<?= htmlspecialchars(coaTpl($editing ?? [], 'venue'), ENT_QUOTES) ?>">
           </div>
           <div class="col-12 col-md-6">
-            <label class="form-label small mb-1">Purpose line</label>
+            <label class="form-label small mb-1">Topic</label>
             <input name="purpose" maxlength="255" class="form-control form-control-sm" value="<?= htmlspecialchars(coaTpl($editing ?? [], 'purpose'), ENT_QUOTES) ?>">
           </div>
           <div class="col-12">
             <label class="form-label small mb-1">Particulars (one line per row, "Label - Value"; empty = defaults)</label>
             <textarea name="particulars" class="form-control form-control-sm" rows="3"><?= htmlspecialchars(coaTpl($editing ?? [], 'particulars'), ENT_QUOTES) ?></textarea>
           </div>
-          <div class="col-12 col-md-6">
-            <label class="form-label small mb-1">Signatory name</label>
-            <input name="signatory_name" maxlength="120" class="form-control form-control-sm" value="<?= htmlspecialchars(coaTpl($editing ?? [], 'signatory_name'), ENT_QUOTES) ?>">
-          </div>
-          <div class="col-12 col-md-6">
-            <label class="form-label small mb-1">Signatory title</label>
-            <input name="signatory_title" maxlength="120" class="form-control form-control-sm" value="<?= htmlspecialchars(coaTpl($editing ?? [], 'signatory_title'), ENT_QUOTES) ?>">
-          </div>
           <div class="col-12">
-            <label class="form-label small mb-1">Signature image path (optional)</label>
-            <input name="signatory_path" class="form-control form-control-sm" value="<?= htmlspecialchars(coaTpl($editing ?? [], 'signatory_path'), ENT_QUOTES) ?>">
-          </div>
-          <div class="col-12">
-            <label class="form-label small mb-1">Left logo image path (optional)</label>
-            <input name="logo_path" class="form-control form-control-sm" value="<?= htmlspecialchars(coaTpl($editing ?? [], 'logo_path'), ENT_QUOTES) ?>">
+            <label class="form-label small mb-1">Signatory</label>
+            <select name="signatory_id" class="form-select form-select-sm" required>
+              <option value="">Select a signatory</option>
+              <?php foreach (($signatories ?? []) as $s): ?>
+              <option value="<?= (int)$s['id'] ?>" <?= (int)($editing['signatory_id'] ?? 0) === (int)$s['id'] ? 'selected' : '' ?>>
+                <?= htmlspecialchars((string)$s['name'], ENT_QUOTES) ?><?= (string)($s['title'] ?? '') !== '' ? ' - ' . htmlspecialchars((string)$s['title'], ENT_QUOTES) : '' ?><?= (string)($s['signature_path'] ?? '') === '' ? ' (no e-sig)' : '' ?>
+              </option>
+              <?php endforeach; ?>
+            </select>
+            <div class="small text-muted mt-1">Manage signatories and e-signatures on the <a href="?r=admin_coa_signatories">Signatories</a> page. Saving copies their name, title, and signature onto this template.</div>
           </div>
           <div class="col-12 d-flex gap-2">
             <button class="btn btn-primary btn-sm"><?= $editing ? 'Update template' : 'Save as template' ?></button>

@@ -46,23 +46,33 @@ final class CoaService
     /**
      * Core generate + mail + record path. Records a coa_sends row (attached
      * to the event's batch for the attendance date) for every outcome:
-     * sent, failed, or skipped (no email). $source is 'auto' (scan) or
-     * 'manual' (resend button, monitor send-new).
+     * sent, failed, or skipped (no email). $source is 'auto' (scan),
+     * 'manual' (resend button, monitor send-new), or 'scheduled'. Compose
+     * passes $overrides (venue/purpose/particulars/signatory/template_id)
+     * so the batch snapshot does not have to mutate the event row. A future
+     * $sendAt queues the row instead of sending now.
      */
-    public static function sendNow(int $eventId, int $participantId, string $attendanceDate, string $source = 'manual', ?string $fromName = null): bool
+    public static function sendNow(int $eventId, int $participantId, string $attendanceDate, string $source = 'manual', ?string $fromName = null, array $overrides = [], ?string $sendAt = null): bool
     {
         $pdo = Database::pdo();
 
         $ev = $pdo->prepare('SELECT * FROM events WHERE id = ? LIMIT 1');
         $ev->execute([$eventId]);
         $event = $ev->fetch();
-        if (!$event || !self::enabledFor($event)) {
-            return false; // Disabled events stay silent: no rows, no noise.
+        if (!$event) {
+            return false;
+        }
+        // Scan auto-send stays gated. Compose / schedule / resend may run
+        // against a chosen template without requiring coa_enabled.
+        if ($source === 'auto' && !self::enabledFor($event)) {
+            return false;
         }
 
-        $venue = trim((string)($event['coa_venue'] ?? '')) !== '' ? (string)$event['coa_venue'] : 'Venue to be announced';
-        $signatory = trim((string)($event['coa_signatory_name'] ?? '')) !== '' ? (string)$event['coa_signatory_name'] : 'Event Head';
-        $batchId = self::ensureBatch($pdo, $eventId, $attendanceDate, (string)$event['name'], $venue, $signatory, $source);
+        $eventLike = self::applyOverrides($event, $overrides);
+        $venue = trim((string)($eventLike['coa_venue'] ?? '')) !== '' ? (string)$eventLike['coa_venue'] : 'Venue to be announced';
+        $signatory = trim((string)($eventLike['coa_signatory_name'] ?? '')) !== '' ? (string)$eventLike['coa_signatory_name'] : 'Event Head';
+        $templateId = (int)($overrides['template_id'] ?? 0);
+        $batchId = self::ensureBatch($pdo, $eventId, $attendanceDate, (string)$event['name'], $venue, $signatory, $source, $templateId);
 
         $st = $pdo->prepare('SELECT id, uuid, first_name, middle_name, last_name, agency, email, office_email FROM participants WHERE id = ? AND event_id = ? LIMIT 1');
         $st->execute([$participantId, $eventId]);
@@ -71,13 +81,21 @@ final class CoaService
             return false;
         }
         $to = trim((string)($participant['email'] ?: $participant['office_email'] ?? ''));
+
+        // Scheduled compose: queue now, the cron worker sends when due.
+        if ($sendAt !== null && $sendAt !== '' && strtotime($sendAt) > time()) {
+            self::recordSend($pdo, $batchId, $eventId, $participantId, $attendanceDate, $to, 'queued', '', '', (string)$event['name'], $venue, $signatory, $sendAt);
+            return true;
+        }
+
         if ($to === '') {
             self::recordSend($pdo, $batchId, $eventId, $participantId, $attendanceDate, '', 'skipped', 'No email on record', '', (string)$event['name'], $venue, $signatory);
             Logger::log(null, 'coa_skipped', ['participant_id' => $participantId, 'reason' => 'no_email'], $eventId);
             return false;
         }
 
-        $path = self::generate($eventId, $participantId, $attendanceDate);
+        $eventLike['name'] = (string)$event['name'];
+        $path = self::generateForEventLike($eventId, $eventLike, $participant, $attendanceDate);
         if ($path === null) {
             self::recordSend($pdo, $batchId, $eventId, $participantId, $attendanceDate, $to, 'failed', 'PDF generation failed (TCPDF unavailable?)', '', (string)$event['name'], $venue, $signatory);
             return false;
@@ -99,8 +117,79 @@ final class CoaService
         return $sent;
     }
 
-    /** The auto/manual batch for this event + attendance date, created on demand. */
-    private static function ensureBatch(\PDO $pdo, int $eventId, string $attendanceDate, string $eventName, string $venue, string $signatory, string $source): int
+    /**
+     * Plan#12 compose: queue (or send, when $sendAt is now/past) a list of
+     * participants against a template snapshot. Returns [processed, sent].
+     * @param list<int> $participantIds
+     * @return array{processed:int,sent:int}
+     */
+    public static function sendBatch(int $eventId, array $participantIds, string $attendanceDate, array $overrides, string $source, ?string $sendAt = null, ?string $fromName = null): array
+    {
+        $processed = 0;
+        $sent = 0;
+        foreach (array_slice($participantIds, 0, 50) as $pid) {
+            $ok = self::sendNow($eventId, (int)$pid, $attendanceDate, $source, $fromName, $overrides, $sendAt);
+            $processed++;
+            if ($ok) $sent++;
+        }
+        return ['processed' => $processed, 'sent' => $sent];
+    }
+
+    /**
+     * Cron / CLI: send due queued rows (send_at null or in the past).
+     * @return array{processed:int,sent:int}
+     */
+    public static function processDue(int $limit = 50): array
+    {
+        $pdo = Database::pdo();
+        $limit = max(1, min(50, $limit));
+        $stmt = $pdo->prepare(
+            "SELECT id FROM coa_sends WHERE status = 'queued' AND (send_at IS NULL OR send_at <= ?) ORDER BY id ASC LIMIT {$limit}"
+        );
+        $stmt->execute([date('Y-m-d H:i:s')]);
+        $ids = array_map('intval', array_column($stmt->fetchAll(), 'id'));
+        $sent = 0;
+        foreach ($ids as $id) {
+            if (self::resendRow($id)) {
+                $sent++;
+            }
+        }
+        return ['processed' => count($ids), 'sent' => $sent];
+    }
+
+    /** Merge compose/template overrides onto an event row (generation view). */
+    private static function applyOverrides(array $event, array $overrides): array
+    {
+        $eventLike = $event;
+        $map = [
+            'venue' => 'coa_venue',
+            'purpose' => 'coa_purpose',
+            'particulars' => 'coa_particulars',
+            'signatory_name' => 'coa_signatory_name',
+            'signatory_title' => 'coa_signatory_title',
+            'signatory_path' => 'coa_signatory_path',
+            'logo_path' => 'coa_logo_path',
+        ];
+        foreach ($map as $key => $column) {
+            if (array_key_exists($key, $overrides) && trim((string)$overrides[$key]) !== '') {
+                $eventLike[$column] = trim((string)$overrides[$key]);
+            }
+        }
+        return $eventLike;
+    }
+
+    /** Resolve a stored relative path against the project root. */
+    public static function resolvePath(string $path): string
+    {
+        if ($path === '') return '';
+        if (preg_match('#^([A-Za-z]:)?[/\\\\]#', $path) === 1) {
+            return $path; // already absolute
+        }
+        return dirname(__DIR__, 2) . DIRECTORY_SEPARATOR . str_replace('/', DIRECTORY_SEPARATOR, $path);
+    }
+
+    /** The auto/manual/scheduled batch for this event + attendance date, created on demand. */
+    private static function ensureBatch(\PDO $pdo, int $eventId, string $attendanceDate, string $eventName, string $venue, string $signatory, string $source, int $templateId = 0): int
     {
         $sel = $pdo->prepare('SELECT id FROM coa_batches WHERE event_id = ? AND inclusive_date = ? AND source = ? ORDER BY id DESC LIMIT 1');
         $sel->execute([$eventId, $attendanceDate, $source]);
@@ -108,20 +197,21 @@ final class CoaService
         if ($existing !== false && $existing !== null) {
             return (int)$existing;
         }
-        $ins = $pdo->prepare('INSERT INTO coa_batches (event_id, created_at, inclusive_date, signatory_name, venue_snapshot, event_name_snapshot, source) VALUES (?,?,?,?,?,?,?)');
-        $ins->execute([$eventId, date('Y-m-d H:i:s'), $attendanceDate, $signatory, $venue, $eventName, $source]);
+        $ins = $pdo->prepare('INSERT INTO coa_batches (event_id, created_at, inclusive_date, signatory_name, venue_snapshot, event_name_snapshot, source, template_id) VALUES (?,?,?,?,?,?,?,?)');
+        $ins->execute([$eventId, date('Y-m-d H:i:s'), $attendanceDate, $signatory, $venue, $eventName, $source, $templateId > 0 ? $templateId : null]);
         return (int)$pdo->lastInsertId();
     }
 
-    private static function recordSend(\PDO $pdo, int $batchId, int $eventId, int $participantId, string $attendanceDate, string $email, string $status, string $error, string $pdfPath, string $eventName, string $venue, string $signatory): void
+    private static function recordSend(\PDO $pdo, int $batchId, int $eventId, int $participantId, string $attendanceDate, string $email, string $status, string $error, string $pdfPath, string $eventName, string $venue, string $signatory, ?string $sendAt = null): void
     {
         $now = date('Y-m-d H:i:s');
-        $ins = $pdo->prepare('INSERT INTO coa_sends (batch_id, event_id, participant_id, attendance_date, email, status, error, pdf_path, event_name_snapshot, venue_snapshot, signatory_snapshot, created_at, updated_at) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?)');
+        $ins = $pdo->prepare('INSERT INTO coa_sends (batch_id, event_id, participant_id, attendance_date, email, status, error, pdf_path, event_name_snapshot, venue_snapshot, signatory_snapshot, send_at, created_at, updated_at) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?)');
         $ins->execute([
             $batchId, $eventId, $participantId, $attendanceDate, $email, $status,
             $error !== '' ? mb_substr($error, 0, 255) : null,
             $pdfPath !== '' ? $pdfPath : null,
-            $eventName, $venue, $signatory, $now, $now,
+            $eventName, $venue, $signatory,
+            $sendAt, $now, $now,
         ]);
     }
 
@@ -152,15 +242,30 @@ final class CoaService
         if (!$event || !$participant) {
             return null;
         }
+        return self::generateForEventLike($eventId, $event, $participant, $attendanceDate);
+    }
+
+    /** Render into the event's storage folder from an event-like settings array. */
+    public static function generateForEventLike(int $eventId, array $eventLike, array $participant, string $attendanceDate): ?string
+    {
+        if (!class_exists('TCPDF')) {
+            $autoload = dirname(__DIR__, 2) . DIRECTORY_SEPARATOR . 'vendor' . DIRECTORY_SEPARATOR . 'autoload.php';
+            if (is_file($autoload)) {
+                require_once $autoload;
+            }
+        }
+        if (!class_exists('TCPDF')) {
+            return null;
+        }
 
         $dir = dirname(__DIR__, 2) . DIRECTORY_SEPARATOR . 'storage' . DIRECTORY_SEPARATOR . 'coa' . DIRECTORY_SEPARATOR . $eventId;
         if (!is_dir($dir) && !mkdir($dir, 0775, true) && !is_dir($dir)) {
             return null;
         }
-        $fileName = 'coa_' . $participantId . '_' . date('Ymd', strtotime($attendanceDate)) . '.pdf';
+        $fileName = 'coa_' . (int)$participant['id'] . '_' . date('Ymd', strtotime($attendanceDate)) . '.pdf';
         $path = $dir . DIRECTORY_SEPARATOR . $fileName;
 
-        $data = self::buildData($event, self::fullName($participant), trim((string)($participant['agency'] ?? '')), $attendanceDate);
+        $data = self::buildData($eventLike, self::fullName($participant), trim((string)($participant['agency'] ?? '')), $attendanceDate);
         return self::renderPdf($data, $path) ? $path : null;
     }
 
@@ -246,8 +351,9 @@ final class CoaService
         $y = 12.0;
 
         // Header: DICT emblem left, Bagong Pilipinas right.
-        if ($data['logoPath'] !== '' && is_file($data['logoPath'])) {
-            $pdf->Image($data['logoPath'], $x0 + $m, $y, 26, 0, '', '', '', true, 300);
+        $logoPath = self::resolvePath($data['logoPath']);
+        if ($logoPath !== '' && is_file($logoPath)) {
+            $pdf->Image($logoPath, $x0 + $m, $y, 26, 0, '', '', '', true, 300);
         } else {
             $pdf->SetLineStyle(['width' => 0.4, 'color' => [11, 27, 69]]);
             $pdf->Rect($x0 + $m, $y, 22, 14, 'D');
@@ -314,8 +420,9 @@ final class CoaService
         $pdf->Cell($inner, 5, 'Issued this ' . $data['issueDate'] . ' at ' . $data['venue'] . '.', 0, 0, 'L');
 
         $sigY = max($y + 22, $pageH - 52);
-        if ($data['signatoryPath'] !== '' && is_file($data['signatoryPath'])) {
-            $pdf->Image($data['signatoryPath'], $x0 + $half - $m - 52, $sigY - 14, 44, 0, '', '', '', true, 300);
+        $signatoryImagePath = self::resolvePath($data['signatoryPath']);
+        if ($signatoryImagePath !== '' && is_file($signatoryImagePath)) {
+            $pdf->Image($signatoryImagePath, $x0 + $half - $m - 52, $sigY - 14, 44, 0, '', '', '', true, 300);
         }
         $pdf->SetFont('helvetica', 'B', 10);
         $pdf->SetXY($x0 + $half - $m - 62, $sigY + 12);

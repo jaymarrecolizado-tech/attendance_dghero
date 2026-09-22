@@ -150,6 +150,17 @@ class Database
         if (!self::tableExists($pdo, 'coa_batches') || !self::tableExists($pdo, 'coa_sends') || !self::tableExists($pdo, 'coa_templates')) {
             self::executeSqlFileTolerant($pdo, $base . '014_coa_monitor.sql');
         }
+        // 015_coa_facility (signatory library, template/event signatory refs,
+        // scheduled sends, batch template snapshot)
+        if (self::tableExists($pdo, 'coa_templates') && (
+            !self::tableExists($pdo, 'coa_signatories')
+            || !self::columnExists($pdo, 'coa_templates', 'signatory_id')
+            || !self::columnExists($pdo, 'events', 'coa_signatory_id')
+            || !self::columnExists($pdo, 'coa_sends', 'send_at')
+            || !self::columnExists($pdo, 'coa_batches', 'template_id')
+        )) {
+            self::executeSqlFileTolerant($pdo, $base . '015_coa_facility.sql');
+        }
     }
 
     private static function migrate010(PDO $pdo): void
