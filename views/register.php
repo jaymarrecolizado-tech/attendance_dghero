@@ -65,8 +65,8 @@ require __DIR__ . DIRECTORY_SEPARATOR . 'partials' . DIRECTORY_SEPARATOR . 'gues
                   <input name="nickname" id="nickname" class="form-control" autocomplete="nickname" value="<?= htmlspecialchars($posted['nickname'] ?? '', ENT_QUOTES) ?>">
                 </div>
                 <div class="col-12 col-md-6">
-                  <label class="form-label" for="sex">Sex</label>
-                  <select name="sex" id="sex" class="form-select">
+                  <label class="form-label" for="sex">Sex <span class="req" aria-hidden="true">*</span></label>
+                  <select name="sex" id="sex" class="form-select" required>
                     <option value="">Select</option>
                     <option value="Female" <?= ($posted['sex'] ?? '') === 'Female' ? 'selected' : '' ?>>Female</option>
                     <option value="Male" <?= ($posted['sex'] ?? '') === 'Male' ? 'selected' : '' ?>>Male</option>
@@ -90,9 +90,9 @@ require __DIR__ . DIRECTORY_SEPARATOR . 'partials' . DIRECTORY_SEPARATOR . 'gues
                   <select name="sector" id="sector" class="form-select" required>
                     <option value="">Select</option>
                     <?php foreach (($sectors ?? []) as $s): ?>
-                      <option value="<?= htmlspecialchars($s, ENT_QUOTES) ?>"><?= htmlspecialchars($s, ENT_QUOTES) ?></option>
+                      <option value="<?= htmlspecialchars($s, ENT_QUOTES) ?>" <?= ($posted['sector'] ?? '') === $s ? 'selected' : '' ?>><?= htmlspecialchars($s, ENT_QUOTES) ?></option>
                     <?php endforeach; ?>
-                    <option value="Other">Other</option>
+                    <option value="Other" <?= ($posted['sector'] ?? '') === 'Other' ? 'selected' : '' ?>>Other</option>
                   </select>
                 </div>
                 <div class="col-12 col-md-6">
@@ -145,8 +145,9 @@ require __DIR__ . DIRECTORY_SEPARATOR . 'partials' . DIRECTORY_SEPARATOR . 'gues
               </div>
               <div class="row g-3 g-md-4">
                 <div class="col-12 col-md-6">
-                  <label class="form-label" for="contact_no">Contact No</label>
-                  <input name="contact_no" id="contact_no" class="form-control" type="tel" inputmode="tel" autocomplete="tel" value="<?= htmlspecialchars($posted['contact_no'] ?? '', ENT_QUOTES) ?>">
+                  <label class="form-label" for="contact_no">Contact No <span class="req" aria-hidden="true">*</span></label>
+                  <input name="contact_no" id="contact_no" class="form-control" type="tel" inputmode="tel" autocomplete="tel" required pattern="[0-9+\-\s]{7,20}" title="7-20 digits (may include +, -, and spaces)" value="<?= htmlspecialchars($posted['contact_no'] ?? '', ENT_QUOTES) ?>">
+                  <p class="field-hint">Mobile or office number, 7-20 digits, so we can reach you about this event.</p>
                 </div>
               </div>
             </fieldset>

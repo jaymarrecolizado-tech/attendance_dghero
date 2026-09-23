@@ -5,6 +5,8 @@ namespace App\Services;
 
 final class ParticipantValidator
 {
+    public const SEXES = ['Female', 'Male', 'Other'];
+
     /**
      * @return array{data: array<string,string|null>, errors: array<string,string>}
      */
@@ -31,6 +33,8 @@ final class ParticipantValidator
         self::requireField($data['sector'], 'sector', 'Sector is required', $errors);
         self::requireField($data['agency'], 'agency', 'Agency is required', $errors);
         self::requireField($data['email'], 'email', 'Email is required for your Certificate of Appearance', $errors);
+        self::requireField($data['sex'], 'sex', 'Sex is required', $errors);
+        self::requireField($data['contact_no'], 'contact_no', 'Contact number is required', $errors);
 
         self::maxLength($data['first_name'], 80, 'first_name', $errors);
         self::maxLength($data['last_name'], 80, 'last_name', $errors);
@@ -46,6 +50,10 @@ final class ParticipantValidator
             $errors['office_email'] = 'Office email format is invalid';
         }
 
+        if ($data['sex'] && !in_array($data['sex'], self::SEXES, true)) {
+            $errors['sex'] = 'Sex must be Female, Male, or Other';
+        }
+
         if ($data['contact_no'] && !preg_match('/^[0-9+\-\s]{7,20}$/', $data['contact_no'])) {
             $errors['contact_no'] = 'Contact number should contain 7-20 digits';
         }
@@ -59,8 +67,10 @@ final class ParticipantValidator
         if ($email === '') {
             return false;
         }
-        $chk = $pdo->prepare('SELECT id FROM participants WHERE event_id = ? AND LOWER(email) = ? LIMIT 1');
-        $chk->execute([$eventId, $email]);
+        $chk = $pdo->prepare(
+            'SELECT id FROM participants WHERE event_id = ? AND (LOWER(email) = ? OR LOWER(office_email) = ?) LIMIT 1'
+        );
+        $chk->execute([$eventId, $email, $email]);
         return (bool)$chk->fetch();
     }
 

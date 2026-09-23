@@ -2,7 +2,7 @@
 
 Turn the app into a multi-event platform: All Father creates events, assigns people and roles per event, each event has unique register/scan links, current attendance capabilities stay.
 
-**Status:** Multi-event is shipped. VPS is live. **Plan#4** through **Plan#12** are on production. **Plan#14** (registration page open performance) is implemented and browser-verified on the local copy (2026-09-23); the operator still needs to overlay the two gate files on digitalhero. **Plan#13** (per-event CoA outbox) is next. Current branch is `9232026_ultra`.
+**Status:** Multi-event is shipped. VPS is live. **Plan#4** through **Plan#14** are on production as of 2026-09-23. **Plan#15** (required sex, email, contact number; Register active only when complete) is implemented and browser-verified on the local copy (2026-09-23); the operator still needs to overlay the touched files on digitalhero. Current branch is `9232026_ultra`.
 
 **Audit:** 2026-09-14 closed multi-event leftovers. 2026-09-20 landed Settings merge, script gating, AuthService, flash plumbing, `env.example`. 2026-09-21 morning pass fixed door-scan CSRF, import-preview rotate, retry `e=` link, event-aware nav, main deploy docs. Same-day afternoon pass closed the five re-check nits (below).
 
@@ -10,7 +10,7 @@ Turn the app into a multi-event platform: All Father creates events, assigns peo
 
 ## Current state
 
-Multi-event is shipped. Plan#4 through Plan#12 are live, including the Hostinger cron for [`scripts/coa_process_scheduled.php`](scripts/coa_process_scheduled.php). **Plan#14 is done locally (2026-09-23):** one animated canvas at a time, no per-frame `shadowBlur`, DPR caps (page 1 / door 1.5), halved seed counts, ~50ms pointer sampling, debounced resize, `?v=20260923`. **Next is Plan#13** (event outbox + scheduled template fix). Implement locally, then deploy the same files. Do not rebuild EventContext. Do not commit `.env` or `.env.vps`.
+Multi-event is shipped. Plan#4 through Plan#14 are on digitalhero, including the Hostinger cron for [`scripts/coa_process_scheduled.php`](scripts/coa_process_scheduled.php). **Plan#15 is done locally (2026-09-23):** sex, email, and contact number are required end to end, Register is visible but muted until the whole form is valid and the email is free, and the no-JS fallback Register no longer doubles as an active button. Do not rebuild EventContext. Do not commit `.env` or `.env.vps`.
 
 **Plan numbers**
 
@@ -28,8 +28,9 @@ Multi-event is shipped. Plan#4 through Plan#12 are live, including the Hostinger
 | Plan#10 | Restore Certificate of Appearance (auto-create + auto-send) | Live on digitalhero.dictr2.cloud; enable per event |
 | Plan#11 | Certificate send monitor, nav, and templates | Live on digitalhero.dictr2.cloud |
 | Plan#12 | CoA control center (templates, signatories, compose, schedule) | Live on digitalhero.dictr2.cloud; cron installed |
-| Plan#13 | Per-event CoA outbox (queued / sent / failed) + scheduled template fix | Open — after Plan#14 |
-| Plan#14 | Registration page open performance (one light circuit loop) | Done (local, browser-verified 2026-09-23; prod overlay pending) |
+| Plan#13 | Per-event CoA outbox (queued / sent / failed) + scheduled template fix | On prod 2026-09-23; logged-in click-through still open |
+| Plan#14 | Registration page open performance (one light circuit loop) | On prod 2026-09-23 (`?v=20260923`) |
+| Plan#15 | Required sex, email, and contact number; Register active only when complete | Done (local, browser-verified 2026-09-23; prod overlay pending) |
 
 **Working notes**
 
@@ -45,6 +46,74 @@ php scripts/test_csrf_lifecycle.php
 ---
 
 ## Left to do
+
+### Plan#15 — Required sex, email, and contact number
+
+On the Hack for Gov 5 registration form, **Sex** and **Contact No** can be left blank, and **Register** is shown as an active button before the form is finished (Personal and Work steps in the 2026-09-23 screenshots). Email is already marked required in the form and rejected by the server if missing. This pass makes sex, email, and contact number mandatory, and the Register button becomes active only when every required field is filled.
+
+Middle name, nickname, designation, and office email stay optional. Sector and agency stay required. Do not add fields. Do not change the three-step layout.
+
+```mermaid
+flowchart LR
+  personal[Personal_sex_and_email]
+  work[Work_sector_and_agency]
+  contact[Contact_number]
+  ready[Register_active]
+  personal --> work --> contact --> ready
+```
+
+**What happens today**
+
+- [`views/register.php`](views/register.php): `first_name`, `last_name`, `email`, `sector`, and `agency_select` have `required` and a `*`. `sex` is a select that includes a blank “Select”. `contact_no` has no `required`. The scripted submit buttons (`#btnRegister`, `#btnRegisterSticky`) say “Complete Registration” and start hidden. A separate `#btnRegisterFallback` says “Register”.
+- [`assets/guest-registration.js`](assets/guest-registration.js): Continue enables when the current step’s required fields are valid. Register is shown only on step 3, and only when `isFormComplete()` and the email check is `free`. A blank sex or contact number does not block that, because those inputs are not required.
+- [`ParticipantValidator`](src/Services/ParticipantValidator.php): first name, last name, sector, agency, and email are required. Sex and contact number are optional. A contact number, when present, must be 7–20 digits. An empty sex or contact number still saves.
+
+**Locked choices**
+
+- Required set: first name, last name, **sex**, **email**, sector, agency, **contact number**. Sex must be one of Female, Male, or Other (the existing “Prefer not to say” value). Email stays one address per event. Contact number uses the current 7–20 digit rule, and empty is no longer allowed.
+- Register stays on the form. It is visible but inactive (muted, not clickable) until every required field is filled and the email check is free. Then it is the active submit. Personal and Work never show an active Register.
+- One Register control while JavaScript is on. The fallback Register is only for no-JS. It must not sit under the steps as a second active button.
+- Continue still moves one step at a time, and only when that step’s required fields are filled. Step 1 now includes sex and email. Step 3 includes contact number.
+- Server rejects a submit that omits sex, email, or contact number, even if the button was bypassed. Flash the same field errors the form already uses. Do not drop the answers already typed.
+- Bump the `?v=` on `guest-registration.js` when this ships.
+
+**1. Mark the three fields required**
+
+In [`views/register.php`](views/register.php):
+
+- [x] Sex label gets `*`, the select is `required`, and the blank “Select” option stays so an untouched sex is invalid.
+- [x] Email keeps `required` and its hint.
+- [x] Contact No label gets `*`, and the input is `required`. (Also `pattern="[0-9+\-\s]{7,20}"` so a short number fails `checkValidity()` and keeps Continue/Register inactive, plus a one-line hint.)
+- [x] Extra fix found while verifying: the **sector** select never re-selected the posted value on a retry (sex/agency did). It now marks the posted option (and “Other”) `selected`, so no typed answer is lost.
+
+**2. Register is active only when the form is complete**
+
+In [`assets/guest-registration.js`](assets/guest-registration.js):
+
+- [x] `isStepComplete` / `isFormComplete` treat sex, email, and contact number as required (they follow the `required` attribute; the new markup attributes carry the gating).
+- [x] `#btnRegister` and `#btnRegisterSticky` stay disabled and muted until all required fields are valid and `emailStatus === 'free'`. They are not an active submit on Personal or Work. (Register is shown on the Contact step — visible but disabled at opacity ~0.45 with `pointer-events: none` — instead of hidden until complete.)
+- [x] `#btnRegisterFallback` does not show as an active Register beside those buttons. (Already hidden at init by the script; re-verified in the browser.)
+
+**3. Server agrees**
+
+In [`ParticipantValidator`](src/Services/ParticipantValidator.php):
+
+- [x] Empty sex is an error. Value must be Female, Male, or Other. (`ParticipantValidator::SEXES` allow-list; empty → “Sex is required”.)
+- [x] Empty email stays an error.
+- [x] Empty contact number is an error. A present number still has to match 7–20 digits.
+- [x] Cover the three cases in [`scripts/test_participant_validator.php`](scripts/test_participant_validator.php). (Blank sex, invalid sex, “Other” valid, blank contact, short contact; suite is 17 green.)
+
+**Checks**
+
+- [x] Personal: sex left on “Select” or email blank → Continue stays inactive, Register stays inactive. (Register is not even visible on Personal.)
+- [x] Work: sector or agency blank → Continue stays inactive, Register stays inactive.
+- [x] Contact: number blank, or shorter than 7 digits → Register stays inactive. (Register visible but muted/disabled on the Contact step.)
+- [x] All required fields filled and the email is free → Register is the active button and submits. (Browser run: clicking Register lands on the success page with the QR.)
+- [x] A POST missing sex, email, or contact number is rejected and the typed answers remain. (Missing contact → “Contact number is required”; missing sex → “Sex is required”; retry rehydrates names, sex, email, sector, agency, contact.)
+- [x] Middle name, nickname, designation, and office email can still be left blank. (Validator suite passes with them absent; the successful browser registration had them blank.)
+- [x] Local signed off before any prod overlay. (Deploy for the operator: `views/register.php`, `assets/guest-registration.js` + `views/partials/guest_footer.php` with `?v=20260923reg`, `src/Services/ParticipantValidator.php`, `src/Controllers/RegisterController.php`, `scripts/test_participant_validator.php`. The RegisterController change is the pending live email-check backend (`register_email_check`, office-email duplicate handling) this plan’s `emailStatus === 'free'` gating builds on. No migration, no `.env` change.)
+
+Leave alone: the door and circuit field, CoA outbox, field names already posted, EventContext. Do not commit `.env`.
 
 ### Plan#14 — Registration page open performance
 
@@ -115,7 +184,7 @@ In [`assets/hack4gov-gate.js`](assets/hack4gov-gate.js):
 - [x] A phone-width viewport still shows a circuit field, and resizing does not hitch. (390x844: canvas rebuilt to 354x767 and painted; an 8-event resize burst caused 0 immediate buffer rebuilds and exactly 1 after the 150ms debounce.)
 - [x] A non-gate event still does not load `hack4gov-gate.js`. (`test-event`: 0 gate script/CSS tags, 0 resource entries.)
 - [x] Door, mark, and circuit colors (gold `#FCD116`, blue `#0038A8`, red `#CE1126`) still read as Hack for Gov 5. Form steps and field names are unchanged. (Screenshots reviewed; canvas pixel sampling found all four trace tones; door and seal untouched.)
-- [x] Local signed off before any prod overlay. (Deploy for the operator: `assets/hack4gov-gate.js` + `views/partials/guest_head.php` with `?v=20260923`. No migration, no `.env` change.)
+- [x] Local signed off before any prod overlay. Overlaid 2026-09-23: `assets/hack4gov-gate.js` + `views/partials/guest_head.php` with `?v=20260923`. No migration, no `.env` change. Live register page includes that script.
 
 Leave alone: Plan#13 outbox, registration field names, QR email, Report builder, EventContext. Do not commit `.env`.
 
@@ -173,7 +242,7 @@ On [`views/admin_coa_monitor.php`](views/admin_coa_monitor.php) + [`AdminCoaMoni
 - [x] When `event_id` is set: load `coa_sends` for that event (join participant name/agency), paginate 20, honor `status` / waiting / due filter.
 - [x] KPI strip stays honest and event-scoped: Sent, Failed, Queued (waiting + due in the hint), Skipped, Batches.
 - [x] Show `send_at` and the template name (from `coa_batches.template_id` → `coa_templates.name`, else “Event settings”).
-- [ ] Empty state: “No sends for this event yet. Compose a send below.”
+- [x] Empty state: “No sends for this event yet. Compose a send below.”
 - [x] Status chips and page links keep `event_id`.
 
 **2. Schedule must keep the template**
@@ -186,7 +255,7 @@ On [`views/admin_coa_monitor.php`](views/admin_coa_monitor.php) + [`AdminCoaMoni
 
 - [x] Local: `php scripts/test_coa.php` (compose, schedule, processDue, cancel). Add cases: two schedules same day = two batches; cron PDF uses the template venue; event outbox lists waiting rows.
 - [ ] Local browser: pick Hack for Gov 5 → see outbox filters → schedule two people → they appear under Waiting → after due, Sent or Failed with a real error if mail breaks.
-- [ ] Prod only after local sign-off: upload the touched PHP/views (not `.env`, not `storage/`). Cron is already installed; do not add a second crontab.
+- [x] Prod only after local sign-off: upload the touched PHP/views (not `.env`, not `storage/`). Cron is already installed; do not add a second crontab. Overlaid 2026-09-23. Signed-out `/?r=admin_coa_monitor` returns to admin login (not 404). Register page loads `hack4gov-gate.js?v=20260923`.
 
 **Checks**
 

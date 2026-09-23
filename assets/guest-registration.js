@@ -30,9 +30,14 @@
   const reviewAgency = document.getElementById('reviewAgency');
   const reviewEmail = document.getElementById('reviewEmail');
 
-  function showStepError(message) {
+  let emailStatus = 'idle';
+  let emailCheckToken = 0;
+  let emailCheckTimer = null;
+
+  function showStepError(message, reason) {
     if (!stepError) return;
     stepError.textContent = message;
+    stepError.dataset.reason = reason || '';
     stepError.classList.add('is-visible');
     stepError.classList.add('alert', 'alert-warning');
   }
@@ -40,6 +45,7 @@
   function hideStepError() {
     if (!stepError) return;
     stepError.textContent = '';
+    delete stepError.dataset.reason;
     stepError.classList.remove('is-visible', 'alert', 'alert-warning');
   }
 
@@ -70,6 +76,8 @@
     [btnContinue, btnContinueSticky].forEach((btn) => {
       if (btn) btn.style.display = isLast ? 'none' : '';
     });
+    // Register lives on the last step: visible but muted (disabled) until the
+    // whole form is valid and the email is free, per setActionsEnabled.
     [btnRegister, btnRegisterSticky].forEach((btn) => {
       if (btn) btn.style.display = isLast ? '' : 'none';
     });
@@ -112,6 +120,53 @@
     return true;
   }
 
+  function emailsToVerify() {
+    const primaryEl = form.querySelector('[name="email"]');
+    const officeEl = form.querySelector('[name="office_email"]');
+    const primary = (primaryEl?.value || '').trim().toLowerCase();
+    const office = (officeEl?.value || '').trim().toLowerCase();
+    const list = [];
+    if (primary && primaryEl.checkValidity()) list.push(primary);
+    if (office && office !== primary && officeEl.checkValidity()) list.push(office);
+    return list;
+  }
+
+  function scheduleEmailCheck() {
+    const emails = emailsToVerify();
+    clearTimeout(emailCheckTimer);
+    if (emails.length === 0) {
+      emailStatus = 'idle';
+      emailCheckToken += 1;
+      return;
+    }
+    emailStatus = 'checking';
+    const token = emailCheckToken + 1;
+    emailCheckToken = token;
+    emailCheckTimer = setTimeout(() => {
+      runEmailCheck(emails, token);
+    }, 300);
+  }
+
+  function runEmailCheck(emails, token) {
+    const slug = form.querySelector('[name="e"]')?.value || '';
+    const requests = emails.map((email) => {
+      const url = '?r=register_email_check&e=' + encodeURIComponent(slug) + '&email=' + encodeURIComponent(email);
+      return fetch(url, { headers: { Accept: 'application/json' } }).then((res) => {
+        if (!res.ok) throw new Error('email check failed');
+        return res.json();
+      });
+    });
+    Promise.all(requests).then((rows) => {
+      if (token !== emailCheckToken) return;
+      emailStatus = rows.some((row) => row && row.taken) ? 'taken' : 'free';
+      setActionsEnabled();
+    }).catch(() => {
+      if (token !== emailCheckToken) return;
+      emailStatus = 'error';
+      setActionsEnabled();
+    });
+  }
+
   function setActionsEnabled() {
     const stepOk = isStepComplete(currentStep);
     [btnContinue, btnContinueSticky].forEach((btn) => {
@@ -119,12 +174,19 @@
       btn.disabled = !stepOk;
       btn.setAttribute('aria-disabled', stepOk ? 'false' : 'true');
     });
-    const canRegister = currentStep === totalSteps && isFormComplete();
+    const canRegister = isFormComplete() && emailStatus === 'free';
     [btnRegister, btnRegisterSticky].forEach((btn) => {
       if (!btn) return;
       btn.disabled = !canRegister;
       btn.setAttribute('aria-disabled', canRegister ? 'false' : 'true');
     });
+    if (emailStatus === 'taken') {
+      showStepError('This email is already registered for this event.', 'email');
+    } else if (emailStatus === 'error') {
+      showStepError('Could not verify this email yet. Edit it to try again.', 'email');
+    } else if (stepError && stepError.dataset.reason === 'email') {
+      hideStepError();
+    }
   }
 
   function validateStep(step) {
@@ -151,8 +213,8 @@
 
   function goToStep(step) {
     currentStep = Math.max(1, Math.min(totalSteps, step));
+    if (!stepError || stepError.dataset.reason !== 'email') hideStepError();
     updateStepper();
-    hideStepError();
     window.scrollTo({ top: 0, behavior: 'smooth' });
   }
 
@@ -204,7 +266,7 @@
   function setSubmitLoading(loading) {
     [btnRegister, btnRegisterSticky].forEach((btn) => {
       if (!btn) return;
-      btn.disabled = loading || !isFormComplete();
+      btn.disabled = loading || !(isFormComplete() && emailStatus === 'free');
       const label = btn.querySelector('.btn-label');
       const spinner = btn.querySelector('.spinner-border');
       if (loading) {
@@ -227,7 +289,7 @@
         return;
       }
     }
-    if (!form.checkValidity() || !isFormComplete()) {
+    if (!form.checkValidity() || !isFormComplete() || emailStatus !== 'free') {
       event.preventDefault();
       event.stopPropagation();
       form.classList.add('was-validated');
@@ -237,8 +299,13 @@
     setSubmitLoading(true);
   });
 
-  form.addEventListener('input', setActionsEnabled);
-  form.addEventListener('change', setActionsEnabled);
+  function onFormEdit() {
+    scheduleEmailCheck();
+    setActionsEnabled();
+  }
+
+  form.addEventListener('input', onFormEdit);
+  form.addEventListener('change', onFormEdit);
 
   form.addEventListener('keydown', (event) => {
     if (event.key !== 'Enter' || currentStep >= totalSteps) return;
@@ -381,5 +448,6 @@
   const fallback = document.querySelector('.guest-submit-fallback');
   if (fallback) fallback.hidden = true;
 
+  scheduleEmailCheck();
   updateStepper();
 })();

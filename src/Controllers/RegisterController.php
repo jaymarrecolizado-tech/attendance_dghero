@@ -131,8 +131,13 @@ class RegisterController
 
         $pdo = Database::pdo();
         try {
-            if (ParticipantValidator::emailTaken($pdo, $eventId, (string)$clean['email'])) {
-                $this->flashRegisterError(409, $slug, 'This email is already registered for this event. Use a different address.');
+            $emailTaken = ParticipantValidator::emailTaken($pdo, $eventId, (string)$clean['email']);
+            $office = (string)($clean['office_email'] ?? '');
+            if (!$emailTaken && $office !== '' && $office !== (string)$clean['email']) {
+                $emailTaken = ParticipantValidator::emailTaken($pdo, $eventId, $office);
+            }
+            if ($emailTaken) {
+                $this->flashRegisterError(409, $slug, 'Email already registered');
                 return;
             }
             $attempts = 0;
@@ -160,7 +165,7 @@ class RegisterController
                     ]);
                     break;
                 } catch (\PDOException $e) {
-                    if ($e->getCode() === '23000') {
+                    if (self::isDuplicateEmailError($e)) {
                         throw $e;
                     }
                     $attempts++;
@@ -172,11 +177,11 @@ class RegisterController
             $up = $pdo->prepare('UPDATE participants SET qr_path=? WHERE uuid=?');
             $up->execute([$qrPath, $uuid]);
         } catch (\PDOException $e) {
-            $duplicate = $e->getCode() === '23000' || str_contains($e->getMessage(), 'uq_participants_event_email');
+            $duplicate = self::isDuplicateEmailError($e);
             $this->flashRegisterError(
                 $duplicate ? 409 : 500,
                 $slug,
-                $duplicate ? 'This email is already registered for this event. Use a different address.' : 'Registration failed'
+                $duplicate ? 'Email already registered' : 'Registration failed'
             );
             return;
         }
@@ -197,6 +202,45 @@ class RegisterController
         }
         header('Location: ?r=register_success&uuid=' . urlencode($uuid) . '&e=' . urlencode($slug));
         exit;
+    }
+
+    /** Live check used by the registration form before it shows Complete Registration. */
+    public function emailCheck(): void
+    {
+        header('Content-Type: application/json; charset=utf-8');
+        $ip = $_SERVER['REMOTE_ADDR'] ?? 'unknown';
+        if (!RateLimiter::allow('register-email:' . $ip, 10, 300)) {
+            http_response_code(429);
+            echo json_encode(['taken' => false]);
+            return;
+        }
+
+        $slug = trim((string)($_GET['e'] ?? ''));
+        $email = ParticipantValidator::normalizeEmail((string)($_GET['email'] ?? ''));
+        if ($slug === '' || $email === '' || filter_var($email, FILTER_VALIDATE_EMAIL) === false) {
+            echo json_encode(['taken' => false]);
+            return;
+        }
+
+        $pdo = Database::pdo();
+        $event = EventContext::findBySlug($pdo, $slug);
+        if (!$event || !EventContext::isPublicOpen($event)) {
+            echo json_encode(['taken' => false]);
+            return;
+        }
+
+        $taken = ParticipantValidator::emailTaken($pdo, (int)$event['id'], $email);
+        echo json_encode(['taken' => $taken]);
+    }
+
+    private static function isDuplicateEmailError(\PDOException $e): bool
+    {
+        $driverCode = (int)($e->errorInfo[1] ?? 0);
+        if ($driverCode !== 1062) {
+            return false;
+        }
+        $message = $e->getMessage();
+        return str_contains($message, 'uq_participants_event_email') || str_contains($message, 'uq_email');
     }
 
     /**
