@@ -5,8 +5,10 @@ namespace App\Controllers;
 
 use App\Controllers\Concerns\ResolvesEventContext;
 use App\Services\AuthService;
+use App\Services\CoaService;
 use App\Services\Database;
 use App\Services\EventContext;
+use App\Services\ReportPdf;
 
 class ReportController
 {
@@ -15,7 +17,8 @@ class ReportController
     public function form(): void
     {
         $pdo = Database::pdo();
-        if (!$this->requireEventContext($pdo, ['event_admin'])) return;
+        $event = $this->requireEventContext($pdo, ['event_admin']);
+        if (!$event) return;
         $pdfAvailable = class_exists('TCPDF') || class_exists('\\TCPDF');
         if (!$pdfAvailable && is_file(dirname(__DIR__, 2) . DIRECTORY_SEPARATOR . 'vendor' . DIRECTORY_SEPARATOR . 'autoload.php')) {
             require_once dirname(__DIR__, 2) . DIRECTORY_SEPARATOR . 'vendor' . DIRECTORY_SEPARATOR . 'autoload.php';
@@ -24,6 +27,14 @@ class ReportController
 
         $tpl = [];
         $reportNotice = null;
+        // Plan#16 builder defaults so a first click already matches the AI
+        // Roadshow sample: event name + venue + day line, sample field set.
+        $defaultSubtitle = implode("\n", ReportPdf::subtitleLines(
+            $event,
+            ReportPdf::dayLine($event, '', '', '')
+        ));
+        $defaultFields = ReportPdf::defaultFields();
+        $fieldLabels = ReportPdf::fieldLabels();
         try {
             // Ensure templates table exists even when auto-migrate is off.
             $exists = $pdo->query("SHOW TABLES LIKE 'report_templates'")->fetch();
@@ -51,7 +62,9 @@ class ReportController
         if (!isset($_POST['csrf']) || !function_exists('csrf_check') || !csrf_check($_POST['csrf'])) { http_response_code(400); echo 'Invalid CSRF'; return; }
         $date = trim((string)($_POST['date'] ?? ''));
         $title = trim((string)($_POST['title'] ?? 'Attendance Report'));
-        $subtitle = trim((string)($_POST['subtitle'] ?? ''));
+        // Normalize CRLF textareas so "operator kept the prefill" compares
+        // cleanly against the LF-only builder default.
+        $subtitle = trim(str_replace("\r\n", "\n", (string)($_POST['subtitle'] ?? '')));
         $fields = (array)($_POST['fields'] ?? []);
         $format = trim((string)($_POST['format'] ?? 'auto'));
         $download = ((string)($_POST['download'] ?? '0')) === '1';
@@ -78,14 +91,32 @@ class ReportController
         if ($date !== '') { $where[]='a.attendance_date = ?'; $bind[]=$date; }
         if ($start !== '' && $end !== '') { $where[]='a.attendance_date BETWEEN ? AND ?'; $bind[]=$start; $bind[]=$end; }
         $sqlWhere = $where?('WHERE '.implode(' AND ',$where)) : '';
-        $stmt = $pdo->prepare("SELECT a.id,a.signature_path,a.attendance_date,a.time_in,p.uuid,p.first_name,p.last_name,p.agency,p.designation,p.email,p.sex,p.contact_no,p.sector FROM attendance a JOIN participants p ON p.id=a.participant_id $sqlWhere ORDER BY a.id ASC");
+        $stmt = $pdo->prepare("SELECT a.id,a.signature_path,a.attendance_date,a.time_in,p.uuid,p.first_name,p.middle_name,p.last_name,p.agency,p.designation,p.email,p.sex,p.contact_no,p.sector FROM attendance a JOIN participants p ON p.id=a.participant_id $sqlWhere ORDER BY a.id ASC");
         $stmt->execute($bind);
         $rows = $stmt->fetchAll();
-        
-        if (empty($fields)) {
-            $fields = ['id', 'name', 'agency', 'designation', 'email', 'sex', 'registered_at'];
+
+        $labels = ReportPdf::fieldLabels();
+        $fields = array_values(array_unique((array)$fields));
+        $fields = array_values(array_filter($fields, static fn ($f) => is_string($f) && isset($labels[$f])));
+        if ($fields === []) {
+            $fields = ReportPdf::defaultFields();
         }
-        $fields = array_values(array_unique($fields));
+
+        // Plan#16 default chrome from the current event. The untouched
+        // builder prefill (or an empty subtitle) re-derives from the chosen
+        // date so the day line is never stale; any edit is an override.
+        $dayLine = ReportPdf::dayLine($event, $date, $start, $end);
+        $prefillSubtitle = implode("\n", ReportPdf::subtitleLines(
+            $event,
+            ReportPdf::dayLine($event, '', '', '')
+        ));
+        if ($subtitle === '' || $subtitle === $prefillSubtitle) {
+            $subtitleLines = ReportPdf::subtitleLines($event, $dayLine);
+        } else {
+            $subtitleLines = array_values(array_filter(array_map('trim', explode("\n", $subtitle)), static fn ($v) => $v !== ''));
+        }
+        $leftLogoPath = $leftLogoPath ?? ReportPdf::markPath('DICT-Logo-Final-2-300x153.png');
+        $rightLogoPath = $rightLogoPath ?? ReportPdf::markPath('Bagong_Pilipinas_logo.png');
 
         // Check if TCPDF is available via composer autoload
         $pdfAvailable = false;
@@ -99,86 +130,27 @@ class ReportController
             $pdfAvailable = class_exists('\\TCPDF') || class_exists('TCPDF');
         }
         $usePdf = ($format === 'pdf' && $pdfAvailable) || ($format === 'auto' && $pdfAvailable);
-        
+
         // Convert newlines to <br> for HTML display
         $titleHtml = nl2br(htmlspecialchars($title, ENT_QUOTES, 'UTF-8'));
-        $subtitleHtml = $subtitle !== '' ? nl2br(htmlspecialchars($subtitle, ENT_QUOTES, 'UTF-8')) : '';
-        
+        $subtitleHtml = $subtitleLines !== [] ? nl2br(htmlspecialchars(implode("\n", $subtitleLines), ENT_QUOTES, 'UTF-8')) : '';
+
         $pdfError = null;
         if ($usePdf) {
             try {
-                // Check if TCPDF constants are defined, otherwise use defaults
-                $orientation = 'L';
-                $unit = defined('PDF_UNIT') ? PDF_UNIT : 'mm';
-                $pageFormat = defined('PDF_PAGE_FORMAT') ? PDF_PAGE_FORMAT : 'A4';
-                
-                $pdfClass = class_exists('\\TCPDF') ? '\\TCPDF' : 'TCPDF';
-                $pdf = new $pdfClass($orientation, $unit, $pageFormat, true, 'UTF-8', false);
-                $pdf->SetCreator('ISSP Solo');
-                $pdf->SetAuthor('ISSP Solo');
-                $pdf->SetTitle($title);
-                $pdf->SetSubject('Attendance Report');
-                $pdf->SetMargins(15, 20, 15);
-                $pdf->SetAutoPageBreak(true, 20);
-                $pdf->setPrintHeader(false);
-                $pdf->setPrintFooter(true);
-                if (defined('PDF_IMAGE_SCALE_RATIO')) {
-                    $pdf->setImageScale(PDF_IMAGE_SCALE_RATIO);
-                } else {
-                    $pdf->setImageScale(1.25);
-                }
-                $pdf->setLanguageArray([]);
-                $pdf->AddPage();
+                ReportPdf::stream($rows, $fields, [
+                    'title' => $title !== '' ? $title : 'Attendance Report',
+                    'subtitleLines' => $subtitleLines,
+                    'leftLogo' => (string)$leftLogoPath,
+                    'rightLogo' => (string)$rightLogoPath,
+                    'download' => $download,
+                ]);
+                return;
             } catch (\Throwable $e) {
                 // Fallback to HTML if PDF fails
                 $usePdf = false;
-                $pdfError = 'PDF initialization failed: ' . htmlspecialchars($e->getMessage(), ENT_QUOTES, 'UTF-8');
-                error_log('TCPDF Initialization Error: ' . $e->getMessage());
-            }
-        }
-        
-        if ($usePdf) {
-            $html = '';
-            $html .= '<table width="100%"><tr>';
-            $html .= '<td width="20%">'.($leftLogoPath?('<img src="data:image/'.($this->extOf($leftLogoPath)).';base64,'.base64_encode(file_get_contents($leftLogoPath)).'" height="60">'):'').'</td>';
-            $html .= '<td width="60%" align="center"><h2>'.$titleHtml.'</h2>'.($subtitleHtml!==''?('<div>'.$subtitleHtml.'</div>'):'').'</td>';
-            $html .= '<td width="20%" align="right">'.($rightLogoPath?('<img src="data:image/'.($this->extOf($rightLogoPath)).';base64,'.base64_encode(file_get_contents($rightLogoPath)).'" height="60">'):'').'</td>';
-            $html .= '</tr></table>';
-            $html .= '<h4>Registered Guest List</h4>';
-            if (empty($rows)) {
-                $html .= '<p><em>No attendance records found for the selected criteria.</em></p>';
-            } else {
-                $html .= '<table border="1" cellpadding="4"><tr>';
-                $map = $this->fieldMap();
-                foreach ($fields as $f) { if (isset($map[$f])) $html .= '<th>'.$map[$f].'</th>'; }
-                $html .= '<th>Signature</th></tr>';
-                $rowNo = 0;
-                foreach ($rows as $r) {
-                $html .= '<tr>';
-                $rowNo++;
-                foreach ($fields as $f) {
-                    $html .= '<td>'.$this->val($f, $r, $rowNo).'</td>';
-                }
-                $b64 = '';
-                if (!empty($r['signature_path']) && is_file($r['signature_path'])) {
-                    $b64 = base64_encode(file_get_contents($r['signature_path']));
-                }
-                $imgTag = $b64 !== '' ? ('<img src="data:image/png;base64,'.$b64.'" height="40">') : '';
-                $html .= '<td>'.$imgTag.'</td>';
-                $html .= '</tr>';
-                }
-                $html .= '</table>';
-                $html .= '<div style="text-align:right;font-size:10px;margin-top:8px;">Page '.$pdf->getAliasNumPage().' / '.$pdf->getAliasNbPages().'</div>';
-            }
-            try {
-                $pdf->writeHTML($html, true, false, true, false, '');
-                $pdf->Output('attendance_report.pdf', $download ? 'D' : 'I');
-                return;
-            } catch (\Throwable $e) {
-                error_log('TCPDF writeHTML/Output Error: ' . $e->getMessage());
-                // Fallback to HTML output with error notice
-                $usePdf = false;
                 $pdfError = 'PDF generation failed: ' . htmlspecialchars($e->getMessage(), ENT_QUOTES, 'UTF-8');
+                error_log('Attendance report PDF error: ' . $e->getMessage());
             }
         }
         header('Content-Type: text/html; charset=UTF-8');
@@ -193,7 +165,7 @@ class ReportController
         echo '<td width="60%" class="text-center"><h2>'.$titleHtml.'</h2>'.($subtitleHtml!==''?('<div>'.$subtitleHtml.'</div>'):'').'</td>';
         echo '<td width="20%" class="text-end">'.($rightLogoPath?('<img src="data:image/'.($this->extOf($rightLogoPath)).';base64,'.base64_encode(file_get_contents($rightLogoPath)).'" style="height:60px">'):'').'</td>';
         echo '</tr></table>';
-        echo '<h4>Registered Guest List</h4>';
+        echo '<h4>Registered Guest List'.(count($rows) > 0 ? ' <span class="text-muted small">'.count($rows).' record'.(count($rows) === 1 ? '' : 's').'</span>' : '').'</h4>';
         if (empty($rows)) {
             echo '<p><em>No attendance records found for the selected criteria.</em></p>';
         } else {
@@ -203,8 +175,9 @@ class ReportController
             foreach ($rows as $r) {
                 $rowNo++;
                 echo '<tr>'; foreach ($fields as $f) { echo '<td>'.$this->val($f,$r,$rowNo).'</td>'; }
+                $sigPath = CoaService::resolvePath((string)($r['signature_path'] ?? ''));
                 $b64 = '';
-                if (!empty($r['signature_path']) && is_file($r['signature_path'])) { $b64 = base64_encode(file_get_contents($r['signature_path'])); }
+                if ($sigPath !== '' && is_file($sigPath)) { $b64 = base64_encode(file_get_contents($sigPath)); }
                 $imgTag = $b64 !== '' ? ('<img src="data:image/png;base64,'.$b64.'" style="height:40px">') : '';
                 echo '<td>'.$imgTag.'</td></tr>';
             }
@@ -216,37 +189,12 @@ class ReportController
 
     private function fieldMap(): array
     {
-        return [
-            'id' => 'No.',
-            'name' => 'Name',
-            'agency' => 'Agency/Org.',
-            'sector' => 'Sector',
-            'designation' => 'Designation',
-            'email' => 'Email',
-            'sex' => 'Gender',
-            'registered_at' => 'Registered At',
-        ];
+        return ReportPdf::fieldLabels();
     }
 
     private function val(string $f, array $r, int $rowNumber = 0): string
     {
-        switch ($f) {
-            case 'id':
-                if ($rowNumber > 0) {
-                    return (string)$rowNumber;
-                }
-                return (string)$r['id'];
-            case 'name': return htmlspecialchars(($r['first_name'].' '.$r['last_name']), ENT_QUOTES);
-            case 'agency': return htmlspecialchars((string)$r['agency'], ENT_QUOTES);
-            case 'designation': return htmlspecialchars((string)$r['designation'], ENT_QUOTES);
-            case 'email': return htmlspecialchars((string)$r['email'], ENT_QUOTES);
-            case 'sector': return htmlspecialchars((string)$r['sector'], ENT_QUOTES);
-            case 'sex': return htmlspecialchars((string)$r['sex'], ENT_QUOTES);
-            case 'registered_at': {
-                return htmlspecialchars($r['attendance_date'] ?? '', ENT_QUOTES);
-            }
-        }
-        return '';
+        return htmlspecialchars(ReportPdf::cellValue($f, $r, $rowNumber), ENT_QUOTES, 'UTF-8');
     }
     private function extOf(string $path): string {
         $lower = strtolower($path);

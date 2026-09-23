@@ -4,6 +4,13 @@ declare(strict_types=1);
 $token = function_exists('csrf_token') ? csrf_token() : '';
 $tpl = $tpl ?? [];
 $pdfAvailable = $pdfAvailable ?? false;
+$defaultSubtitle = $defaultSubtitle ?? '';
+$defaultFields = $defaultFields ?: ['id', 'name', 'agency', 'sector', 'designation', 'email', 'sex'];
+$fieldLabels = $fieldLabels ?: [
+    'id' => 'No.', 'name' => 'Name', 'agency' => 'Agency/Org.', 'sector' => 'Sector',
+    'designation' => 'Designation', 'email' => 'Email', 'sex' => 'Gender',
+    'time_in' => 'Time In', 'registered_at' => 'Registered At',
+];
 ?>
 <!doctype html>
 <html lang="en">
@@ -38,8 +45,8 @@ $pdfAvailable = $pdfAvailable ?? false;
     </div>
     <div class="col-12">
       <label class="form-label">Subtitle</label>
-      <textarea name="subtitle" class="form-control" rows="3" placeholder="Event / Venue / Date / Additional details..." style="resize: vertical;"></textarea>
-      <div class="form-text">Add subtitle information such as event name, venue, date range, or other details. Supports multiple lines.</div>
+      <textarea name="subtitle" class="form-control" rows="3" placeholder="Event / Venue / Date / Additional details..." style="resize: vertical;"><?= htmlspecialchars($defaultSubtitle, ENT_QUOTES) ?></textarea>
+      <div class="form-text">Prefilled from the current event (name, venue, day line) so the PDF opens like the sample guest list. Edit freely; one line each.</div>
     </div>
     <div class="col-12 col-md-4">
       <label class="form-label">Date</label>
@@ -56,10 +63,11 @@ $pdfAvailable = $pdfAvailable ?? false;
     <div class="col-12">
       <label class="form-label">Fields</label>
       <div class="row g-1">
-        <?php $fields = ['id'=>'No.','name'=>'Name','agency'=>'Agency/Org.','sector'=>'Sector','designation'=>'Designation','email'=>'Email','sex'=>'Gender','registered_at'=>'Registered At']; foreach ($fields as $k=>$v): ?>
-        <div class="col-6 col-md-3"><div class="form-check"><input class="form-check-input" type="checkbox" name="fields[]" value="<?= $k ?>" id="f<?= $k ?>" checked><label class="form-check-label" for="f<?= $k ?>"><?= $v ?></label></div></div>
+        <?php foreach ($fieldLabels as $k=>$v): ?>
+        <div class="col-6 col-md-3"><div class="form-check"><input class="form-check-input" type="checkbox" name="fields[]" value="<?= $k ?>" id="f<?= $k ?>" <?= in_array($k, $defaultFields, true) ? 'checked' : '' ?>><label class="form-check-label" for="f<?= $k ?>"><?= htmlspecialchars($v, ENT_QUOTES) ?></label></div></div>
         <?php endforeach; ?>
       </div>
+      <div class="form-text">Defaults match the sample guest list (Signature is always added last).</div>
     </div>
     <div class="col-12 col-md-6">
       <label class="form-label">Output Format</label>
@@ -82,6 +90,7 @@ $pdfAvailable = $pdfAvailable ?? false;
         <div class="col-6"><input type="file" name="left_logo" accept="image/*" class="form-control"></div>
         <div class="col-6"><input type="file" name="right_logo" accept="image/*" class="form-control"></div>
       </div>
+      <div class="form-text">Defaults to the official DICT (left) and Bagong Pilipinas (right) marks; upload to override.</div>
     </div>
     <div class="col-12 d-flex gap-2">
       <button class="btn btn-primary" type="submit" onclick="document.querySelector('select[name=format]').value='html';document.querySelector('input[name=download]').value='0'">Generate HTML</button>

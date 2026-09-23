@@ -2,7 +2,7 @@
 
 Turn the app into a multi-event platform: All Father creates events, assigns people and roles per event, each event has unique register/scan links, current attendance capabilities stay.
 
-**Status:** Multi-event is shipped. VPS is live. **Plan#4** through **Plan#14** are on production. **Plan#15** is done locally (prod overlay still pending). **Current work is Plan#16** (attendance report PDF to match the AI Roadshow guest-list layout). Build and verify on the **local copy first**, then mirror the same files to digitalhero. Current branch is `9232026_ultra`.
+**Status:** Multi-event is shipped. VPS is live. **Plan#4** through **Plan#14** are on production. **Plan#15** is done locally (prod overlay still pending). **Plan#16** (attendance report PDF like the AI Roadshow guest list) is implemented and browser-verified on the local copy (2026-09-23); the operator still needs to overlay the touched files on digitalhero. Current branch is `9232026_ultra`.
 
 **Audit:** 2026-09-14 closed multi-event leftovers. 2026-09-20 landed Settings merge, script gating, AuthService, flash plumbing, `env.example`. 2026-09-21 morning pass fixed door-scan CSRF, import-preview rotate, retry `e=` link, event-aware nav, main deploy docs. Same-day afternoon pass closed the five re-check nits (below).
 
@@ -10,7 +10,7 @@ Turn the app into a multi-event platform: All Father creates events, assigns peo
 
 ## Current state
 
-Multi-event is shipped. Plan#4 through Plan#14 are on digitalhero. Plan#15 is done locally. **Next is Plan#16:** make the Attendance Report PDF look like [`Resource/DAY-2-JULY-24-2026-AI-ROADSHOW-2026 (2).pdf`](Resource/DAY-2-JULY-24-2026-AI-ROADSHOW-2026%20(2).pdf). Implement locally, then deploy the same files. Do not rebuild EventContext. Do not commit `.env` or `.env.vps`.
+Multi-event is shipped. Plan#4 through Plan#14 are on digitalhero. Plan#15 is done locally. **Plan#16 is done locally (2026-09-23):** the Report Builder paints the sample-style PDF through a new [`ReportPdf`](src/Services/ReportPdf.php) renderer (repeated header + logos, navy column band, zebra rows, ink signatures, real footer) with builder defaults from the current event. Do not rebuild EventContext. Do not commit `.env` or `.env.vps`.
 
 **Plan numbers**
 
@@ -31,7 +31,7 @@ Multi-event is shipped. Plan#4 through Plan#14 are on digitalhero. Plan#15 is do
 | Plan#13 | Per-event CoA outbox (queued / sent / failed) + scheduled template fix | On prod 2026-09-23; logged-in click-through still open |
 | Plan#14 | Registration page open performance (one light circuit loop) | On prod 2026-09-23 (`?v=20260923`) |
 | Plan#15 | Required sex, email, and contact number; Register active only when complete | Done (local, browser-verified 2026-09-23; prod overlay pending) |
-| Plan#16 | Attendance report PDF like the AI Roadshow guest list | **Next — local first, then prod** |
+| Plan#16 | Attendance report PDF like the AI Roadshow guest list | Done (local, browser-verified 2026-09-23; prod overlay pending) |
 
 **Working notes**
 
@@ -93,39 +93,39 @@ flowchart LR
 
 **1. PDF layout helper**
 
-- [ ] Add a small renderer (keep [`ReportController`](src/Controllers/ReportController.php) thin) that paints header, count line, column headers, rows, signatures, footer.
-- [ ] Column widths that fit landscape A4 without clipping email or sector.
-- [ ] Empty state: “No attendance records found for the selected criteria.”
+- [x] Add a small renderer (keep [`ReportController`](src/Controllers/ReportController.php) thin) that paints header, count line, column headers, rows, signatures, footer. New [`src/Services/ReportPdf.php`](src/Services/ReportPdf.php): `ReportPdf::stream()` paints with TCPDF cells (a `ReportPdfPage` subclass repeats the header chrome on every page and owns a real `Footer()`), plus shared `fieldLabels()` / `cellValue()` / `dayLine()` / `subtitleLines()` / `markPath()` helpers the controller and HTML preview reuse. Geometry measured from the sample: 12mm margins, 13pt bold navy title/event lines, 9pt gray venue/day, navy `#1A365D` band with white 8.5pt labels, 12mm borderless rows zebra-striped `#F8FAFC`, thick+thin navy rule under the header, thin `#CBD5E1` rule above the footer.
+- [x] Column widths that fit landscape A4 without clipping email or sector. Equal-width columns exactly like the sample (773.85pt usable / columns+signature); long text wraps inside the cell (rows grow only past two lines) — verified no clipping and no bleed into the Signature column.
+- [x] Empty state: “No attendance records found for the selected criteria.” (1-page PDF with header + guest-list line + italic message, no count, no table — verified.)
 
 **2. Builder defaults**
 
 In [`views/admin_report.php`](views/admin_report.php):
 
-- [ ] Prefill title `Attendance Report`. Prefill subtitle from the current event (name, venue, selected date) so a first click already looks like the sample.
-- [ ] Default logos to the official marks; keep the two file inputs as overrides.
-- [ ] Default checked fields = the sample set. Leave Registered At unchecked.
+- [x] Prefill title `Attendance Report`. Prefill subtitle from the current event (name, venue, selected date) so a first click already looks like the sample. (Subtitle textarea prefills event name / `coa_venue` / day line; an untouched prefill re-derives at generate time so the day line follows the chosen date — textarea CRLF normalized — and any edit is an operator override.)
+- [x] Default logos to the official marks; keep the two file inputs as overrides. (Left DICT + right Bagong Pilipinas from `Resource/` via the CoA-cleared `storage/coa/brand` cache when present; uploads still win.)
+- [x] Default checked fields = the sample set. Leave Registered At unchecked. (No./Name/Agency/Sector/Designation/Email/Gender checked; **Time In** added as an available-but-unchecked field; Registered At unchecked.)
 
 **3. Signatures and data**
 
-- [ ] Join attendance + participants as now. Fix signature path so `storage/signatures/...` actually prints.
-- [ ] Record count on page 1 only.
-- [ ] Time in / attendance date stay available as optional fields, not in the default set.
+- [x] Join attendance + participants as now. Fix signature path so `storage/signatures/...` actually prints. (`CoaService::resolvePath()` in the renderer and the HTML preview; absolute stored paths pass through.)
+- [x] Record count on page 1 only. (“26 records” under “Registered Guest List”; not on later pages.)
+- [x] Time in / attendance date stay available as optional fields, not in the default set. (Name = first + middle initial + last, same as CoA; signature always the last column.)
 
 **4. Local first, then prod**
 
-- [ ] Local: generate PDF for a date that has signatures. Compare page 1 and a middle page to the sample (header repeat, count, signature column, footer).
-- [ ] HTML generate still works for a quick look.
-- [ ] Saved templates still load.
-- [ ] Prod only after local sign-off: upload the touched PHP/views. Do not overwrite `.env`.
+- [x] Local: generate PDF for a date that has signatures. Compare page 1 and a middle page to the sample (header repeat, count, signature column, footer). Seeded 26 guests (20 with ink signatures, every 4th empty) for Hack for Gov 5 → 3 pages, 11-12 rows/page; header stack + logos + double rule on every page, guest list + “26 records” page 1 only, navy band + zebra rows, signatures centered in the last column, “Generated …” + “Page X of 3” on every page. Screenshot + vision review found the page faithful: no clipping, no overlap, logos undistorted.
+- [x] HTML generate still works for a quick look. (Official marks embedded, derived day line “Day 4 - September 23, 2026”, count line, signatures as data-URI images.)
+- [x] Saved templates still load. (Saved “Plan16 Template Check” with a custom title/date/field set → Load restores title, date, field checkboxes, subtitle; test row removed afterward.)
+- [ ] Prod only after local sign-off: upload the touched PHP/views. Do not overwrite `.env`. (Pending operator: `src/Services/ReportPdf.php` (new), `src/Controllers/ReportController.php`, `views/admin_report.php`. No migration, no `.env` change, no `?v=` bump needed — admin pages are not long-cached.)
 
 **Checks**
 
-- [ ] PDF header on every page matches the sample stack (title, event, venue, day)
-- [ ] First page shows “Registered Guest List” and the correct record count
-- [ ] Columns and signature marks match the sample
-- [ ] Footer shows generated time (Asia/Manila) and Page X of Y
-- [ ] A guest with a stored signature shows ink; a guest without one has an empty cell
-- [ ] Local signed off before any prod overlay
+- [x] PDF header on every page matches the sample stack (title, event, venue, day) — verified programmatically (text extraction on all pages) and visually.
+- [x] First page shows “Registered Guest List” and the correct record count (page 1 only).
+- [x] Columns and signature marks match the sample (equal columns, sample labels/alignment, ink centered last column; empty cells where no signature exists).
+- [x] Footer shows generated time (Asia/Manila) and Page X of Y (“Generated Sep 23, 2026 … PM” / “Page 1 of 3”; no TCPDF “Powered by” footer — `Footer()` is fully overridden).
+- [x] A guest with a stored signature shows ink; a guest without one has an empty cell (20 with / 6 without in the fixture; placements verified per page).
+- [x] Local signed off before any prod overlay
 
 Leave alone: CoA PDF, guest gate, registration fields, EventContext, Report builder route name. Do not commit `.env`.
 
