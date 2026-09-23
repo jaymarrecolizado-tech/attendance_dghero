@@ -438,15 +438,18 @@ final class CoaService
 
         $pdf->SetFont('helvetica', '', 10);
         $pdf->SetTextColor(31, 41, 51);
-        $text = 'This is to certify that ' . $data['name']
-            . ($data['agency'] !== '' ? ' (' . $data['agency'] . ')' : '')
-            . ' appeared in ' . $data['eventName']
-            . ' held at ' . $data['venue'] . ' on ' . $data['appearanceDate'] . '.'
+        $bold = static function (string $value): string {
+            return '<b>' . htmlspecialchars($value, ENT_QUOTES) . '</b>';
+        };
+        $text = 'This is to certify that ' . $bold((string)$data['name'])
+            . ($data['agency'] !== '' ? ' (' . htmlspecialchars((string)$data['agency'], ENT_QUOTES) . ')' : '')
+            . ' appeared in ' . $bold((string)$data['eventName'])
+            . ' held at ' . $bold((string)$data['venue'])
+            . ' on ' . $bold((string)$data['appearanceDate']) . '.'
             . ' This certification is issued upon request to attest to the fact and duration of the appearance.';
-        $text = trim(preg_replace('/\s+/', ' ', $text));
         $pdf->SetXY($x0 + $m, $y);
         $pdf->writeHTMLCell($inner, 0, $x0 + $m, $y, '<p style="text-align:center; line-height:160%;">'
-            . htmlspecialchars($text, ENT_QUOTES) . '</p>', 0, 0, false, true, 'C');
+            . $text . '</p>', 0, 0, false, true, 'C');
         $y += 26;
 
         // Particulars table.
@@ -468,7 +471,19 @@ final class CoaService
         // Issue date + signatory block.
         $pdf->SetFont('helvetica', '', 9);
         $pdf->SetXY($x0 + $m, $y);
-        $pdf->Cell($inner, 5, 'Issued this ' . $data['issueDate'] . ' at ' . $data['venue'] . '.', 0, 0, 'L');
+        $pdf->writeHTMLCell(
+            $inner,
+            5,
+            $x0 + $m,
+            $y,
+            'Issued this <b>' . htmlspecialchars((string)$data['issueDate'], ENT_QUOTES) . '</b> at <b>'
+                . htmlspecialchars((string)$data['venue'], ENT_QUOTES) . '</b>.',
+            0,
+            0,
+            false,
+            true,
+            'L'
+        );
 
         $sigY = max($y + 22, $pageH - 52);
         $signatoryImagePath = self::resolvePath($data['signatoryPath']);
@@ -564,7 +579,13 @@ final class CoaService
     public static function sendOverridesFor(int $sendId): array
     {
         $pdo = Database::pdo();
-        $sel = $pdo->prepare('SELECT s.*, b.template_id, b.venue_snapshot, b.signatory_name AS signatory_snapshot, b.event_name_snapshot FROM coa_sends s JOIN coa_batches b ON b.id = s.batch_id WHERE s.id = ? LIMIT 1');
+        // Alias batch columns so they do not collide with coa_sends.signatory_snapshot.
+        $sel = $pdo->prepare(
+            'SELECT b.template_id, b.venue_snapshot, b.signatory_name, b.event_name_snapshot
+             FROM coa_sends s
+             JOIN coa_batches b ON b.id = s.batch_id
+             WHERE s.id = ? LIMIT 1'
+        );
         $sel->execute([$sendId]);
         $row = $sel->fetch();
         if (!$row) {
@@ -576,14 +597,44 @@ final class CoaService
         ];
         $templateId = (int)($row['template_id'] ?? 0);
         if ($templateId > 0) {
-            $stmt = $pdo->prepare('SELECT purpose, particulars, signatory_path, logo_path FROM coa_templates WHERE id = ? LIMIT 1');
+            $stmt = $pdo->prepare('SELECT purpose, particulars, venue, signatory_id, signatory_name, signatory_title, signatory_path, logo_path FROM coa_templates WHERE id = ? LIMIT 1');
             $stmt->execute([$templateId]);
             $tpl = $stmt->fetch();
             if ($tpl) {
+                $sigName = trim((string)($tpl['signatory_name'] ?? ''));
+                $sigTitle = trim((string)($tpl['signatory_title'] ?? ''));
+                $sigPath = trim((string)($tpl['signatory_path'] ?? ''));
+                $signatoryId = (int)($tpl['signatory_id'] ?? 0);
+                if ($signatoryId > 0) {
+                    $sigStmt = $pdo->prepare('SELECT name, title, signature_path FROM coa_signatories WHERE id = ? LIMIT 1');
+                    $sigStmt->execute([$signatoryId]);
+                    $sig = $sigStmt->fetch();
+                    if ($sig) {
+                        if (trim((string)($sig['name'] ?? '')) !== '') {
+                            $sigName = trim((string)$sig['name']);
+                        }
+                        if (trim((string)($sig['title'] ?? '')) !== '') {
+                            $sigTitle = trim((string)$sig['title']);
+                        }
+                        if (trim((string)($sig['signature_path'] ?? '')) !== '') {
+                            $sigPath = trim((string)$sig['signature_path']);
+                        }
+                    }
+                }
+                $batchName = trim($overrides['signatory_name']);
+                if ($batchName === '' || strcasecmp($batchName, 'Event Head') === 0) {
+                    $overrides['signatory_name'] = $sigName;
+                }
+                $overrides['signatory_title'] = $sigTitle;
+                $overrides['signatory_path'] = $sigPath;
                 $overrides['purpose'] = (string)($tpl['purpose'] ?? '');
                 $overrides['particulars'] = (string)($tpl['particulars'] ?? '');
-                $overrides['signatory_path'] = (string)($tpl['signatory_path'] ?? '');
                 $overrides['logo_path'] = (string)($tpl['logo_path'] ?? '');
+                $batchVenue = trim($overrides['venue']);
+                $tplVenue = trim((string)($tpl['venue'] ?? ''));
+                if (($batchVenue === '' || strcasecmp($batchVenue, 'Venue to be announced') === 0) && $tplVenue !== '') {
+                    $overrides['venue'] = $tplVenue;
+                }
             }
         }
         return $overrides;
@@ -596,19 +647,8 @@ final class CoaService
         $ev->execute([(int)$row['event_id']]);
         $eventLike = $ev->fetch() ?: [];
         $overrides = self::sendOverridesFor((int)$row['id']);
-        if (isset($overrides['venue']) && $overrides['venue'] !== '') {
-            $eventLike['coa_venue'] = $overrides['venue'];
-        }
-        if (isset($overrides['signatory_name']) && $overrides['signatory_name'] !== '') {
-            $eventLike['coa_signatory_name'] = $overrides['signatory_name'];
-        }
-        foreach (['purpose', 'particulars', 'signatory_path', 'logo_path'] as $key) {
-            if (array_key_exists($key, $overrides)) {
-                $col = 'coa_' . $key;
-                $eventLike[$col] = $overrides[$key];
-            }
-        }
-        if (isset($overrides['venue']) || isset($overrides['signatory_name'])) {
+        $eventLike = self::applyOverrides($eventLike, $overrides);
+        if (trim((string)($overrides['venue'] ?? '')) !== '' || trim((string)($overrides['signatory_name'] ?? '')) !== '') {
             $eventLike['name'] = (string)($row['event_name_snapshot'] ?? ($eventLike['name'] ?? 'Event'));
         }
         return $eventLike;

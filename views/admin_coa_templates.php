@@ -57,6 +57,20 @@ if (!function_exists('coaTpl')) {
             <input name="venue" maxlength="255" class="form-control form-control-sm" value="<?= htmlspecialchars(coaTpl($editing ?? [], 'venue'), ENT_QUOTES) ?>">
           </div>
           <div class="col-12 col-md-6">
+            <label class="form-label small mb-1">Certificate start date</label>
+            <input name="date_from" type="date" class="form-control form-control-sm" value="<?= htmlspecialchars(substr(coaTpl($editing ?? [], 'date_from'), 0, 10), ENT_QUOTES) ?>">
+          </div>
+          <div class="col-12 col-md-6">
+            <label class="form-label small mb-1">Certificate end date</label>
+            <input name="date_to" type="date" class="form-control form-control-sm" value="<?= htmlspecialchars(substr(coaTpl($editing ?? [], 'date_to'), 0, 10), ENT_QUOTES) ?>">
+            <div class="small text-muted mt-1">Empty end date prints one day. September 22 through 24 prints as September 22-24, 2026.</div>
+          </div>
+          <div class="col-12 col-md-6">
+            <label class="form-label small mb-1">Issued date</label>
+            <input name="issue_date" type="date" class="form-control form-control-sm" value="<?= htmlspecialchars(substr(coaTpl($editing ?? [], 'issue_date'), 0, 10), ENT_QUOTES) ?>">
+            <div class="small text-muted mt-1">Printed on the Issued this… line. Empty uses the last day of the range.</div>
+          </div>
+          <div class="col-12 col-md-6">
             <label class="form-label small mb-1">Topic</label>
             <input name="purpose" maxlength="255" class="form-control form-control-sm" value="<?= htmlspecialchars(coaTpl($editing ?? [], 'purpose'), ENT_QUOTES) ?>">
           </div>
@@ -124,10 +138,17 @@ if (!function_exists('coaTpl')) {
             <div class="d-flex justify-content-between align-items-start">
               <div>
                 <strong><?= htmlspecialchars((string)$t['name'], ENT_QUOTES) ?></strong>
+                <?php if ((int)($t['is_default'] ?? 0) === 1): ?><span class="badge text-bg-primary ms-1">Default</span><?php endif; ?>
                 <div class="small text-muted"><?= htmlspecialchars((string)($t['venue'] ?? ''), ENT_QUOTES) ?: 'No venue set' ?></div>
                 <div class="small text-muted"><?= htmlspecialchars((string)($t['signatory_name'] ?? ''), ENT_QUOTES) ?> - <?= htmlspecialchars((string)($t['signatory_title'] ?? ''), ENT_QUOTES) ?></div>
               </div>
               <div class="d-flex flex-column gap-1">
+                <form method="post" action="?r=admin_coa_template_default" class="m-0">
+                  <input type="hidden" name="csrf" value="<?= htmlspecialchars($token, ENT_QUOTES) ?>">
+                  <input type="hidden" name="id" value="<?= (int)$t['id'] ?>">
+                  <input type="hidden" name="on" value="<?= (int)($t['is_default'] ?? 0) === 1 ? '0' : '1' ?>">
+                  <button class="btn btn-sm <?= (int)($t['is_default'] ?? 0) === 1 ? 'btn-primary' : 'btn-outline-secondary' ?> py-0" type="submit"><?= (int)($t['is_default'] ?? 0) === 1 ? 'Default on' : 'Set as default' ?></button>
+                </form>
                 <a class="btn btn-sm btn-outline-primary py-0" href="?r=admin_coa_templates&edit_id=<?= (int)$t['id'] ?>">Edit</a>
                 <a class="btn btn-sm btn-outline-secondary py-0" href="?r=admin_coa_preview_template&template_id=<?= (int)$t['id'] ?>" target="_blank" rel="noopener">Preview</a>
               </div>

@@ -138,6 +138,10 @@ return [
         'POST' => [AdminCoaMonitorController::class, 'templateApply'],
         '_guards' => [$rolesAdmin],
     ],
+    'admin_coa_template_default' => [
+        'POST' => [AdminCoaMonitorController::class, 'templateDefault'],
+        '_guards' => [$rolesAdmin],
+    ],
     'admin_coa_signatories' => [
         'GET' => [AdminCoaMonitorController::class, 'signatories'],
         '_guards' => [$rolesAdmin],

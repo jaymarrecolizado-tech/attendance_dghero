@@ -185,6 +185,14 @@ $tplRow = $pdo->prepare('SELECT signatory_id, signatory_name FROM coa_templates 
 $tplRow->execute([$tplId]);
 $tplRow = $tplRow->fetch();
 assertTrue((int)$tplRow['signatory_id'] === $sigId && $tplRow['signatory_name'] === '_CoA Signatory', 'template copies signatory name from library');
+$_POST = ['id' => (string)$tplId, 'on' => '1', 'csrf' => $freshCsrf()];
+ob_start();
+$mon->templateDefault();
+ob_end_clean();
+$defaultFlag = (int)$pdo->query('SELECT is_default FROM coa_templates WHERE id = ' . $tplId)->fetchColumn();
+assertTrue($defaultFlag === 1, 'toggle sets the default template');
+$otherDefaults = (int)$pdo->query('SELECT COUNT(*) FROM coa_templates WHERE id <> ' . $tplId . ' AND is_default = 1')->fetchColumn();
+assertTrue($otherDefaults === 0, 'only one template is default');
 
 $_POST = ['template_id' => (string)$tplId, 'event_id' => (string)$eventIdOn, 'csrf' => $freshCsrf()];
 ob_start();
@@ -218,6 +226,9 @@ $st = $pdo->prepare('SELECT s.status, s.send_at, b.source FROM coa_sends s JOIN 
 $st->execute([$pid3]);
 $sched = $st->fetch();
 assertTrue($sched && $sched['status'] === 'queued' && $sched['source'] === 'scheduled' && (string)$sched['send_at'] !== '', 'schedule selected queues a future send');
+$schedBatch = $pdo->query('SELECT b.template_id, b.signatory_name FROM coa_sends s JOIN coa_batches b ON b.id = s.batch_id WHERE s.participant_id = ' . $pid3 . ' ORDER BY s.id DESC LIMIT 1')->fetch();
+assertTrue($schedBatch && (int)$schedBatch['template_id'] === $tplId, 'schedule stores the chosen template');
+assertTrue($schedBatch && $schedBatch['signatory_name'] === '_CoA Signatory', 'schedule snapshots the template signatory, not Event Head');
 $schedId = (int)$pdo->query('SELECT id FROM coa_sends WHERE participant_id = ' . $pid3 . ' ORDER BY id DESC LIMIT 1')->fetchColumn();
 $pdo->prepare("UPDATE coa_sends SET send_at = ? WHERE id = ?")->execute([date('Y-m-d H:i:s', time() - 60), $schedId]);
 $due = \App\Services\CoaService::processDue(50);
@@ -289,7 +300,8 @@ assertTrue($secondBatch > 0 && $secondBatch !== $batchToCancel, 'two schedules t
 // event columns. Move the event venue out of the way, make the queued row
 // due, process it, then confirm the send row still carries the template
 // venue snapshot and the regenerated PDF exists.
-$pdo->prepare('UPDATE events SET coa_venue = ? WHERE id = ?')->execute(['DIFFERENT Event Venue', $eventIdOn]);
+$pdo->prepare('UPDATE coa_batches SET signatory_name = ? WHERE id = ?')->execute(['Event Head', $secondBatch]);
+$pdo->prepare('UPDATE events SET coa_venue = ?, coa_signatory_name = ?, coa_signatory_title = ? WHERE id = ?')->execute(['DIFFERENT Event Venue', 'WRONG Signatory', 'WRONG Title', $eventIdOn]);
 $queuedInSecond = (int)$pdo->query("SELECT id FROM coa_sends WHERE batch_id = $secondBatch LIMIT 1")->fetchColumn();
 $pdo->prepare("UPDATE coa_sends SET send_at = ? WHERE id = ?")->execute([date('Y-m-d H:i:s', time() - 30), $queuedInSecond]);
 $due = \App\Services\CoaService::processDue(50);
@@ -301,7 +313,24 @@ assertTrue($cronRow['venue_snapshot'] === 'Template Hall', 'cron kept the templa
 assertTrue($cronRow['pdf_path'] !== null && is_file($cronRow['pdf_path']), 'cron rebuilt the PDF');
 $ovr = \App\Services\CoaService::sendOverridesFor($queuedInSecond);
 assertTrue(($ovr['venue'] ?? '') === 'Template Hall', 'sendOverridesFor resolves the batch venue');
-$pdo->prepare('UPDATE events SET coa_venue = ? WHERE id = ?')->execute(['ICT Convention Hall', $eventIdOn]);
+assertTrue(($ovr['signatory_name'] ?? '') === '_CoA Signatory', 'sendOverridesFor resolves the batch signatory, not the live event');
+assertTrue(($ovr['signatory_title'] ?? '') === 'Director', 'sendOverridesFor resolves the template signatory title');
+$pdfBytes = is_file((string)$cronRow['pdf_path']) ? (string)file_get_contents((string)$cronRow['pdf_path']) : '';
+$pdfText = $pdfBytes;
+if (preg_match_all('/stream\r?\n(.*?)\r?\nendstream/s', $pdfBytes, $streams)) {
+    foreach ($streams[1] as $stream) {
+        $decoded = @gzuncompress($stream);
+        if ($decoded === false) {
+            $decoded = @gzinflate($stream);
+        }
+        if (is_string($decoded)) {
+            $pdfText .= $decoded;
+        }
+    }
+}
+assertTrue(strpos($pdfText, '_CoA Signatory') !== false, 'cron PDF uses the batch signatory');
+assertTrue(strpos($pdfText, 'WRONG Signatory') === false, 'cron PDF ignores the live event signatory');
+$pdo->prepare('UPDATE events SET coa_venue = ?, coa_signatory_name = ?, coa_signatory_title = ? WHERE id = ?')->execute(['ICT Convention Hall', 'Juan Signatory', 'Regional Director', $eventIdOn]);
 
 // Plan#13: the event outbox lists sends without opening a batch. Drive the
 // monitor action with the scope + waiting filter and check the HTML.
@@ -311,6 +340,55 @@ $mon->monitor();
 $html = (string)ob_get_clean();
 assertTrue(strpos($html, 'Outbox - every send for this event') !== false, 'outbox section renders for a scoped event');
 assertTrue(strpos($html, 'No sends for this event yet') === false, 'outbox shows rows when they exist');
+assertTrue(strpos($html, 'Cancel selected') !== false, 'cancel selected is on the All filter');
+
+$_GET = ['event_id' => (string)$eventIdOn, 'outbox' => 'due'];
+ob_start();
+$mon->monitor();
+$dueHtml = (string)ob_get_clean();
+assertTrue(strpos($dueHtml, 'Cancel selected') !== false, 'cancel selected is on the Due filter');
+
+$_GET = [];
+$_SESSION['current_event_id'] = $eventIdOn;
+ob_start();
+$mon->monitor();
+$defaultHtml = (string)ob_get_clean();
+assertTrue(strpos($defaultHtml, 'Outbox - every send for this event') !== false, 'bare monitor opens the current event outbox');
+assertTrue(strpos($defaultHtml, 'value="' . $eventIdOn . '" selected') !== false, 'scope dropdown selects the current event');
+
+$_GET = ['event_id' => ''];
+ob_start();
+$mon->monitor();
+$allHtml = (string)ob_get_clean();
+assertTrue(strpos($allHtml, 'Pick an event to see its outbox') !== false, 'all events prompts to pick an event');
+assertTrue(strpos($allHtml, 'Outbox - every send for this event') === false, 'all events hides the outbox table');
+
+$uuid5 = $mkUuid();
+$pdo->prepare('INSERT INTO participants (event_id, uuid, email, first_name, last_name) VALUES (?,?,?,?,?)')
+    ->execute([$eventIdOn, $uuid5, '_coa_fifth@test.local', 'Diego', 'Silang']);
+$pid5 = (int)$pdo->lastInsertId();
+$pdo->prepare('INSERT INTO attendance (participant_id, attendance_date, time_in, signature_path, event_id, status) VALUES (?,?,?,?,?,?)')
+    ->execute([$pid5, date('Y-m-d'), date('H:i:s'), '', $eventIdOn, 'present']);
+$_POST = [
+    'event_id' => (string)$eventIdOn,
+    'attendance_date' => date('Y-m-d'),
+    'template_id' => (string)$tplId,
+    'participant_ids' => [(string)$pid5],
+    'send_at' => date('Y-m-d\TH:i', time() + 5400),
+    'do' => 'schedule',
+    'csrf' => $freshCsrf(),
+];
+ob_start();
+$mon->sendSelected();
+ob_end_clean();
+$cancelId = (int)$pdo->query("SELECT id FROM coa_sends WHERE participant_id = $pid5 AND status = 'queued' ORDER BY id DESC LIMIT 1")->fetchColumn();
+assertTrue($cancelId > 0, 'row queued for cancel-selected');
+$_POST = ['event_id' => (string)$eventIdOn, 'outbox' => 'due', 'send_ids' => [(string)$cancelId], 'csrf' => $freshCsrf()];
+ob_start();
+$mon->cancelSelected();
+ob_end_clean();
+$stillQueued = (int)$pdo->query("SELECT COUNT(*) FROM coa_sends WHERE id = $cancelId AND status = 'queued'")->fetchColumn();
+assertTrue($stillQueued === 0, 'cancel selected removes a queued row from the Due filter');
 
 // Plan#13: mail failures persist a real reason, not just "Mail send failed".
 putenv('MAIL_MODE=smtp');

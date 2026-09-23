@@ -259,6 +259,28 @@ final class EventContext
     }
 
     /**
+     * Absolute shareable URL for a publicLinks() path, using the current request host.
+     */
+    public static function absolutePublicUrl(string $relative): string
+    {
+        if (preg_match('#^https?://#i', $relative) === 1) {
+            return $relative;
+        }
+        $forwarded = strtolower((string)($_SERVER['HTTP_X_FORWARDED_PROTO'] ?? ''));
+        $https = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off') || $forwarded === 'https';
+        $host = (string)($_SERVER['HTTP_HOST'] ?? 'localhost');
+        if (preg_match('/^[A-Za-z0-9.\-:\[\]]+$/', $host) !== 1) {
+            $host = 'localhost';
+        }
+        $script = (string)($_SERVER['SCRIPT_NAME'] ?? '');
+        if ($script === '' || strpbrk($script, "\r\n") !== false) {
+            $script = '/index.php';
+        }
+        $suffix = ($relative !== '' && ($relative[0] === '?' || $relative[0] === '/')) ? $relative : '?' . $relative;
+        return ($https ? 'https' : 'http') . '://' . $host . $script . $suffix;
+    }
+
+    /**
      * Structured per-event branding, sanitized. Returns [] when the event has
      * no theme so guests keep the default Public Sans + federal navy look.
      * @return array{primary:string,dark:string,accent:string,welcome:string,layout:string,logo_url:string,banner_url:string}

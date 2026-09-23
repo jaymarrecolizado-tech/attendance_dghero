@@ -62,7 +62,8 @@ $token = function_exists('csrf_token') ? csrf_token() : '';
           <td>
             <?php if ($links): ?>
             <div class="d-flex flex-column gap-1">
-              <span class="small"><code class="text-break"><?= htmlspecialchars($links['register'], ENT_QUOTES) ?></code> <button type="button" class="btn btn-sm btn-outline-secondary py-0" data-copy="<?= htmlspecialchars($links['register'], ENT_QUOTES) ?>" aria-label="Copy registration link">Copy register</button></span>
+              <?php $registerUrl = EventContext::absolutePublicUrl($links['register']); ?>
+              <span class="small"><a href="<?= htmlspecialchars($registerUrl, ENT_QUOTES) ?>"><code class="text-break"><?= htmlspecialchars($registerUrl, ENT_QUOTES) ?></code></a> <button type="button" class="btn btn-sm btn-outline-secondary py-0" data-copy="<?= htmlspecialchars($registerUrl, ENT_QUOTES) ?>" aria-label="Copy registration link">Copy register</button></span>
               <span class="small"><code class="text-break"><?= htmlspecialchars($links['scan'], ENT_QUOTES) ?></code> <button type="button" class="btn btn-sm btn-outline-secondary py-0" data-copy="<?= htmlspecialchars($links['scan'], ENT_QUOTES) ?>" aria-label="Copy scan kiosk link">Copy scan</button></span>
             </div>
             <?php endif; ?>
@@ -123,6 +124,15 @@ $token = function_exists('csrf_token') ? csrf_token() : '';
                 <input name="coa_venue" maxlength="255" class="form-control form-control-sm" placeholder="Venue" aria-label="CoA venue" value="<?= htmlspecialchars($coaVenue, ENT_QUOTES) ?>">
                 <input name="coa_purpose" maxlength="255" class="form-control form-control-sm" placeholder="Purpose line (e.g. for the Hack for Gov 5 roadmap briefing)" aria-label="CoA purpose" value="<?= htmlspecialchars($coaPurpose, ENT_QUOTES) ?>">
                 <textarea name="coa_particulars" class="form-control form-control-sm" rows="3" placeholder="Particulars, one line per row (Label - Value). Empty = defaults." aria-label="CoA particulars"><?= htmlspecialchars($coaParticulars, ENT_QUOTES) ?></textarea>
+                <label class="form-label small text-muted mb-0 mt-1">Dates on the certificate</label>
+                <div class="d-flex gap-1">
+                  <input name="coa_date_from" type="date" class="form-control form-control-sm" aria-label="Certificate start date" value="<?= htmlspecialchars(substr((string)($r['coa_date_from'] ?? ''), 0, 10), ENT_QUOTES) ?>">
+                  <input name="coa_date_to" type="date" class="form-control form-control-sm" aria-label="Certificate end date" value="<?= htmlspecialchars(substr((string)($r['coa_date_to'] ?? ''), 0, 10), ENT_QUOTES) ?>">
+                </div>
+                <p class="small text-muted mb-0">Leave the second date empty for one day. A range prints as September 22-24, 2026.</p>
+                <label class="form-label small text-muted mb-0 mt-1">Issued date</label>
+                <input name="coa_issue_date" type="date" class="form-control form-control-sm" aria-label="Certificate issued date" value="<?= htmlspecialchars(substr((string)($r['coa_issue_date'] ?? ''), 0, 10), ENT_QUOTES) ?>">
+                <p class="small text-muted mb-0">Printed on the Issued this… line. Empty uses the last day of the range.</p>
                 <label class="form-label small text-muted mb-0 mt-1">Signatory</label>
                 <select name="coa_signatory_id" class="form-select form-select-sm" aria-label="CoA signatory">
                   <option value="">Select a signatory</option>
@@ -194,7 +204,7 @@ $token = function_exists('csrf_token') ? csrf_token() : '';
 // Clipboard with a non-secure-context fallback (admin kiosks may run over plain HTTP),
 // and a temporary "Copied" label so the button always returns to its original text.
 function copyToClipboard(text, btn) {
-  // Shareable absolute URL; the on-screen code stays short on purpose.
+  // Registration links are already absolute. Scan links stay short until copied.
   var full = text.indexOf('http') === 0 ? text : window.location.origin + window.location.pathname + text;
   var done = function () {
     if (!btn.getAttribute('data-label')) btn.setAttribute('data-label', btn.textContent);

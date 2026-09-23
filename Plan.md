@@ -2,7 +2,7 @@
 
 Turn the app into a multi-event platform: All Father creates events, assigns people and roles per event, each event has unique register/scan links, current attendance capabilities stay.
 
-**Status:** Multi-event is shipped. VPS is live. **Plan#4** through **Plan#14** are on production as of 2026-09-23. **Plan#15** (required sex, email, contact number; Register active only when complete) is implemented and browser-verified on the local copy (2026-09-23); the operator still needs to overlay the touched files on digitalhero. Current branch is `9232026_ultra`.
+**Status:** Multi-event is shipped. VPS is live. **Plan#4** through **Plan#14** are on production. **Plan#15** is done locally (prod overlay still pending). **Current work is Plan#16** (attendance report PDF to match the AI Roadshow guest-list layout). Build and verify on the **local copy first**, then mirror the same files to digitalhero. Current branch is `9232026_ultra`.
 
 **Audit:** 2026-09-14 closed multi-event leftovers. 2026-09-20 landed Settings merge, script gating, AuthService, flash plumbing, `env.example`. 2026-09-21 morning pass fixed door-scan CSRF, import-preview rotate, retry `e=` link, event-aware nav, main deploy docs. Same-day afternoon pass closed the five re-check nits (below).
 
@@ -10,7 +10,7 @@ Turn the app into a multi-event platform: All Father creates events, assigns peo
 
 ## Current state
 
-Multi-event is shipped. Plan#4 through Plan#14 are on digitalhero, including the Hostinger cron for [`scripts/coa_process_scheduled.php`](scripts/coa_process_scheduled.php). **Plan#15 is done locally (2026-09-23):** sex, email, and contact number are required end to end, Register is visible but muted until the whole form is valid and the email is free, and the no-JS fallback Register no longer doubles as an active button. Do not rebuild EventContext. Do not commit `.env` or `.env.vps`.
+Multi-event is shipped. Plan#4 through Plan#14 are on digitalhero. Plan#15 is done locally. **Next is Plan#16:** make the Attendance Report PDF look like [`Resource/DAY-2-JULY-24-2026-AI-ROADSHOW-2026 (2).pdf`](Resource/DAY-2-JULY-24-2026-AI-ROADSHOW-2026%20(2).pdf). Implement locally, then deploy the same files. Do not rebuild EventContext. Do not commit `.env` or `.env.vps`.
 
 **Plan numbers**
 
@@ -31,6 +31,7 @@ Multi-event is shipped. Plan#4 through Plan#14 are on digitalhero, including the
 | Plan#13 | Per-event CoA outbox (queued / sent / failed) + scheduled template fix | On prod 2026-09-23; logged-in click-through still open |
 | Plan#14 | Registration page open performance (one light circuit loop) | On prod 2026-09-23 (`?v=20260923`) |
 | Plan#15 | Required sex, email, and contact number; Register active only when complete | Done (local, browser-verified 2026-09-23; prod overlay pending) |
+| Plan#16 | Attendance report PDF like the AI Roadshow guest list | **Next — local first, then prod** |
 
 **Working notes**
 
@@ -46,6 +47,87 @@ php scripts/test_csrf_lifecycle.php
 ---
 
 ## Left to do
+
+### Plan#16 — Attendance report PDF like the AI Roadshow guest list
+
+The target look is [`Resource/DAY-2-JULY-24-2026-AI-ROADSHOW-2026 (2).pdf`](Resource/DAY-2-JULY-24-2026-AI-ROADSHOW-2026%20(2).pdf) (14 pages, 163 guests, Day 2 — July 24, 2026). That file was already produced by this app (TCPDF). The Report Builder should generate that kind of PDF on purpose, every time, without the operator restyling title/subtitle by hand.
+
+**Order:** implement and check on the **local copy**. When local is good, overlay the same files on production (keep server `.env` and `storage/`). Do not start on prod.
+
+```mermaid
+flowchart LR
+  builder[Report_builder]
+  event[Event_name_venue_date]
+  logos[DICT_and_Bagong_Pilipinas]
+  table[Guest_list_plus_signatures]
+  footer[Generated_and_page_X_of_Y]
+  builder --> event --> table
+  logos --> table
+  table --> footer
+```
+
+**What the sample does**
+
+- Landscape A4. Header on **every** page: **Attendance Report**, event name (`DICT AI Roadshow 2026`), venue (`The Claude Andrews Auditorium Hall, CSU Andrews Campus Tuguegarao City`), day line (`Day 2 - July 24, 2026`).
+- First page only: **Registered Guest List** and **N records**.
+- Columns: No. · Name · Agency/Org. · Sector · Designation · Email · Gender · Signature.
+- Ink signatures in the last column (from attendance).
+- Footer: `Generated Jul 24, 2026 9:08 PM` and `Page X of 14`.
+- About 11 rows per page; long agency/email wrap inside the cell.
+
+**What happens today**
+
+[`ReportController::generate`](src/Controllers/ReportController.php) dumps one HTML table through TCPDF `writeHTML`. Title and subtitle are free text. Logos are optional uploads. The page header does not repeat. The footer inside the HTML does not behave like a real TCPDF footer. `signature_path` is used as a filesystem path and often misses `storage/...`. The builder still offers “Registered At”, which the sample does not use.
+
+**Locked choices**
+
+- Keep the Report Builder at `?r=admin_report`. Keep HTML preview. PDF is the layout we match to the sample.
+- Default PDF chrome from the **current event**: title stays `Attendance Report`; event name = `events.name`; venue = `events.coa_venue` (fallback: leave the line off if empty); day line from the chosen date, or `start`–`end` if a range is set. The operator can still override title/subtitle.
+- Default header marks: the same DICT and Bagong Pilipinas files already used on CoA ([`Resource/`](Resource/)). Uploaded left/right logos still win when provided.
+- Default field set matches the sample (No., Name, Agency/Org., Sector, Designation, Email, Gender, Signature). Other checkboxes stay optional.
+- Name = first + middle initial + last (same as CoA). Signature always last.
+- Draw with TCPDF cells (or a small `ReportPdf` helper), not one giant `writeHTML` table. Repeat the header on each page. Real footer for generated time + page X of Y. Strip “Powered by TCPDF” if we can do it without breaking output.
+- Resolve signature files the same way CoA resolves `storage/...` paths.
+- No new tables. `report_templates` still stores title, subtitle, dates, fields, format.
+- Public Sans / federal navy stay on the admin form. The PDF itself stays black text on white, like the sample.
+
+**1. PDF layout helper**
+
+- [ ] Add a small renderer (keep [`ReportController`](src/Controllers/ReportController.php) thin) that paints header, count line, column headers, rows, signatures, footer.
+- [ ] Column widths that fit landscape A4 without clipping email or sector.
+- [ ] Empty state: “No attendance records found for the selected criteria.”
+
+**2. Builder defaults**
+
+In [`views/admin_report.php`](views/admin_report.php):
+
+- [ ] Prefill title `Attendance Report`. Prefill subtitle from the current event (name, venue, selected date) so a first click already looks like the sample.
+- [ ] Default logos to the official marks; keep the two file inputs as overrides.
+- [ ] Default checked fields = the sample set. Leave Registered At unchecked.
+
+**3. Signatures and data**
+
+- [ ] Join attendance + participants as now. Fix signature path so `storage/signatures/...` actually prints.
+- [ ] Record count on page 1 only.
+- [ ] Time in / attendance date stay available as optional fields, not in the default set.
+
+**4. Local first, then prod**
+
+- [ ] Local: generate PDF for a date that has signatures. Compare page 1 and a middle page to the sample (header repeat, count, signature column, footer).
+- [ ] HTML generate still works for a quick look.
+- [ ] Saved templates still load.
+- [ ] Prod only after local sign-off: upload the touched PHP/views. Do not overwrite `.env`.
+
+**Checks**
+
+- [ ] PDF header on every page matches the sample stack (title, event, venue, day)
+- [ ] First page shows “Registered Guest List” and the correct record count
+- [ ] Columns and signature marks match the sample
+- [ ] Footer shows generated time (Asia/Manila) and Page X of Y
+- [ ] A guest with a stored signature shows ink; a guest without one has an empty cell
+- [ ] Local signed off before any prod overlay
+
+Leave alone: CoA PDF, guest gate, registration fields, EventContext, Report builder route name. Do not commit `.env`.
 
 ### Plan#15 — Required sex, email, and contact number
 

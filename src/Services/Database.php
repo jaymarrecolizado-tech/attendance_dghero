@@ -184,6 +184,20 @@ class Database
             self::addColumnIfMissing($pdo, 'coa_templates', 'signatory_id', 'INT UNSIGNED NULL');
             self::addColumnIfMissing($pdo, 'coa_sends', 'send_at', 'DATETIME NULL');
             self::addColumnIfMissing($pdo, 'coa_batches', 'template_id', 'INT UNSIGNED NULL');
+            self::addColumnIfMissing($pdo, 'events', 'coa_date_from', 'DATE NULL');
+            self::addColumnIfMissing($pdo, 'events', 'coa_date_to', 'DATE NULL');
+            self::addColumnIfMissing($pdo, 'events', 'coa_issue_date', 'DATE NULL');
+            self::addColumnIfMissing($pdo, 'coa_templates', 'date_from', 'DATE NULL');
+            self::addColumnIfMissing($pdo, 'coa_templates', 'date_to', 'DATE NULL');
+            self::addColumnIfMissing($pdo, 'coa_templates', 'issue_date', 'DATE NULL');
+            $hadDefault = self::columnExists($pdo, 'coa_templates', 'is_default');
+            self::addColumnIfMissing($pdo, 'coa_templates', 'is_default', 'TINYINT(1) NOT NULL DEFAULT 0');
+            if (!$hadDefault && self::columnExists($pdo, 'coa_templates', 'is_default')) {
+                $named = $pdo->query("SELECT id FROM coa_templates WHERE name = 'Certificate of Appearance' ORDER BY id ASC LIMIT 1")->fetchColumn();
+                if ($named) {
+                    $pdo->prepare('UPDATE coa_templates SET is_default = 1 WHERE id = ?')->execute([(int)$named]);
+                }
+            }
         } catch (\Throwable $e) {
             // Leave the caller to fall back to an empty list.
         }

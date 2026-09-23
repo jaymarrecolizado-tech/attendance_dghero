@@ -37,9 +37,17 @@ final class AdminCoaMonitorController
         return true;
     }
 
-    private function scopeEventId(): int
+    /**
+     * Explicit event_id (including 0 / empty = All events) wins.
+     * A bare Certificates open uses the nav's current event so the outbox shows.
+     */
+    private function scopeEventId(\PDO $pdo): int
     {
-        return (int)($_GET['event_id'] ?? 0);
+        if (array_key_exists('event_id', $_GET)) {
+            return max(0, (int)$_GET['event_id']);
+        }
+        $current = EventContext::currentEvent($pdo);
+        return $current ? (int)$current['id'] : 0;
     }
 
     /** Display name for the nav-selected event (never invents a session key). */
@@ -58,7 +66,7 @@ final class AdminCoaMonitorController
         if (!$this->requireAllFather()) return;
         $pdo = Database::pdo();
         Database::ensureCoaFacility($pdo);
-        $scopeEventId = $this->scopeEventId();
+        $scopeEventId = $this->scopeEventId($pdo);
         $scopeSql = $scopeEventId > 0 ? ' WHERE event_id = ?' : '';
         $scopeParams = $scopeEventId > 0 ? [$scopeEventId] : [];
 
@@ -200,19 +208,32 @@ final class AdminCoaMonitorController
         if (preg_match('/^\d{4}-\d{2}-\d{2}$/', $composeDate) !== 1) {
             $composeDate = date('Y-m-d');
         }
-        $composeTemplateId = (int)($_GET['template'] ?? 0);
+        if (array_key_exists('template', $_GET)) {
+            $composeTemplateId = (int)$_GET['template'];
+        } else {
+            $defaultId = $pdo->query('SELECT id FROM coa_templates WHERE is_default = 1 ORDER BY id ASC LIMIT 1')->fetchColumn();
+            if ($defaultId) {
+                $composeTemplateId = (int)$defaultId;
+            } elseif (count($templates) === 1) {
+                $composeTemplateId = (int)$templates[0]['id'];
+            } else {
+                $composeTemplateId = 0;
+            }
+        }
         $composeAttendees = [];
         if ($composeEventId > 0) {
             $stmt = $pdo->prepare(
                 'SELECT p.id, p.first_name, p.last_name, p.agency,
                         COALESCE(NULLIF(p.email, \'\'), NULLIF(p.office_email, \'\')) AS email,
-                        (SELECT status FROM coa_sends cs WHERE cs.participant_id = p.id AND cs.attendance_date = a.attendance_date ORDER BY cs.id DESC LIMIT 1) AS last_status
+                        MAX(CASE WHEN a.signature_path IS NOT NULL AND a.signature_path <> \'\' THEN 1 ELSE 0 END) AS has_signature,
+                        (SELECT status FROM coa_sends cs WHERE cs.participant_id = p.id AND cs.attendance_date = ? ORDER BY cs.id DESC LIMIT 1) AS last_status
                  FROM participants p
                  JOIN attendance a ON a.participant_id = p.id AND a.event_id = p.event_id AND a.attendance_date = ?
                  WHERE p.event_id = ?
+                 GROUP BY p.id, p.first_name, p.last_name, p.agency, p.email, p.office_email
                  ORDER BY p.last_name ASC, p.first_name ASC'
             );
-            $stmt->execute([$composeDate, $composeEventId]);
+            $stmt->execute([$composeDate, $composeDate, $composeEventId]);
             $composeAttendees = $stmt->fetchAll();
         }
 
@@ -479,6 +500,30 @@ final class AdminCoaMonitorController
         header('Location: ?r=admin_coa_templates');
     }
 
+    /** One template is the default for compose and schedule. Toggle off clears it. */
+    public function templateDefault(): void
+    {
+        if (!$this->requireAllFather('POST') || !$this->requireCsrf()) return;
+        $id = (int)($_POST['id'] ?? 0);
+        $on = (string)($_POST['on'] ?? '1') === '1';
+        $pdo = Database::pdo();
+        Database::ensureCoaFacility($pdo);
+        if ($id <= 0) {
+            $_SESSION['coa_flash'] = ['type' => 'danger', 'message' => 'Pick a template to set as default.'];
+            header('Location: ?r=admin_coa_templates');
+            return;
+        }
+        $pdo->exec('UPDATE coa_templates SET is_default = 0');
+        if ($on) {
+            $stmt = $pdo->prepare('UPDATE coa_templates SET is_default = 1 WHERE id = ?');
+            $stmt->execute([$id]);
+            $_SESSION['coa_flash'] = ['type' => 'success', 'message' => 'Default template updated. New sends use it unless you pick another.'];
+        } else {
+            $_SESSION['coa_flash'] = ['type' => 'success', 'message' => 'Default template cleared.'];
+        }
+        header('Location: ?r=admin_coa_templates');
+    }
+
     /** Copy a template's fields onto an event's CoA columns. */
     public function templateApply(): void
     {
@@ -655,21 +700,26 @@ final class AdminCoaMonitorController
         if (!$this->requireAllFather('POST') || !$this->requireCsrf()) return;
         $eventId = (int)($_POST['event_id'] ?? 0);
         $ids = array_values(array_filter(array_map('intval', (array)($_POST['send_ids'] ?? [])), static fn($v) => $v > 0));
+        $back = (string)($_POST['outbox'] ?? 'all');
+        if (!in_array($back, ['all', 'waiting', 'due'], true)) {
+            $back = 'all';
+        }
+        $backTo = '?r=admin_coa_monitor' . ($eventId > 0 ? '&event_id=' . $eventId : '') . '&outbox=' . $back;
         if (!count($ids)) {
-            $_SESSION['coa_flash'] = ['type' => 'danger', 'message' => 'Tick at least one waiting row to cancel.'];
-            header('Location: ?r=admin_coa_monitor' . ($eventId > 0 ? '&event_id=' . $eventId : ''));
+            $_SESSION['coa_flash'] = ['type' => 'danger', 'message' => 'Tick at least one queued row to cancel.'];
+            header('Location: ' . $backTo);
             return;
         }
         $pdo = Database::pdo();
         $placeholders = implode(',', array_fill(0, count($ids), '?'));
-        $params = array_merge(["queued"], $ids);
+        $params = $ids;
         if ($eventId > 0) {
             $params[] = $eventId;
         }
         $stmt = $pdo->prepare("DELETE FROM coa_sends WHERE status = 'queued' AND id IN ({$placeholders})" . ($eventId > 0 ? ' AND event_id = ?' : ''));
         $stmt->execute($params);
         $_SESSION['coa_flash'] = ['type' => 'success', 'message' => $stmt->rowCount() . ' queued row(s) cancelled - no mail will be sent.'];
-        header('Location: ?r=admin_coa_monitor&event_id=' . $eventId . '&outbox=waiting');
+        header('Location: ' . $backTo);
     }
 
     /**

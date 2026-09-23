@@ -44,7 +44,8 @@ use App\Services\EventContext;
             <?php endif; ?>
           </td>
           <td><span class="badge text-bg-<?= (($ev['status'] ?? '') === 'open') ? 'success' : 'secondary' ?>"><?= htmlspecialchars((string)($ev['status'] ?? ''), ENT_QUOTES) ?></span></td>
-          <td><code class="text-break"><?= htmlspecialchars($links['register'], ENT_QUOTES) ?></code> <button type="button" class="btn btn-sm btn-outline-secondary py-0" data-copy="<?= htmlspecialchars($links['register'], ENT_QUOTES) ?>" aria-label="Copy registration link">Copy</button></td>
+          <?php $registerUrl = EventContext::absolutePublicUrl($links['register']); ?>
+          <td><a href="<?= htmlspecialchars($registerUrl, ENT_QUOTES) ?>"><code class="text-break"><?= htmlspecialchars($registerUrl, ENT_QUOTES) ?></code></a> <button type="button" class="btn btn-sm btn-outline-secondary py-0" data-copy="<?= htmlspecialchars($registerUrl, ENT_QUOTES) ?>" aria-label="Copy registration link">Copy</button></td>
           <td><code class="text-break"><?= htmlspecialchars($links['scan'], ENT_QUOTES) ?></code> <button type="button" class="btn btn-sm btn-outline-secondary py-0" data-copy="<?= htmlspecialchars($links['scan'], ENT_QUOTES) ?>" aria-label="Copy scan kiosk link">Copy</button></td>
         </tr>
         <?php endforeach; ?>
@@ -57,7 +58,7 @@ use App\Services\EventContext;
 // Clipboard with a non-secure-context fallback (kiosks may run over plain HTTP),
 // and a temporary "Copied" label so the button always returns to its original text.
 function copyToClipboard(text, btn) {
-  // Shareable absolute URL; the on-screen code stays short on purpose.
+  // Registration links are already absolute. Scan links stay short until copied.
   var full = text.indexOf('http') === 0 ? text : window.location.origin + window.location.pathname + text;
   var done = function () {
     if (!btn.getAttribute('data-label')) btn.setAttribute('data-label', btn.textContent);

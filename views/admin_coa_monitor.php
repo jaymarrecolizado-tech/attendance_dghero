@@ -8,7 +8,9 @@ use App\Services\AuthService;
  * queue/resend actions, recent batches, and per-recipient status detail.
  */
 $flash = $flash ?? null;
-$scopeEventId = (int)($_GET['event_id'] ?? 0);
+if (!isset($scopeEventId)) {
+    $scopeEventId = (int)($_GET['event_id'] ?? 0);
+}
 $statusFilter = (string)($_GET['status'] ?? 'all');
 $activeNav = 'admin_coa_monitor';
 $token = function_exists('csrf_token') ? csrf_token() : '';
@@ -69,6 +71,7 @@ $token = function_exists('csrf_token') ? csrf_token() : '';
     <form method="post" action="?r=admin_coa_cancel_selected">
       <input type="hidden" name="csrf" value="<?= htmlspecialchars($token, ENT_QUOTES) ?>">
       <input type="hidden" name="event_id" value="<?= $scopeEventId ?>">
+      <input type="hidden" name="outbox" value="<?= htmlspecialchars((string)($outboxStatus ?? 'all'), ENT_QUOTES) ?>">
       <table class="table table-sm align-middle mb-0">
         <thead><tr><th></th><th>Name</th><th>Agency</th><th>Email</th><th>Status</th><th>Scheduled / sent</th><th>Template</th><th>Error</th><th>Preview</th></tr></thead>
         <tbody>
@@ -98,8 +101,8 @@ $token = function_exists('csrf_token') ? csrf_token() : '';
       </table>
       <div class="d-flex justify-content-between align-items-center mt-2">
         <small class="text-muted"><?= $outboxTotal ?> send(s)</small>
-        <?php if ($outboxStatus === 'waiting'): ?>
-        <button class="btn btn-sm btn-outline-danger" onclick="return confirm('Cancel the ticked waiting rows? No mail will be sent.');">Cancel selected</button>
+        <?php if (in_array($outboxStatus, ['all', 'waiting', 'due'], true)): ?>
+        <button class="btn btn-sm btn-outline-danger" onclick="return confirm('Cancel the ticked queued rows? No mail will be sent.');">Cancel selected</button>
         <?php endif; ?>
       </div>
     </form>
@@ -111,12 +114,14 @@ $token = function_exists('csrf_token') ? csrf_token() : '';
     </ul></nav>
     <?php endif; ?>
   </div>
+  <?php else: ?>
+  <div class="alert alert-info py-2">Pick an event to see its outbox. All events only rolls up the cards and recent batches.</div>
   <?php endif; ?>
 
   <?php $monitorTemplates = $templates ?? []; $monitorSignatories = $signatories ?? []; ?>
   <div class="card mb-3"><div class="card-body">
     <h2 class="h6 mb-2">Compose send</h2>
-    <form method="get" action="?r=admin_coa_monitor" class="row g-2 align-items-end">
+    <form method="get" action="?r=admin_coa_monitor" id="composeLoadForm" class="row g-2 align-items-end">
       <input type="hidden" name="r" value="admin_coa_monitor">
       <input type="hidden" name="compose" value="1">
       <div class="col-12 col-md-3">
@@ -131,15 +136,7 @@ $token = function_exists('csrf_token') ? csrf_token() : '';
         <label class="form-label small mb-1">Attendance date</label>
         <input type="date" name="compose_date" class="form-control form-control-sm" value="<?= htmlspecialchars($composeDate, ENT_QUOTES) ?>" required>
       </div>
-      <div class="col-12 col-md-4">
-        <label class="form-label small mb-1">Template</label>
-        <select name="template" class="form-select form-select-sm">
-          <option value="0">Use event CoA settings</option>
-          <?php foreach ($monitorTemplates as $t): ?>
-          <option value="<?= (int)$t['id'] ?>" <?= $composeTemplateId === (int)$t['id'] ? 'selected' : '' ?>><?= htmlspecialchars((string)$t['name'], ENT_QUOTES) ?></option>
-          <?php endforeach; ?>
-        </select>
-      </div>
+      <input type="hidden" name="template" id="composeTemplateKeep" value="<?= (int)$composeTemplateId ?>">
       <div class="col-12 col-md-2">
         <button class="btn btn-sm btn-outline-primary w-100">Load attendees</button>
       </div>
@@ -151,13 +148,22 @@ $token = function_exists('csrf_token') ? csrf_token() : '';
       <input type="hidden" name="csrf" value="<?= htmlspecialchars($token, ENT_QUOTES) ?>">
       <input type="hidden" name="event_id" value="<?= $composeEventId ?>">
       <input type="hidden" name="attendance_date" value="<?= htmlspecialchars($composeDate, ENT_QUOTES) ?>">
-      <input type="hidden" name="template_id" value="<?= $composeTemplateId ?>">
+      <div class="mb-2">
+        <label class="form-label small mb-1" for="composeTemplatePick">Template for this send</label>
+        <select name="template_id" id="composeTemplatePick" class="form-select form-select-sm">
+          <option value="0">Use event CoA settings</option>
+          <?php foreach ($monitorTemplates as $t): ?>
+          <option value="<?= (int)$t['id'] ?>" <?= (int)$composeTemplateId === (int)$t['id'] ? 'selected' : '' ?>><?= htmlspecialchars((string)$t['name'], ENT_QUOTES) ?></option>
+          <?php endforeach; ?>
+        </select>
+        <p class="text-muted small mb-0">Schedule and send use this template, including its signatory and signature.</p>
+      </div>
       <div class="table-responsive">
         <table class="table table-sm align-middle mb-2">
-          <thead><tr><th></th><th>Name</th><th>Agency</th><th>Email</th><th>Last CoA status</th></tr></thead>
+          <thead><tr><th></th><th>Name</th><th>Agency</th><th>Email</th><th>Signature</th><th>Last CoA status</th></tr></thead>
           <tbody>
             <?php if (!count($composeAttendees)): ?>
-            <tr><td colspan="5" class="text-center text-muted py-2">No attendees with attendance on <?= htmlspecialchars($composeDate, ENT_QUOTES) ?>.</td></tr>
+            <tr><td colspan="6" class="text-center text-muted py-2">No attendees with attendance on <?= htmlspecialchars($composeDate, ENT_QUOTES) ?>.</td></tr>
             <?php endif; ?>
             <?php foreach ($composeAttendees as $a): ?>
             <tr>
@@ -165,9 +171,16 @@ $token = function_exists('csrf_token') ? csrf_token() : '';
                 <input class="form-check-input" type="checkbox" name="participant_ids[]" value="<?= (int)$a['id'] ?>"
                   <?= (string)$a['email'] === '' ? 'disabled' : 'checked' ?>>
               </td>
-              <td class="small"><?= htmlspecialchars((string)$a['name'], ENT_QUOTES) ?></td>
+              <td class="small"><?= htmlspecialchars(trim((string)($a['first_name'] ?? '') . ' ' . (string)($a['last_name'] ?? '')), ENT_QUOTES) ?></td>
               <td class="small"><?= htmlspecialchars((string)$a['agency'], ENT_QUOTES) ?></td>
               <td class="small"><?= htmlspecialchars((string)$a['email'], ENT_QUOTES) ?></td>
+              <td class="small">
+                <?php if ((int)($a['has_signature'] ?? 0) === 1): ?>
+                <span class="badge text-bg-success">Signed</span>
+                <?php else: ?>
+                <span class="badge text-bg-secondary">No signature</span>
+                <?php endif; ?>
+              </td>
               <td class="small"><?= htmlspecialchars((string)($a['last_status'] ?? 'none'), ENT_QUOTES) ?></td>
             </tr>
             <?php endforeach; ?>
@@ -185,6 +198,13 @@ $token = function_exists('csrf_token') ? csrf_token() : '';
         </div>
       </div>
     </form>
+    <script>
+    document.getElementById('composeLoadForm')?.addEventListener('submit', function () {
+      var pick = document.getElementById('composeTemplatePick');
+      var keep = document.getElementById('composeTemplateKeep');
+      if (pick && keep) keep.value = pick.value;
+    });
+    </script>
     <?php endif; ?>
   </div></div>
 

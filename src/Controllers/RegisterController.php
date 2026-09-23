@@ -209,8 +209,10 @@ class RegisterController
     {
         header('Content-Type: application/json; charset=utf-8');
         $ip = $_SERVER['REMOTE_ADDR'] ?? 'unknown';
-        if (!RateLimiter::allow('register-email:' . $ip, 10, 300)) {
-            http_response_code(429);
+        // Typing retriggers this check. Over the limit, say "not taken" with
+        // HTTP 200 so the form does not stick on a verify error. Submit still
+        // rejects a duplicate email.
+        if (!RateLimiter::allow('register-email:' . $ip, 60, 300)) {
             echo json_encode(['taken' => false]);
             return;
         }

@@ -42,9 +42,9 @@ class AdminEventsController
     {
         if (!$this->requireAllFather()) return;
         $pdo = Database::pdo();
+        Database::ensureCoaFacility($pdo);
         $rows = $pdo->query('SELECT * FROM events ORDER BY id DESC')->fetchAll();
         $staff = $pdo->query("SELECT id, username, display_name, role FROM admins WHERE is_active = 1 ORDER BY username ASC")->fetchAll();
-        Database::ensureCoaFacility($pdo);
         try {
             $coaSignatories = $pdo->query('SELECT id, name, title, signature_path FROM coa_signatories ORDER BY name ASC')->fetchAll();
         } catch (\Throwable $e) {
@@ -207,12 +207,22 @@ class AdminEventsController
         }
 
         $pdo = Database::pdo();
-        $stmt = $pdo->prepare('UPDATE events SET coa_enabled = ?, coa_venue = ?, coa_purpose = ?, coa_particulars = ?, coa_signatory_id = ?, coa_signatory_name = ?, coa_signatory_title = ?, coa_signatory_path = ?, coa_logo_path = ? WHERE id = ?');
+        Database::ensureCoaFacility($pdo);
+        $dateFrom = self::coaDate($_POST['coa_date_from'] ?? '');
+        $dateTo = self::coaDate($_POST['coa_date_to'] ?? '');
+        $issueDate = self::coaDate($_POST['coa_issue_date'] ?? '');
+        if ($dateFrom !== null && $dateTo !== null && $dateTo < $dateFrom) {
+            $dateTo = $dateFrom;
+        }
+        $stmt = $pdo->prepare('UPDATE events SET coa_enabled = ?, coa_venue = ?, coa_purpose = ?, coa_particulars = ?, coa_date_from = ?, coa_date_to = ?, coa_issue_date = ?, coa_signatory_id = ?, coa_signatory_name = ?, coa_signatory_title = ?, coa_signatory_path = ?, coa_logo_path = ? WHERE id = ?');
         $stmt->execute([
             $enabled,
             $venue !== '' ? mb_substr($venue, 0, 255) : null,
             $purpose !== '' ? mb_substr($purpose, 0, 255) : null,
             $particulars !== '' ? $particulars : null,
+            $dateFrom,
+            $dateTo,
+            $issueDate,
             $signatoryId > 0 ? $signatoryId : null,
             $sigName !== '' ? mb_substr($sigName, 0, 120) : null,
             $sigTitle !== '' ? mb_substr($sigTitle, 0, 120) : null,
@@ -331,5 +341,11 @@ class AdminEventsController
             @unlink($real);
         }
         $pdo->prepare("UPDATE events SET {$column} = NULL WHERE id = ?")->execute([$eventId]);
+    }
+
+    private static function coaDate(string $value): ?string
+    {
+        $value = trim($value);
+        return preg_match('/^\d{4}-\d{2}-\d{2}$/', $value) === 1 ? $value : null;
     }
 }

@@ -31,8 +31,6 @@
   const reviewEmail = document.getElementById('reviewEmail');
 
   let emailStatus = 'idle';
-  let emailCheckToken = 0;
-  let emailCheckTimer = null;
 
   function showStepError(message, reason) {
     if (!stepError) return;
@@ -131,40 +129,17 @@
     return list;
   }
 
-  function scheduleEmailCheck() {
-    const emails = emailsToVerify();
-    clearTimeout(emailCheckTimer);
-    if (emails.length === 0) {
-      emailStatus = 'idle';
-      emailCheckToken += 1;
-      return;
-    }
-    emailStatus = 'checking';
-    const token = emailCheckToken + 1;
-    emailCheckToken = token;
-    emailCheckTimer = setTimeout(() => {
-      runEmailCheck(emails, token);
-    }, 300);
-  }
-
-  function runEmailCheck(emails, token) {
+  function runEmailCheck(emails) {
     const slug = form.querySelector('[name="e"]')?.value || '';
     const requests = emails.map((email) => {
       const url = '?r=register_email_check&e=' + encodeURIComponent(slug) + '&email=' + encodeURIComponent(email);
       return fetch(url, { headers: { Accept: 'application/json' } }).then((res) => {
-        if (!res.ok) throw new Error('email check failed');
-        return res.json();
-      });
+        return res.json().then((row) => row || { taken: false }, () => ({ taken: false }));
+      }, () => ({ taken: false }));
     });
-    Promise.all(requests).then((rows) => {
-      if (token !== emailCheckToken) return;
-      emailStatus = rows.some((row) => row && row.taken) ? 'taken' : 'free';
-      setActionsEnabled();
-    }).catch(() => {
-      if (token !== emailCheckToken) return;
-      emailStatus = 'error';
-      setActionsEnabled();
-    });
+    return Promise.all(requests).then((rows) => {
+      return rows.some((row) => row && row.taken);
+    }, () => false);
   }
 
   function setActionsEnabled() {
@@ -174,7 +149,7 @@
       btn.disabled = !stepOk;
       btn.setAttribute('aria-disabled', stepOk ? 'false' : 'true');
     });
-    const canRegister = isFormComplete() && emailStatus === 'free';
+    const canRegister = isFormComplete();
     [btnRegister, btnRegisterSticky].forEach((btn) => {
       if (!btn) return;
       btn.disabled = !canRegister;
@@ -182,8 +157,6 @@
     });
     if (emailStatus === 'taken') {
       showStepError('This email is already registered for this event.', 'email');
-    } else if (emailStatus === 'error') {
-      showStepError('Could not verify this email yet. Edit it to try again.', 'email');
     } else if (stepError && stepError.dataset.reason === 'email') {
       hideStepError();
     }
@@ -266,7 +239,7 @@
   function setSubmitLoading(loading) {
     [btnRegister, btnRegisterSticky].forEach((btn) => {
       if (!btn) return;
-      btn.disabled = loading || !(isFormComplete() && emailStatus === 'free');
+      btn.disabled = loading || !isFormComplete();
       const label = btn.querySelector('.btn-label');
       const spinner = btn.querySelector('.spinner-border');
       if (loading) {
@@ -289,18 +262,40 @@
         return;
       }
     }
-    if (!form.checkValidity() || !isFormComplete() || emailStatus !== 'free') {
+    if (!form.checkValidity() || !isFormComplete()) {
       event.preventDefault();
       event.stopPropagation();
       form.classList.add('was-validated');
       setActionsEnabled();
       return;
     }
+    event.preventDefault();
+    event.stopPropagation();
     setSubmitLoading(true);
+    const emails = emailsToVerify();
+    const sendForm = () => {
+      form.submit();
+    };
+    if (emails.length === 0) {
+      sendForm();
+      return;
+    }
+    runEmailCheck(emails).then((taken) => {
+      if (!taken) {
+        sendForm();
+        return;
+      }
+      emailStatus = 'taken';
+      setSubmitLoading(false);
+      goToStep(1);
+      showStepError('This email is already registered for this event.', 'email');
+      const emailField = form.querySelector('[name="email"]');
+      if (emailField) emailField.focus();
+    });
   });
 
   function onFormEdit() {
-    scheduleEmailCheck();
+    if (emailStatus === 'taken') emailStatus = 'idle';
     setActionsEnabled();
   }
 
@@ -448,6 +443,5 @@
   const fallback = document.querySelector('.guest-submit-fallback');
   if (fallback) fallback.hidden = true;
 
-  scheduleEmailCheck();
   updateStepper();
 })();
