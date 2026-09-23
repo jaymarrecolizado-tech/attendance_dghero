@@ -85,9 +85,11 @@ $mailsBefore = is_dir($outbox) ? count(glob($outbox . '/*.eml') ?: []) : 0;
 $res = $ctrl->submitJsonForTest(['uuid' => $uuidOn, 'signature' => 'data:image/png;base64,AAAA', 'e' => $slugOn], $_SESSION['csrf']);
 assertTrue(($res['ok'] ?? false) === true, 'attendance accepted on CoA-enabled event');
 
-$pdf = dirname(__DIR__) . DIRECTORY_SEPARATOR . 'storage' . DIRECTORY_SEPARATOR . 'coa' . DIRECTORY_SEPARATOR . $eventIdOn . DIRECTORY_SEPARATOR . 'coa_' . $pidOn . '_' . date('Ymd') . '.pdf';
-assertTrue(is_file($pdf), 'dual-copy CoA PDF generated under storage/coa/{eventId}');
-if (is_file($pdf)) {
+$pdfGlob = dirname(__DIR__) . DIRECTORY_SEPARATOR . 'storage' . DIRECTORY_SEPARATOR . 'coa' . DIRECTORY_SEPARATOR . $eventIdOn . DIRECTORY_SEPARATOR . 'coa_' . $pidOn . '_' . date('Ymd') . '*.pdf';
+$pdfMatches = glob($pdfGlob) ?: [];
+$pdf = $pdfMatches[0] ?? null;
+assertTrue($pdf !== null && is_file($pdf), 'dual-copy CoA PDF generated under storage/coa/{eventId}');
+if ($pdf !== null && is_file($pdf)) {
     $bytes = filesize($pdf);
     assertTrue($bytes > 2000, 'CoA PDF has real content (' . $bytes . ' bytes)');
     assertTrue(substr(file_get_contents($pdf) ?: '', 0, 4) === "%PDF", 'CoA file is a PDF');
@@ -265,6 +267,65 @@ $mon->cancelBatch();
 ob_end_clean();
 $left = (int)$pdo->query("SELECT COUNT(*) FROM coa_sends WHERE batch_id = $batchToCancel AND status = 'queued'")->fetchColumn();
 assertTrue($left === 0, 'cancel queued removes still-queued rows');
+
+
+// Plan#13: a second scheduled compose on the same day creates its own batch.
+$_POST = [
+    'event_id' => (string)$eventIdOn,
+    'attendance_date' => date('Y-m-d'),
+    'template_id' => (string)$tplId,
+    'participant_ids' => [(string)$pid3],
+    'send_at' => date('Y-m-d\TH:i', time() + 9000),
+    'do' => 'schedule',
+    'csrf' => $freshCsrf(),
+];
+ob_start();
+$mon->sendSelected();
+ob_end_clean();
+$secondBatch = (int)$pdo->query("SELECT batch_id FROM coa_sends WHERE participant_id = $pid3 AND status = 'queued' ORDER BY id DESC LIMIT 1")->fetchColumn();
+assertTrue($secondBatch > 0 && $secondBatch !== $batchToCancel, 'two schedules the same day create two distinct batches');
+
+// Plan#13: cron rebuilds the PDF from the batch template snapshot, not the
+// event columns. Move the event venue out of the way, make the queued row
+// due, process it, then confirm the send row still carries the template
+// venue snapshot and the regenerated PDF exists.
+$pdo->prepare('UPDATE events SET coa_venue = ? WHERE id = ?')->execute(['DIFFERENT Event Venue', $eventIdOn]);
+$queuedInSecond = (int)$pdo->query("SELECT id FROM coa_sends WHERE batch_id = $secondBatch LIMIT 1")->fetchColumn();
+$pdo->prepare("UPDATE coa_sends SET send_at = ? WHERE id = ?")->execute([date('Y-m-d H:i:s', time() - 30), $queuedInSecond]);
+$due = \App\Services\CoaService::processDue(50);
+$row = $pdo->prepare('SELECT s.status, s.venue_snapshot, s.pdf_path FROM coa_sends s WHERE s.id = ?');
+$row->execute([$queuedInSecond]);
+$cronRow = $row->fetch();
+assertTrue($cronRow && $cronRow['status'] === 'sent', 'scheduled row sends after becoming due');
+assertTrue($cronRow['venue_snapshot'] === 'Template Hall', 'cron kept the template venue snapshot');
+assertTrue($cronRow['pdf_path'] !== null && is_file($cronRow['pdf_path']), 'cron rebuilt the PDF');
+$ovr = \App\Services\CoaService::sendOverridesFor($queuedInSecond);
+assertTrue(($ovr['venue'] ?? '') === 'Template Hall', 'sendOverridesFor resolves the batch venue');
+$pdo->prepare('UPDATE events SET coa_venue = ? WHERE id = ?')->execute(['ICT Convention Hall', $eventIdOn]);
+
+// Plan#13: the event outbox lists sends without opening a batch. Drive the
+// monitor action with the scope + waiting filter and check the HTML.
+$_GET = ['event_id' => (string)$eventIdOn, 'outbox' => 'all'];
+ob_start();
+$mon->monitor();
+$html = (string)ob_get_clean();
+assertTrue(strpos($html, 'Outbox - every send for this event') !== false, 'outbox section renders for a scoped event');
+assertTrue(strpos($html, 'No sends for this event yet') === false, 'outbox shows rows when they exist');
+
+// Plan#13: mail failures persist a real reason, not just "Mail send failed".
+putenv('MAIL_MODE=smtp');
+putenv('SMTP_HOST=127.0.0.1');
+putenv('SMTP_PORT=1');
+putenv('SMTP_USER=u');
+putenv('SMTP_PASS=p');
+$ok = \App\Services\CoaService::maybeSendFor($eventIdOn, $pidOn, date('Y-m-d'));
+assertTrue($ok === false, 'smtp send to a dead server fails');
+$row = $pdo->prepare('SELECT error FROM coa_sends WHERE event_id = ? ORDER BY id DESC LIMIT 1');
+$row->execute([$eventIdOn]);
+$err = (string)$row->fetchColumn();
+assertTrue(stripos($err, 'SMTP connect failed') !== false, 'failed row persists the real SMTP error');
+putenv('MAIL_MODE=log');
+
 
 // Preview: a sample PDF renders from the template.
 $sample = \App\Services\CoaService::generatePreview(

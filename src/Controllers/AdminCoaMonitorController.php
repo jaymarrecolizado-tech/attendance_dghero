@@ -72,6 +72,16 @@ final class AdminCoaMonitorController
         $stmt->execute($scopeParams);
         $kpis['batches'] = (int)$stmt->fetchColumn();
 
+        $batchPer = 20;
+        $batchPage = max(1, (int)($_GET['bpage'] ?? 1));
+        $countStmt = $pdo->prepare('SELECT COUNT(*) FROM coa_batches' . ($scopeEventId > 0 ? ' WHERE event_id = ?' : ''));
+        $countStmt->execute($scopeParams);
+        $batchTotal = (int)$countStmt->fetchColumn();
+        $batchPages = max(1, (int)ceil($batchTotal / $batchPer));
+        if ($batchPage > $batchPages) {
+            $batchPage = $batchPages;
+        }
+        $batchOffset = ($batchPage - 1) * $batchPer;
         $batchSql = 'SELECT b.*,
                 COALESCE(SUM(CASE WHEN s.status = \'sent\' THEN 1 ELSE 0 END), 0) AS sent_count,
                 COALESCE(SUM(CASE WHEN s.status = \'failed\' THEN 1 ELSE 0 END), 0) AS failed_count,
@@ -80,7 +90,7 @@ final class AdminCoaMonitorController
             FROM coa_batches b
             LEFT JOIN coa_sends s ON s.batch_id = b.id'
             . ($scopeEventId > 0 ? ' WHERE b.event_id = ?' : '')
-            . ' GROUP BY b.id ORDER BY b.id DESC LIMIT 20';
+            . " GROUP BY b.id ORDER BY b.id DESC LIMIT {$batchPer} OFFSET {$batchOffset}";
         $stmt = $pdo->prepare($batchSql);
         $stmt->execute($scopeParams);
         $batches = $stmt->fetchAll();
@@ -91,6 +101,10 @@ final class AdminCoaMonitorController
 
         $batchDetail = null;
         $recipients = [];
+        $recipTotal = 0;
+        $recipPages = 1;
+        $recipPage = max(1, (int)($_GET['page'] ?? 1));
+        $recipPer = 20;
         $statusFilter = (string)($_GET['status'] ?? 'all');
         $batchId = (int)($_GET['batch_id'] ?? 0);
         if ($batchId > 0) {
@@ -98,15 +112,24 @@ final class AdminCoaMonitorController
             $stmt->execute([$batchId]);
             $batchDetail = $stmt->fetch();
             if ($batchDetail) {
-                $sql = 'SELECT s.*, p.first_name, p.last_name, p.agency
-                    FROM coa_sends s LEFT JOIN participants p ON p.id = s.participant_id
-                    WHERE s.batch_id = ?';
+                $where = 's.batch_id = ?';
                 $params = [$batchId];
                 if (in_array($statusFilter, ['sent', 'failed', 'queued', 'skipped'], true)) {
-                    $sql .= ' AND s.status = ?';
+                    $where .= ' AND s.status = ?';
                     $params[] = $statusFilter;
                 }
-                $sql .= ' ORDER BY s.id ASC';
+                $count = $pdo->prepare("SELECT COUNT(*) FROM coa_sends s WHERE {$where}");
+                $count->execute($params);
+                $recipTotal = (int)$count->fetchColumn();
+                $recipPages = max(1, (int)ceil($recipTotal / $recipPer));
+                if ($recipPage > $recipPages) {
+                    $recipPage = $recipPages;
+                }
+                $recipOffset = ($recipPage - 1) * $recipPer;
+                $sql = "SELECT s.*, p.first_name, p.last_name, p.agency
+                    FROM coa_sends s LEFT JOIN participants p ON p.id = s.participant_id
+                    WHERE {$where}
+                    ORDER BY s.id ASC LIMIT {$recipPer} OFFSET {$recipOffset}";
                 $stmt = $pdo->prepare($sql);
                 $stmt->execute($params);
                 $recipients = $stmt->fetchAll();
@@ -114,6 +137,62 @@ final class AdminCoaMonitorController
                 $q->execute([$batchId]);
                 $batchDetail['queued_left'] = (int)$q->fetchColumn();
             }
+        }
+
+        // Plan#13: event outbox - every send for the selected event, with
+        // waiting/due split on queued rows. Requires an event; "All events"
+        // keeps the batches roll-up only.
+        $outboxStatus = (string)($_GET['outbox'] ?? 'all');
+        $outboxPage = max(1, (int)($_GET['obpage'] ?? 1));
+        $outboxPer = 20;
+        $outboxRows = [];
+        $outboxTotal = 0;
+        $outboxPages = 1;
+        $outboxHint = '';
+        if ($scopeEventId > 0) {
+            $now = date('Y-m-d H:i:s');
+            $where = 's.event_id = ?';
+            $params = [$scopeEventId];
+            if ($outboxStatus === 'waiting') {
+                $where .= " AND s.status = 'queued' AND s.send_at IS NOT NULL AND s.send_at > ?";
+                $params[] = $now;
+            } elseif ($outboxStatus === 'due') {
+                $where .= " AND s.status = 'queued' AND (s.send_at IS NULL OR s.send_at <= ?)";
+                $params[] = $now;
+            } elseif (in_array($outboxStatus, ['sent', 'failed', 'skipped'], true)) {
+                $where .= ' AND s.status = ?';
+                $params[] = $outboxStatus;
+            } else {
+                $outboxStatus = 'all';
+            }
+            $count = $pdo->prepare("SELECT COUNT(*) FROM coa_sends s WHERE {$where}");
+            $count->execute($params);
+            $outboxTotal = (int)$count->fetchColumn();
+            $outboxPages = max(1, (int)ceil($outboxTotal / $outboxPer));
+            if ($outboxPage > $outboxPages) {
+                $outboxPage = $outboxPages;
+            }
+            $offset = ($outboxPage - 1) * $outboxPer;
+            $sql = "SELECT s.*, p.first_name, p.last_name, p.agency, b.template_id, t.name AS template_name
+                FROM coa_sends s
+                LEFT JOIN participants p ON p.id = s.participant_id
+                LEFT JOIN coa_batches b ON b.id = s.batch_id
+                LEFT JOIN coa_templates t ON t.id = b.template_id
+                WHERE {$where}
+                ORDER BY COALESCE(s.send_at, s.created_at) DESC, s.id DESC
+                LIMIT {$outboxPer} OFFSET {$offset}";
+            $stmt = $pdo->prepare($sql);
+            $stmt->execute($params);
+            $outboxRows = $stmt->fetchAll();
+
+            // Queued KPI hint: split waiting vs due.
+            $q = $pdo->prepare("SELECT
+                    COALESCE(SUM(CASE WHEN s.status = 'queued' AND s.send_at IS NOT NULL AND s.send_at > ? THEN 1 ELSE 0 END), 0) AS waiting,
+                    COALESCE(SUM(CASE WHEN s.status = 'queued' AND (s.send_at IS NULL OR s.send_at <= ?) THEN 1 ELSE 0 END), 0) AS due
+                FROM coa_sends s WHERE s.event_id = ? AND s.status = 'queued'");
+            $q->execute([$now, $now, $scopeEventId]);
+            $split = $q->fetch();
+            $outboxHint = (int)$split['waiting'] . ' waiting + ' . (int)$split['due'] . ' due';
         }
 
         $composeEventId = (int)($_GET['compose_event_id'] ?? ($scopeEventId > 0 ? $scopeEventId : 0));
@@ -271,6 +350,9 @@ final class AdminCoaMonitorController
                 'coa_signatory_title' => $template['signatory_title'],
                 'coa_signatory_path' => $template['signatory_path'],
                 'coa_logo_path' => $template['logo_path'],
+                'coa_date_from' => $template['date_from'] ?? '',
+                'coa_date_to' => $template['date_to'] ?? '',
+                'coa_issue_date' => $template['issue_date'] ?? '',
             ];
         } else {
             $current = EventContext::currentEvent($pdo);
@@ -296,6 +378,8 @@ final class AdminCoaMonitorController
     {
         if (!$this->requireAllFather()) return;
         $pdo = Database::pdo();
+        Database::ensureCoaFacility($pdo);
+        CoaService::ensureDefaultTemplate();
         $templates = $pdo->query('SELECT * FROM coa_templates ORDER BY updated_at DESC, id DESC')->fetchAll();
         $editing = null;
         $editId = (int)($_GET['edit_id'] ?? 0);
@@ -326,7 +410,14 @@ final class AdminCoaMonitorController
             return;
         }
         $pdo = Database::pdo();
+        Database::ensureCoaFacility($pdo);
         $now = date('Y-m-d H:i:s');
+        $dateFrom = preg_match('/^\d{4}-\d{2}-\d{2}$/', trim((string)($_POST['date_from'] ?? ''))) === 1 ? trim((string)$_POST['date_from']) : null;
+        $dateTo = preg_match('/^\d{4}-\d{2}-\d{2}$/', trim((string)($_POST['date_to'] ?? ''))) === 1 ? trim((string)$_POST['date_to']) : null;
+        $issueDate = preg_match('/^\d{4}-\d{2}-\d{2}$/', trim((string)($_POST['issue_date'] ?? ''))) === 1 ? trim((string)$_POST['issue_date']) : null;
+        if ($dateFrom !== null && $dateTo !== null && $dateTo < $dateFrom) {
+            $dateTo = $dateFrom;
+        }
 
         // Signatory dropdown: copy name/title/signature onto the template row.
         $signatoryId = (int)($_POST['signatory_id'] ?? 0);
@@ -356,23 +447,29 @@ final class AdminCoaMonitorController
         $logoPath = $existing['logo_path'] ?? null;
 
         if ($id > 0) {
-            $stmt = $pdo->prepare('UPDATE coa_templates SET name = ?, venue = ?, purpose = ?, particulars = ?, signatory_id = ?, signatory_name = ?, signatory_title = ?, signatory_path = ?, updated_at = ? WHERE id = ?');
+            $stmt = $pdo->prepare('UPDATE coa_templates SET name = ?, venue = ?, purpose = ?, particulars = ?, date_from = ?, date_to = ?, issue_date = ?, signatory_id = ?, signatory_name = ?, signatory_title = ?, signatory_path = ?, updated_at = ? WHERE id = ?');
             $stmt->execute([
                 mb_substr($name, 0, 120),
                 trim((string)($_POST['venue'] ?? '')),
                 trim(strip_tags((string)($_POST['purpose'] ?? ''))),
                 trim((string)($_POST['particulars'] ?? '')),
+                $dateFrom,
+                $dateTo,
+                $issueDate,
                 $signatoryId > 0 ? $signatoryId : null,
                 $sigName, $sigTitle, $sigPath,
                 $now, $id,
             ]);
         } else {
-            $stmt = $pdo->prepare('INSERT INTO coa_templates (name, venue, purpose, particulars, signatory_id, signatory_name, signatory_title, signatory_path, logo_path, created_at, updated_at) VALUES (?,?,?,?,?,?,?,?,?,?,?)');
+            $stmt = $pdo->prepare('INSERT INTO coa_templates (name, venue, purpose, particulars, date_from, date_to, issue_date, signatory_id, signatory_name, signatory_title, signatory_path, logo_path, created_at, updated_at) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?)');
             $stmt->execute([
                 mb_substr($name, 0, 120),
                 trim((string)($_POST['venue'] ?? '')),
                 trim(strip_tags((string)($_POST['purpose'] ?? ''))),
                 trim((string)($_POST['particulars'] ?? '')),
+                $dateFrom,
+                $dateTo,
+                $issueDate,
                 $signatoryId > 0 ? $signatoryId : null,
                 $sigName, $sigTitle, $sigPath,
                 $logoPath, $now, $now,
@@ -394,6 +491,7 @@ final class AdminCoaMonitorController
             return;
         }
         $pdo = Database::pdo();
+        Database::ensureCoaFacility($pdo);
         $stmt = $pdo->prepare('SELECT * FROM coa_templates WHERE id = ? LIMIT 1');
         $stmt->execute([$templateId]);
         $template = $stmt->fetch();
@@ -402,9 +500,10 @@ final class AdminCoaMonitorController
             header('Location: ?r=admin_coa_templates');
             return;
         }
-        $upd = $pdo->prepare('UPDATE events SET coa_venue = ?, coa_purpose = ?, coa_particulars = ?, coa_signatory_name = ?, coa_signatory_title = ?, coa_signatory_path = ?, coa_logo_path = ? WHERE id = ?');
+        $upd = $pdo->prepare('UPDATE events SET coa_venue = ?, coa_purpose = ?, coa_particulars = ?, coa_date_from = ?, coa_date_to = ?, coa_issue_date = ?, coa_signatory_name = ?, coa_signatory_title = ?, coa_signatory_path = ?, coa_logo_path = ? WHERE id = ?');
         $upd->execute([
             $template['venue'], $template['purpose'], $template['particulars'],
+            $template['date_from'] ?? null, $template['date_to'] ?? null, $template['issue_date'] ?? null,
             $template['signatory_name'], $template['signatory_title'],
             $template['signatory_path'], $template['logo_path'], $eventId,
         ]);
@@ -548,6 +647,29 @@ final class AdminCoaMonitorController
         $stmt->execute([$batchId]);
         $_SESSION['coa_flash'] = ['type' => 'success', 'message' => $stmt->rowCount() . ' queued row(s) cancelled - no mail will be sent.'];
         header('Location: ?r=admin_coa_monitor&batch_id=' . $batchId);
+    }
+
+    /** Plan#13 outbox: cancel the checked queued rows by id. */
+    public function cancelSelected(): void
+    {
+        if (!$this->requireAllFather('POST') || !$this->requireCsrf()) return;
+        $eventId = (int)($_POST['event_id'] ?? 0);
+        $ids = array_values(array_filter(array_map('intval', (array)($_POST['send_ids'] ?? [])), static fn($v) => $v > 0));
+        if (!count($ids)) {
+            $_SESSION['coa_flash'] = ['type' => 'danger', 'message' => 'Tick at least one waiting row to cancel.'];
+            header('Location: ?r=admin_coa_monitor' . ($eventId > 0 ? '&event_id=' . $eventId : ''));
+            return;
+        }
+        $pdo = Database::pdo();
+        $placeholders = implode(',', array_fill(0, count($ids), '?'));
+        $params = array_merge(["queued"], $ids);
+        if ($eventId > 0) {
+            $params[] = $eventId;
+        }
+        $stmt = $pdo->prepare("DELETE FROM coa_sends WHERE status = 'queued' AND id IN ({$placeholders})" . ($eventId > 0 ? ' AND event_id = ?' : ''));
+        $stmt->execute($params);
+        $_SESSION['coa_flash'] = ['type' => 'success', 'message' => $stmt->rowCount() . ' queued row(s) cancelled - no mail will be sent.'];
+        header('Location: ?r=admin_coa_monitor&event_id=' . $eventId . '&outbox=waiting');
     }
 
     /**

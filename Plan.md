@@ -2,7 +2,7 @@
 
 Turn the app into a multi-event platform: All Father creates events, assigns people and roles per event, each event has unique register/scan links, current attendance capabilities stay.
 
-**Status:** Multi-event is shipped. VPS is live. **Plan#4** through **Plan#12** are on production (full sync 2026-09-22). Current branch is `9232026_ultra`; `main` carries the same code.
+**Status:** Multi-event is shipped. VPS is live. **Plan#4** through **Plan#12** are on production. **Current work is Plan#14** (registration page open performance), from a 2026-09-23 test: the gate registration page lags on open and burns CPU/GPU. **Plan#13** (per-event CoA outbox) stays open and follows. Build and verify on the **local copy first**, then mirror the same files to digitalhero. Current branch is `9232026_ultra`.
 
 **Audit:** 2026-09-14 closed multi-event leftovers. 2026-09-20 landed Settings merge, script gating, AuthService, flash plumbing, `env.example`. 2026-09-21 morning pass fixed door-scan CSRF, import-preview rotate, retry `e=` link, event-aware nav, main deploy docs. Same-day afternoon pass closed the five re-check nits (below).
 
@@ -10,7 +10,7 @@ Turn the app into a multi-event platform: All Father creates events, assigns peo
 
 ## Current state
 
-Multi-event is shipped. VPS cutover ran 2026-09-21. Full code and migration sync ran 2026-09-22 (server `.env` and `storage/` uploads kept). Plan#4 through Plan#12 are live, including the Hostinger cron for `scripts/coa_process_scheduled.php`. Do not rebuild EventContext. Do not commit `.env` or `.env.vps`.
+Multi-event is shipped. Plan#4 through Plan#12 are live, including the Hostinger cron for [`scripts/coa_process_scheduled.php`](scripts/coa_process_scheduled.php). **Next is Plan#14:** make the gate registration page open quickly and stay light. The door, the mark, and a moving circuit field stay; the double full-screen canvas loop does not. **Plan#13** (event outbox + scheduled template) remains the following item. Implement locally, then deploy the same files. Do not rebuild EventContext. Do not commit `.env` or `.env.vps`.
 
 **Plan numbers**
 
@@ -28,6 +28,8 @@ Multi-event is shipped. VPS cutover ran 2026-09-21. Full code and migration sync
 | Plan#10 | Restore Certificate of Appearance (auto-create + auto-send) | Live on digitalhero.dictr2.cloud; enable per event |
 | Plan#11 | Certificate send monitor, nav, and templates | Live on digitalhero.dictr2.cloud |
 | Plan#12 | CoA control center (templates, signatories, compose, schedule) | Live on digitalhero.dictr2.cloud; cron installed |
+| Plan#13 | Per-event CoA outbox (queued / sent / failed) + scheduled template fix | Open — after Plan#14 |
+| Plan#14 | Registration page open performance (one light circuit loop) | **Next — local first, then prod** |
 
 **Working notes**
 
@@ -43,6 +45,160 @@ php scripts/test_csrf_lifecycle.php
 ---
 
 ## Left to do
+
+### Plan#14 — Registration page open performance
+
+Opening a gate-layout registration page (Hack for Gov 5, `/?r=register&e=...`) lags and uses a lot of CPU/GPU. Confirmed by a 2026-09-23 open test. The form steps are not the cost. Two full-viewport canvas loops start before the guest can type, and one of them never stops.
+
+Keep the door, the flag mark, and a moving circuit field (Plan#6 through Plan#8). This pass only cuts the work those effects do on open and while the form is on screen. Public Sans and the federal navy stay. Non-gate events already skip [`assets/hack4gov-gate.js`](assets/hack4gov-gate.js); leave that guard in place.
+
+```mermaid
+flowchart LR
+  open[Register_GET]
+  door[Door_canvas_only]
+  unlock[Unlock_or_session_skip]
+  page[Page_circuit_one_loop]
+  hidden[Tab_hidden_pause]
+  open --> door --> unlock --> page
+  page --> hidden
+```
+
+**What runs today**
+
+[`views/partials/guest_head.php`](views/partials/guest_head.php) loads the gate CSS and JS when `theme_layout` is `gate`. [`views/partials/guest_gate.php`](views/partials/guest_gate.php) paints two canvases before the form:
+
+1. `#eventGatePageCircuits` — `initPageCircuits()` in [`assets/hack4gov-gate.js`](assets/hack4gov-gate.js). Desktop builds 84 seeds × 2 segments (168). Every animation frame clears the whole canvas and, per segment, measures pointer distance, strokes twice, fills an arc, and sets `shadowBlur` between 8 and 22. `requestAnimationFrame` never stops. A return visit removes `#eventGate` via session storage and still leaves this loop running. The buffer uses `devicePixelRatio` capped at 2, so a 1920×1080 screen is about an 8 megapixel canvas.
+2. `#eventGateWindow` — the same painter, 64 seeds × 2 segments (128), started immediately by `startParticles()`. It does stop about 900ms after unlock. While the door is up, both loops run together (about 296 glowing segments a frame).
+
+`prefers-reduced-motion` already draws once and skips the loop. Keep that.
+
+On the server, [`RegisterController::show`](src/Controllers/RegisterController.php) runs two `SELECT DISTINCT ... LIMIT 500` scans (`agency`, `designation`) before any HTML. That can slow first byte as the event grows. Measure it; do not rewrite it unless it shows up in the timing.
+
+**Locked choices**
+
+- One animated canvas at a time. While the door window runs, the page circuit stays paused. After unlock, and on a session-skip return, only the page circuit runs.
+- Pause the page circuit when the tab is hidden (`document.visibilitychange`). Resume with a single frame when it is visible again.
+- No `shadowBlur` on the per-frame path. The traveling dash is a plain stroke. A second thinner stroke can stand in for the glow.
+- Page canvas DPR cap is 1. Door canvas DPR cap is 1.5, and only while that canvas is visible.
+- About half of today’s seed counts (desktop page ~40, door ~28). Phone keeps the smaller branch it already has.
+- Pointer lighting updates on a timer (about 50ms), not as a distance test of every segment inside the frame.
+- Resize is debounced (~150ms). A drag-resize must not rebuild the buffer on every event.
+- No new libraries. Same `?r=register` route. Same door sequence and focus move to `first_name`. Bump the `?v=` on `hack4gov-gate.js` and `hack4gov-gate.css` when this ships so browsers drop the old loop.
+
+**1. One light circuit loop**
+
+In [`assets/hack4gov-gate.js`](assets/hack4gov-gate.js):
+
+- [ ] Do not start `initPageCircuits` while `#eventGate` is on screen. Start it from `release()`, and immediately when the session skip already removed the gate.
+- [ ] Cancel the page `requestAnimationFrame` on `visibilitychange` hidden; restart when visible.
+- [ ] Remove per-frame `shadowBlur` from both `drawTrace` copies (page and door).
+- [ ] Cap page DPR at 1 and door DPR at 1.5.
+- [ ] Cut seed counts to about half.
+- [ ] Move pointer hit-testing out of the frame loop onto a ~50ms timer.
+- [ ] Debounce `resize` on both canvases.
+
+**2. Do not add paint on the door**
+
+- [ ] [`views/partials/guest_gate.php`](views/partials/guest_gate.php) keeps one logo URL for both halves (`assets/hack4gov-door-logo.png`). Do not add another image.
+- [ ] Do not add `filter`, `backdrop-filter`, or new infinite animations in [`assets/hack4gov-gate.css`](assets/hack4gov-gate.css).
+
+**3. Server open path, only if it is slow**
+
+- [ ] Time the two `DISTINCT` queries in `RegisterController::show` against the local Hack for Gov 5 event. Change them only if they dominate time to first byte (over ~30ms locally). Otherwise leave the SQL.
+
+**Checks**
+
+- [ ] Local open of the Hack for Gov 5 register link: the form is usable without a multi-second stall.
+- [ ] While the door is up, only the door canvas is animating. After unlock, and on a return visit, only the page circuit is animating.
+- [ ] Backgrounding the tab stops the loop. Coming back starts it again.
+- [ ] `prefers-reduced-motion` still paints a static field and does not loop.
+- [ ] A phone-width viewport still shows a circuit field, and resizing does not hitch.
+- [ ] A non-gate event still does not load `hack4gov-gate.js`.
+- [ ] Door, mark, and circuit colors (gold `#FCD116`, blue `#0038A8`, red `#CE1126`) still read as Hack for Gov 5. Form steps and field names are unchanged.
+- [ ] Local signed off before any prod overlay.
+
+Leave alone: Plan#13 outbox, registration field names, QR email, Report builder, EventContext. Do not commit `.env`.
+
+### Plan#13 — Per-event CoA outbox (queued / sent / failed)
+
+All Father can already **compose + schedule** a CoA send from a template, and cron does fire. What is missing is a clear **per-event list of every email**: who is still queued, who was sent, who failed. Today you only see that after opening a batch, and several scheduled times get folded into one reused batch.
+
+**Order:** implement and browser-check on the **local copy**. When local is good, overlay the same files on production (keep server `.env` and `storage/`). Do not start on prod.
+
+```mermaid
+flowchart LR
+  event[Pick_event]
+  kpis[Sent_Failed_Queued_Due]
+  list[Outbox_table]
+  filter[All_Queued_Sent_Failed]
+  cron[Existing_cron]
+  tpl[Template_snapshot]
+  event --> kpis --> list
+  list --> filter
+  cron --> tpl --> list
+```
+
+**How it works today (do not rebuild this)**
+
+- Compose on [`views/admin_coa_monitor.php`](views/admin_coa_monitor.php): event + attendance date + optional template + checkboxes + `send_at`.
+- [`AdminCoaMonitorController::sendSelected`](src/Controllers/AdminCoaMonitorController.php) snapshots the template onto overrides and calls [`CoaService::sendBatch`](src/Services/CoaService.php).
+- Future `send_at` inserts `coa_sends` as `queued`. Cron [`scripts/coa_process_scheduled.php`](scripts/coa_process_scheduled.php) calls `processDue` → `resendRow`.
+- Monitor KPIs and Recent batches can scope by `event_id`, but the recipient table only appears after **Open** on a batch. There is no “all queued for this event” list.
+
+**Gaps to close**
+
+1. **No event outbox.** Queued rows live across batches. Opening batch #1 is not “every queued email for Hack for Gov 5.”
+2. **One reused scheduled batch per event + date.** [`ensureBatch`](src/Services/CoaService.php) returns the last `scheduled` batch for that date, so 08:00 and 10:55 land in the same batch. Hard to tell what is waiting vs already failed.
+3. **Cron drops the template.** `resendRow` calls `generate()` from the **event** CoA columns, not the compose template / batch snapshot. Scheduled PDFs can ignore the chosen template.
+4. **Queued mixes two meanings.** Future `send_at` (waiting) and “Queue failed” retries (`send_at` null, due immediately) share `status=queued`.
+5. **Mail errors are opaque.** [`Mailer`](src/Services/Mailer.php) swallows the SMTP exception; the row only says `Mail send failed`.
+6. **Pagination** is on batches and batch recipients only. The new event list must paginate the same way (20 per page).
+
+**Locked choices**
+
+- All Father only. Same `?r=admin_coa_monitor`, Asia/Manila, 50-per-tick cron. No new frontend stack. No second schedule table.
+- Event is the primary scope. Default the dropdown to the current event (or the last scoped `event_id`). “All events” stays as a roll-up of KPIs + batches, but the outbox table requires an event (prompt to pick one).
+- One **Outbox** table for that event: name, agency, email, status, scheduled time, template/batch, error, preview. Filter chips: All / Waiting / Due / Sent / Failed / Skipped.
+  - **Waiting** = `queued` AND `send_at` > now
+  - **Due** = `queued` AND (`send_at` IS NULL OR `send_at` <= now)
+  - **Queued** KPI = Waiting + Due, with the two counts shown in the hint line
+- Keep Recent batches. Do not hide them. Outbox is the default view when an event is selected.
+- Cancel still removes only still-queued rows. Add **Cancel selected** on the outbox (queued rows only).
+- Queue failed / Resend queued stay, scoped to the selected event.
+
+**1. Event outbox UI**
+
+On [`views/admin_coa_monitor.php`](views/admin_coa_monitor.php) + [`AdminCoaMonitorController::monitor`](src/Controllers/AdminCoaMonitorController.php):
+
+- [x] When `event_id` is set: load `coa_sends` for that event (join participant name/agency), paginate 20, honor `status` / waiting / due filter.
+- [x] KPI strip stays honest and event-scoped: Sent, Failed, Queued (waiting + due in the hint), Skipped, Batches.
+- [x] Show `send_at` and the template name (from `coa_batches.template_id` → `coa_templates.name`, else “Event settings”).
+- [ ] Empty state: “No sends for this event yet. Compose a send below.”
+- [x] Status chips and page links keep `event_id`.
+
+**2. Schedule must keep the template**
+
+- [x] Stop reusing one scheduled batch per date. `ensureBatch` for `source=scheduled` creates a **new** batch each compose (so each `send_at` is its own run). Auto/manual may still reuse per date.
+- [x] `resendRow` / cron rebuilds the PDF from the **batch** (`template_id` + venue / signatory snapshots), then falls back to event CoA settings. Same path as compose send-now.
+- [x] Persist a short SMTP/mail error on `coa_sends.error` (trim to 255). Keep the user-facing label, but stop throwing the real reason away.
+
+**3. Local first, then prod**
+
+- [x] Local: `php scripts/test_coa.php` (compose, schedule, processDue, cancel). Add cases: two schedules same day = two batches; cron PDF uses the template venue; event outbox lists waiting rows.
+- [ ] Local browser: pick Hack for Gov 5 → see outbox filters → schedule two people → they appear under Waiting → after due, Sent or Failed with a real error if mail breaks.
+- [ ] Prod only after local sign-off: upload the touched PHP/views (not `.env`, not `storage/`). Cron is already installed; do not add a second crontab.
+
+**Checks**
+
+- [ ] Certificates → event selected → outbox lists every send for that event without opening a batch
+- [ ] Waiting / Due / Sent / Failed filters match the KPI numbers
+- [x] Schedule with a template → after cron, PDF venue/topic/signatory match the template
+- [x] Two schedules the same day show as two batches and two `send_at` groups
+- [x] Failed row shows more than the words “Mail send failed” when SMTP returns a reason
+- [x] `php scripts/test_coa.php` ALL OK
+- [ ] Local signed off before any prod overlay
+
+Leave alone: guest gate, registration fields, QR email, Report builder, EventContext, signatory upload UI. Do not commit `.env`.
 
 ### Plan#12 — CoA control center (templates, signatories, compose, schedule)
 

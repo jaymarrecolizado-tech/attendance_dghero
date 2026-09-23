@@ -49,6 +49,9 @@ return [
     'register_success' => [
         'GET' => [RegisterController::class, 'success'],
     ],
+    'register_email_check' => [
+        'GET' => [RegisterController::class, 'emailCheck'],
+    ],
     'scan' => [
         'GET' => [ScanController::class, 'show'],
     ],
@@ -157,6 +160,10 @@ return [
     ],
     'admin_coa_cancel' => [
         'POST' => [AdminCoaMonitorController::class, 'cancelBatch'],
+        '_guards' => [$rolesAdmin],
+    ],
+    'admin_coa_cancel_selected' => [
+        'POST' => [AdminCoaMonitorController::class, 'cancelSelected'],
         '_guards' => [$rolesAdmin],
     ],
     'admin_coa_attendees' => [

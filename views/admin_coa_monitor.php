@@ -41,12 +41,77 @@ $token = function_exists('csrf_token') ? csrf_token() : '';
         <div class="h4 mb-0"><?= (int)($kpis[$key] ?? 0) ?></div>
         <div class="text-muted small text-uppercase" style="letter-spacing:.08em;"><?= $label ?></div>
         <div class="text-muted" style="font-size:.68rem;">
-          <?= ['sent' => 'emailed OK', 'failed' => 'generation or mail error', 'queued' => 'waiting (scheduled or retry)', 'skipped' => 'no email / cancelled', 'batches' => 'send runs'][$key] ?? '' ?>
+          <?= $key === 'queued' && $scopeEventId > 0
+              ? htmlspecialchars($outboxHint !== '' ? $outboxHint : 'waiting + due', ENT_QUOTES)
+              : (['sent' => 'emailed OK', 'failed' => 'generation or mail error', 'queued' => 'waiting (scheduled or retry)', 'skipped' => 'no email / cancelled', 'batches' => 'send runs'][$key] ?? '') ?>
         </div>
       </div></div>
     </div>
     <?php endforeach; ?>
   </div>
+
+  <?php if ($scopeEventId > 0):
+      $obBase = '?r=admin_coa_monitor&event_id=' . $scopeEventId;
+      $obChips = ['all' => 'All', 'waiting' => 'Waiting', 'due' => 'Due', 'sent' => 'Sent', 'failed' => 'Failed', 'skipped' => 'Skipped'];
+      $obLink = static function (string $status, int $page = 1) use ($obBase): string {
+          return $obBase . '&outbox=' . $status . ($page > 1 ? '&obpage=' . $page : '');
+      };
+  ?>
+  <div class="d-flex justify-content-between align-items-center mb-2">
+    <h2 class="h6 mb-0">Outbox - every send for this event</h2>
+    <div class="d-flex gap-1">
+      <?php foreach ($obChips as $f => $label): ?>
+      <a class="btn btn-sm <?= $outboxStatus === $f ? 'btn-primary' : 'btn-outline-secondary' ?>" href="<?= $obLink($f) ?>"><?= $label ?></a>
+      <?php endforeach; ?>
+    </div>
+  </div>
+  <div class="table-responsive table-modern mb-4">
+    <form method="post" action="?r=admin_coa_cancel_selected">
+      <input type="hidden" name="csrf" value="<?= htmlspecialchars($token, ENT_QUOTES) ?>">
+      <input type="hidden" name="event_id" value="<?= $scopeEventId ?>">
+      <table class="table table-sm align-middle mb-0">
+        <thead><tr><th></th><th>Name</th><th>Agency</th><th>Email</th><th>Status</th><th>Scheduled / sent</th><th>Template</th><th>Error</th><th>Preview</th></tr></thead>
+        <tbody>
+          <?php if (!($outboxRows ?? [])): ?>
+          <tr><td colspan="9" class="text-center text-muted py-3">No sends for this event yet. Compose a send below.</td></tr>
+          <?php endif; ?>
+          <?php foreach (($outboxRows ?? []) as $o): ?>
+          <?php $isWaiting = ($o['status'] ?? '') === 'queued' && ($o['send_at'] ?? '') !== '' && strtotime((string)$o['send_at']) > time(); ?>
+          <tr>
+            <td><?php if (($o['status'] ?? '') === 'queued'): ?><input class="form-check-input" type="checkbox" name="send_ids[]" value="<?= (int)$o['id'] ?>"><?php endif; ?></td>
+            <td class="small"><?= htmlspecialchars(trim((string)($o['first_name'] ?? '') . ' ' . (string)($o['last_name'] ?? '')), ENT_QUOTES) ?></td>
+            <td class="small"><?= htmlspecialchars((string)($o['agency'] ?? ''), ENT_QUOTES) ?></td>
+            <td class="small"><?= htmlspecialchars((string)($o['email'] ?? ''), ENT_QUOTES) ?></td>
+            <td>
+              <?php $oStatus = (string)($o['status'] ?? ''); ?>
+              <span class="badge text-bg-<?= ['sent' => 'success', 'failed' => 'danger', 'queued' => ($isWaiting ? 'info' : 'secondary'), 'skipped' => 'light'][$oStatus] ?? 'light' ?>">
+                <?= $oStatus === 'queued' ? ($isWaiting ? 'waiting' : 'due') : htmlspecialchars($oStatus, ENT_QUOTES) ?>
+              </span>
+            </td>
+            <td class="small"><?= htmlspecialchars(($o['send_at'] ?? null) !== null ? (string)$o['send_at'] : (string)($o['updated_at'] ?? ''), ENT_QUOTES) ?></td>
+            <td class="small"><?= htmlspecialchars((string)($o['template_name'] ?? '') !== '' ? (string)$o['template_name'] : 'Event settings', ENT_QUOTES) ?></td>
+            <td class="small text-danger"><?= htmlspecialchars((string)($o['error'] ?? ''), ENT_QUOTES) ?></td>
+            <td><a class="btn btn-sm btn-outline-secondary py-0" href="?r=admin_coa_preview&send_id=<?= (int)$o['id'] ?>" target="_blank" rel="noopener">Preview</a></td>
+          </tr>
+          <?php endforeach; ?>
+        </tbody>
+      </table>
+      <div class="d-flex justify-content-between align-items-center mt-2">
+        <small class="text-muted"><?= $outboxTotal ?> send(s)</small>
+        <?php if ($outboxStatus === 'waiting'): ?>
+        <button class="btn btn-sm btn-outline-danger" onclick="return confirm('Cancel the ticked waiting rows? No mail will be sent.');">Cancel selected</button>
+        <?php endif; ?>
+      </div>
+    </form>
+    <?php if ($outboxPages > 1): ?>
+    <nav class="mt-2"><ul class="pagination pagination-sm mb-0">
+      <?php for ($p = 1; $p <= $outboxPages; $p++): ?>
+      <li class="page-item <?= $p === $outboxPage ? 'active' : '' ?>"><a class="page-link" href="<?= $obLink($outboxStatus, $p) ?>"><?= $p ?></a></li>
+      <?php endfor; ?>
+    </ul></nav>
+    <?php endif; ?>
+  </div>
+  <?php endif; ?>
 
   <?php $monitorTemplates = $templates ?? []; $monitorSignatories = $signatories ?? []; ?>
   <div class="card mb-3"><div class="card-body">
@@ -212,6 +277,17 @@ $token = function_exists('csrf_token') ? csrf_token() : '';
       </tbody>
     </table>
   </div>
+  <?php if (($batchPages ?? 1) > 1): ?>
+  <nav>
+    <ul class="pagination">
+      <?php for ($p = 1; $p <= (int)$batchPages; $p++): ?>
+        <li class="page-item <?= $p === (int)($batchPage ?? 1) ? 'active' : '' ?>">
+          <a class="page-link" href="?r=admin_coa_monitor&bpage=<?= $p ?><?= $scopeEventId > 0 ? '&event_id=' . $scopeEventId : '' ?>"><?= $p ?></a>
+        </li>
+      <?php endfor; ?>
+    </ul>
+  </nav>
+  <?php endif; ?>
 
   <?php if (!empty($batchDetail)): ?>
   <div class="d-flex justify-content-between align-items-center mb-2">
@@ -237,7 +313,7 @@ $token = function_exists('csrf_token') ? csrf_token() : '';
   </p>
   <div class="d-flex gap-1 mb-2">
     <?php foreach (['all', 'sent', 'failed', 'queued', 'skipped'] as $f): ?>
-    <a class="btn btn-sm <?= $statusFilter === $f ? 'btn-primary' : 'btn-outline-secondary' ?>" href="?r=admin_coa_monitor&batch_id=<?= (int)$batchDetail['id'] ?>&status=<?= $f ?>&event_id=<?= (int)$batchDetail['event_id'] ?>"><?= ucfirst($f) ?></a>
+    <a class="btn btn-sm <?= $statusFilter === $f ? 'btn-primary' : 'btn-outline-secondary' ?>" href="?r=admin_coa_monitor&batch_id=<?= (int)$batchDetail['id'] ?>&status=<?= $f ?>&event_id=<?= (int)$batchDetail['event_id'] ?>&bpage=<?= (int)($batchPage ?? 1) ?>"><?= ucfirst($f) ?></a>
     <?php endforeach; ?>
   </div>
   <div class="table-responsive table-modern">
@@ -261,6 +337,17 @@ $token = function_exists('csrf_token') ? csrf_token() : '';
       </tbody>
     </table>
   </div>
+  <?php if (($recipPages ?? 1) > 1): ?>
+  <nav>
+    <ul class="pagination mt-2">
+      <?php for ($p = 1; $p <= (int)$recipPages; $p++): ?>
+        <li class="page-item <?= $p === (int)($recipPage ?? 1) ? 'active' : '' ?>">
+          <a class="page-link" href="?r=admin_coa_monitor&batch_id=<?= (int)$batchDetail['id'] ?>&status=<?= htmlspecialchars($statusFilter, ENT_QUOTES) ?>&event_id=<?= (int)$batchDetail['event_id'] ?>&page=<?= $p ?>&bpage=<?= (int)($batchPage ?? 1) ?>"><?= $p ?></a>
+        </li>
+      <?php endfor; ?>
+    </ul>
+  </nav>
+  <?php endif; ?>
   <?php endif; ?>
 </div>
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
