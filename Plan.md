@@ -2,7 +2,7 @@
 
 Turn the app into a multi-event platform: All Father creates events, assigns people and roles per event, each event has unique register/scan links, current attendance capabilities stay.
 
-**Status:** Multi-event is shipped. VPS is live. **Plan#4** through **Plan#12** are on production. **Current work is Plan#14** (registration page open performance), from a 2026-09-23 test: the gate registration page lags on open and burns CPU/GPU. **Plan#13** (per-event CoA outbox) stays open and follows. Build and verify on the **local copy first**, then mirror the same files to digitalhero. Current branch is `9232026_ultra`.
+**Status:** Multi-event is shipped. VPS is live. **Plan#4** through **Plan#12** are on production. **Plan#14** (registration page open performance) is implemented and browser-verified on the local copy (2026-09-23); the operator still needs to overlay the two gate files on digitalhero. **Plan#13** (per-event CoA outbox) is next. Current branch is `9232026_ultra`.
 
 **Audit:** 2026-09-14 closed multi-event leftovers. 2026-09-20 landed Settings merge, script gating, AuthService, flash plumbing, `env.example`. 2026-09-21 morning pass fixed door-scan CSRF, import-preview rotate, retry `e=` link, event-aware nav, main deploy docs. Same-day afternoon pass closed the five re-check nits (below).
 
@@ -10,7 +10,7 @@ Turn the app into a multi-event platform: All Father creates events, assigns peo
 
 ## Current state
 
-Multi-event is shipped. Plan#4 through Plan#12 are live, including the Hostinger cron for [`scripts/coa_process_scheduled.php`](scripts/coa_process_scheduled.php). **Next is Plan#14:** make the gate registration page open quickly and stay light. The door, the mark, and a moving circuit field stay; the double full-screen canvas loop does not. **Plan#13** (event outbox + scheduled template) remains the following item. Implement locally, then deploy the same files. Do not rebuild EventContext. Do not commit `.env` or `.env.vps`.
+Multi-event is shipped. Plan#4 through Plan#12 are live, including the Hostinger cron for [`scripts/coa_process_scheduled.php`](scripts/coa_process_scheduled.php). **Plan#14 is done locally (2026-09-23):** one animated canvas at a time, no per-frame `shadowBlur`, DPR caps (page 1 / door 1.5), halved seed counts, ~50ms pointer sampling, debounced resize, `?v=20260923`. **Next is Plan#13** (event outbox + scheduled template fix). Implement locally, then deploy the same files. Do not rebuild EventContext. Do not commit `.env` or `.env.vps`.
 
 **Plan numbers**
 
@@ -29,7 +29,7 @@ Multi-event is shipped. Plan#4 through Plan#12 are live, including the Hostinger
 | Plan#11 | Certificate send monitor, nav, and templates | Live on digitalhero.dictr2.cloud |
 | Plan#12 | CoA control center (templates, signatories, compose, schedule) | Live on digitalhero.dictr2.cloud; cron installed |
 | Plan#13 | Per-event CoA outbox (queued / sent / failed) + scheduled template fix | Open — after Plan#14 |
-| Plan#14 | Registration page open performance (one light circuit loop) | **Next — local first, then prod** |
+| Plan#14 | Registration page open performance (one light circuit loop) | Done (local, browser-verified 2026-09-23; prod overlay pending) |
 
 **Working notes**
 
@@ -89,33 +89,33 @@ On the server, [`RegisterController::show`](src/Controllers/RegisterController.p
 
 In [`assets/hack4gov-gate.js`](assets/hack4gov-gate.js):
 
-- [ ] Do not start `initPageCircuits` while `#eventGate` is on screen. Start it from `release()`, and immediately when the session skip already removed the gate.
-- [ ] Cancel the page `requestAnimationFrame` on `visibilitychange` hidden; restart when visible.
-- [ ] Remove per-frame `shadowBlur` from both `drawTrace` copies (page and door).
-- [ ] Cap page DPR at 1 and door DPR at 1.5.
-- [ ] Cut seed counts to about half.
-- [ ] Move pointer hit-testing out of the frame loop onto a ~50ms timer.
-- [ ] Debounce `resize` on both canvases.
+- [x] Do not start `initPageCircuits` while `#eventGate` is on screen. Start it from `release()`, and immediately when the session skip already removed the gate.
+- [x] Cancel the page `requestAnimationFrame` on `visibilitychange` hidden; restart when visible.
+- [x] Remove per-frame `shadowBlur` from both `drawTrace` copies (page and door).
+- [x] Cap page DPR at 1 and door DPR at 1.5.
+- [x] Cut seed counts to about half.
+- [x] Move pointer hit-testing out of the frame loop onto a ~50ms timer.
+- [x] Debounce `resize` on both canvases.
 
 **2. Do not add paint on the door**
 
-- [ ] [`views/partials/guest_gate.php`](views/partials/guest_gate.php) keeps one logo URL for both halves (`assets/hack4gov-door-logo.png`). Do not add another image.
-- [ ] Do not add `filter`, `backdrop-filter`, or new infinite animations in [`assets/hack4gov-gate.css`](assets/hack4gov-gate.css).
+- [x] [`views/partials/guest_gate.php`](views/partials/guest_gate.php) keeps one logo URL for both halves (`assets/hack4gov-door-logo.png`). Do not add another image.
+- [x] Do not add `filter`, `backdrop-filter`, or new infinite animations in [`assets/hack4gov-gate.css`](assets/hack4gov-gate.css). (File untouched this pass.)
 
 **3. Server open path, only if it is slow**
 
-- [ ] Time the two `DISTINCT` queries in `RegisterController::show` against the local Hack for Gov 5 event. Change them only if they dominate time to first byte (over ~30ms locally). Otherwise leave the SQL.
+- [x] Time the two `DISTINCT` queries in `RegisterController::show` against the local Hack for Gov 5 event. Change them only if they dominate time to first byte (over ~30ms locally). Otherwise leave the SQL. Measured 2026-09-23: ~0.3ms total with 0 rows; ~6-7ms total after seeding 3,000 participants — far under 30ms, so the SQL is unchanged.
 
 **Checks**
 
-- [ ] Local open of the Hack for Gov 5 register link: the form is usable without a multi-second stall.
-- [ ] While the door is up, only the door canvas is animating. After unlock, and on a return visit, only the page circuit is animating.
-- [ ] Backgrounding the tab stops the loop. Coming back starts it again.
-- [ ] `prefers-reduced-motion` still paints a static field and does not loop.
-- [ ] A phone-width viewport still shows a circuit field, and resizing does not hitch.
-- [ ] A non-gate event still does not load `hack4gov-gate.js`.
-- [ ] Door, mark, and circuit colors (gold `#FCD116`, blue `#0038A8`, red `#CE1126`) still read as Hack for Gov 5. Form steps and field names are unchanged.
-- [ ] Local signed off before any prod overlay.
+- [x] Local open of the Hack for Gov 5 register link: the form is usable without a multi-second stall. (responseEnd ~190ms, DCL ~340-685ms; form fields live behind and right after the door.)
+- [x] While the door is up, only the door canvas is animating. After unlock, and on a return visit, only the page circuit is animating. (Verified in a full-motion harness with a rAF counter: page canvas untouched while the door runs, door cleared at release+900ms, one loop after.)
+- [x] Backgrounding the tab stops the loop. Coming back starts it again. (Browser-verified that rAF freezes when the view is backgrounded and resumes on return; the explicit cancel/resume branch is the same cancel pattern as the verified `stopParticles` — this IAB never reports `document.hidden`, so the synthetic event could not be fired locally.)
+- [x] `prefers-reduced-motion` still paints a static field and does not loop. (OS reduce is on here: static paint confirmed on both the door window and the page field; no rAF loop.)
+- [x] A phone-width viewport still shows a circuit field, and resizing does not hitch. (390x844: canvas rebuilt to 354x767 and painted; an 8-event resize burst caused 0 immediate buffer rebuilds and exactly 1 after the 150ms debounce.)
+- [x] A non-gate event still does not load `hack4gov-gate.js`. (`test-event`: 0 gate script/CSS tags, 0 resource entries.)
+- [x] Door, mark, and circuit colors (gold `#FCD116`, blue `#0038A8`, red `#CE1126`) still read as Hack for Gov 5. Form steps and field names are unchanged. (Screenshots reviewed; canvas pixel sampling found all four trace tones; door and seal untouched.)
+- [x] Local signed off before any prod overlay. (Deploy for the operator: `assets/hack4gov-gate.js` + `views/partials/guest_head.php` with `?v=20260923`. No migration, no `.env` change.)
 
 Leave alone: Plan#13 outbox, registration field names, QR email, Report builder, EventContext. Do not commit `.env`.
 

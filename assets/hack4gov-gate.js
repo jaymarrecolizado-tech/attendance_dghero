@@ -5,6 +5,14 @@
  * gate partial renders server-side; this script only enhances it and never
  * blocks the form (guest_gate.php already removes the gate without JS or
  * when the session flag says it was unlocked before).
+ *
+ * One animated canvas at a time: while the door window runs, the page
+ * circuit stays unstarted; release() hands over to it (a session-skip
+ * return starts it immediately). The page loop pauses on visibilitychange
+ * hidden and resumes with one frame. Per-frame work stays light: no
+ * shadowBlur (a wider translucent stroke stands in for the glow), DPR
+ * capped at 1 (page) / 1.5 (door), halved seed counts, pointer lighting
+ * sampled on a ~50ms timer, and debounced resizes.
  */
 (function () {
   var reduceMotion = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
@@ -48,9 +56,11 @@
   }
 
   initCircuits();
-  initPageCircuits();
 
   /* ---------- Page-level circuit background ------------------------------ */
+  /* Not started while the door overlay is on screen: release() calls this
+     once the overlay leaves, and the session-skip path (no #eventGate left
+     in the DOM) starts it right away. */
 
   function initPageCircuits() {
     var canvas = document.getElementById('eventGatePageCircuits');
@@ -58,9 +68,10 @@
     var ctx = canvas.getContext('2d');
     var traces = [];
     var raf = 0;
+    var running = false;
     var w = 0;
     var h = 0;
-    var dpr = Math.min(window.devicePixelRatio || 1, 2);
+    var dpr = Math.min(window.devicePixelRatio || 1, 1);
     var pointerX = -9999;
     var pointerY = -9999;
     var colors = ['252,209,22', '46,196,255', '0,140,255', '255,150,48'];
@@ -79,7 +90,7 @@
 
     function buildTraces() {
       var step = w < 720 ? 72 : 56;
-      var count = w < 720 ? 36 : 84;
+      var count = w < 720 ? 18 : 40;
       traces = [];
       for (var i = 0; i < count; i++) {
         var horiz = Math.random() < 0.5;
@@ -92,14 +103,15 @@
         var bend = (1 + Math.floor(Math.random() * 3)) * step;
         var color = colors[i % colors.length];
         var phase = Math.random();
-        traces.push({ x1: x, y1: y, x2: x2, y2: y2, color: color, phase: phase });
+        traces.push({ x1: x, y1: y, x2: x2, y2: y2, color: color, phase: phase, lit: false });
         traces.push({
           x1: x2,
           y1: y2,
           x2: clamp(horiz ? x2 : x2 + (Math.random() < 0.5 ? bend : -bend), w),
           y2: clamp(horiz ? y2 + (Math.random() < 0.5 ? bend : -bend) : y2, h),
           color: color,
-          phase: phase
+          phase: phase,
+          lit: false
         });
       }
     }
@@ -114,7 +126,17 @@
       return Math.sqrt((px - sx) * (px - sx) + (py - sy) * (py - sy));
     }
 
-    function drawTrace(t, now, lit) {
+    // Pointer lighting is sampled here on a timer, not measured per segment
+    // inside the animation frame.
+    function hitTest() {
+      var far = pointerX < -9000;
+      for (var i = 0; i < traces.length; i++) {
+        traces[i].lit = !far && distToSeg(pointerX, pointerY, traces[i]) < 150;
+      }
+    }
+
+    function drawTrace(t, now) {
+      var lit = t.lit;
       var dx = t.x2 - t.x1;
       var dy = t.y2 - t.y1;
       ctx.save();
@@ -131,10 +153,6 @@
         var u = ((now * speed) + t.phase) % 1;
         var span = lit ? 0.36 : 0.2;
         var u0 = u - span;
-        ctx.strokeStyle = 'rgba(' + t.color + ',1)';
-        ctx.lineWidth = lit ? 2.8 : 2;
-        ctx.shadowColor = 'rgba(' + t.color + ',1)';
-        ctx.shadowBlur = lit ? 22 : 14;
         ctx.beginPath();
         if (u0 < 0) {
           ctx.moveTo(t.x1, t.y1);
@@ -145,6 +163,13 @@
           ctx.moveTo(t.x1 + dx * u0, t.y1 + dy * u0);
           ctx.lineTo(t.x1 + dx * u, t.y1 + dy * u);
         }
+        // Glow without shadowBlur: one wide translucent pass under the
+        // bright traveling dash.
+        ctx.strokeStyle = 'rgba(' + t.color + ',0.22)';
+        ctx.lineWidth = lit ? 6 : 4.5;
+        ctx.stroke();
+        ctx.strokeStyle = 'rgba(' + t.color + ',1)';
+        ctx.lineWidth = lit ? 2.8 : 2;
         ctx.stroke();
         ctx.fillStyle = '#fff';
         ctx.beginPath();
@@ -152,8 +177,6 @@
         ctx.fill();
       }
 
-      ctx.shadowColor = 'rgba(' + t.color + ',0.95)';
-      ctx.shadowBlur = lit ? 16 : 8;
       ctx.fillStyle = 'rgba(' + t.color + ',' + (lit ? '1' : '0.85') + ')';
       ctx.beginPath();
       ctx.arc(t.x1, t.y1, lit ? 3.5 : 2.2, 0, Math.PI * 2);
@@ -161,21 +184,31 @@
       ctx.restore();
     }
 
-    function frame(now) {
+    function drawFrame(now) {
       ctx.clearRect(0, 0, w, h);
-      for (var i = 0; i < traces.length; i++) {
-        var t = traces[i];
-        var lit = !reduceMotion && distToSeg(pointerX, pointerY, t) < 150;
-        drawTrace(t, now || 0, lit);
-      }
-      if (!reduceMotion) raf = window.requestAnimationFrame(frame);
+      for (var i = 0; i < traces.length; i++) drawTrace(traces[i], now || 0);
+    }
+
+    function frame(now) {
+      raf = 0;
+      if (!running) return;
+      drawFrame(now);
+      raf = window.requestAnimationFrame(frame);
     }
 
     function start() {
       sizeCanvas();
       buildTraces();
-      if (raf) window.cancelAnimationFrame(raf);
-      raf = window.requestAnimationFrame(frame);
+      hitTest();
+      if (reduceMotion) {
+        drawFrame(0); // static field, no loop
+        return;
+      }
+      if (document.hidden) return; // visibilitychange resumes the loop
+      if (!running) {
+        running = true;
+        raf = window.requestAnimationFrame(frame);
+      }
     }
 
     document.addEventListener('pointermove', function (e) {
@@ -183,14 +216,42 @@
       pointerY = e.clientY;
     }, { passive: true });
 
-    window.addEventListener('resize', start);
+    if (!reduceMotion) window.setInterval(hitTest, 50);
+
+    document.addEventListener('visibilitychange', function () {
+      if (document.hidden) {
+        running = false;
+        if (raf) window.cancelAnimationFrame(raf);
+        raf = 0;
+        return;
+      }
+      // Back on screen: one frame restarts the loop over the same field.
+      if (!reduceMotion && !running) {
+        running = true;
+        raf = window.requestAnimationFrame(frame);
+      }
+    });
+
+    // A drag-resize must not rebuild the buffer on every event.
+    var resizeTimer = 0;
+    window.addEventListener('resize', function () {
+      window.clearTimeout(resizeTimer);
+      resizeTimer = window.setTimeout(start, 150);
+    });
+
     start();
   }
 
   /* ---------- Door gate (only when the overlay rendered) ----------------- */
 
   var gate = document.getElementById('eventGate');
-  if (!gate) return;
+  if (!gate) {
+    // guest_gate.php's inline script already removed the overlay for this
+    // browser session (or no gate rendered): the page circuit is the only
+    // canvas, so it starts now instead of waiting for a door release.
+    initPageCircuits();
+    return;
+  }
 
   var slug = gate.getAttribute('data-event-slug') || 'event';
   var hud = document.getElementById('eventGateHud');
@@ -207,6 +268,8 @@
     gate.classList.add('done');
     gate.setAttribute('aria-hidden', 'true');
     document.body.classList.remove('gate-pending');
+    // The door window is leaving, so the page circuit takes over now.
+    initPageCircuits();
     try {
       sessionStorage.setItem('gateUnlocked:' + slug, '1');
     } catch (e) { /* storage unavailable: gate just re-shows next load */ }
@@ -263,9 +326,10 @@
   var traces = [];
   var raf = 0;
   var running = false;
+  var hitTimer = 0;
   var w = 0;
   var h = 0;
-  var dpr = Math.min(window.devicePixelRatio || 1, 2);
+  var dpr = Math.min(window.devicePixelRatio || 1, 1.5);
   var pointerX = -9999;
   var pointerY = -9999;
   var COLORS = ['252,209,22', '46,196,255', '0,140,255', '255,150,48'];
@@ -284,7 +348,7 @@
 
   function spawn() {
     var step = w < 720 ? 70 : 54;
-    var count = w < 720 ? 28 : 64;
+    var count = w < 720 ? 14 : 28;
     traces = [];
     for (var i = 0; i < count; i++) {
       var horiz = Math.random() < 0.5;
@@ -297,14 +361,15 @@
       var bend = (1 + Math.floor(Math.random() * 3)) * step;
       var color = COLORS[i % COLORS.length];
       var phase = Math.random();
-      traces.push({ x1: x, y1: y, x2: x2, y2: y2, color: color, phase: phase });
+      traces.push({ x1: x, y1: y, x2: x2, y2: y2, color: color, phase: phase, lit: false });
       traces.push({
         x1: x2,
         y1: y2,
         x2: clamp(horiz ? x2 : x2 + (Math.random() < 0.5 ? bend : -bend), w),
         y2: clamp(horiz ? y2 + (Math.random() < 0.5 ? bend : -bend) : y2, h),
         color: color,
-        phase: phase
+        phase: phase,
+        lit: false
       });
     }
   }
@@ -319,7 +384,16 @@
     return Math.sqrt((px - sx) * (px - sx) + (py - sy) * (py - sy));
   }
 
-  function drawTrace(t, now, lit) {
+  // Pointer lighting sampled on a timer while the window runs, not per frame.
+  function hitTest() {
+    var far = pointerX < -9000;
+    for (var i = 0; i < traces.length; i++) {
+      traces[i].lit = !far && distToSeg(pointerX, pointerY, traces[i]) < 140;
+    }
+  }
+
+  function drawTrace(t, now) {
+    var lit = t.lit;
     var dx = t.x2 - t.x1;
     var dy = t.y2 - t.y1;
     ctx.save();
@@ -335,10 +409,6 @@
       var u = ((now * speed) + t.phase) % 1;
       var span = lit ? 0.34 : 0.18;
       var u0 = u - span;
-      ctx.strokeStyle = 'rgba(' + t.color + ',1)';
-      ctx.lineWidth = lit ? 3 : 2.1;
-      ctx.shadowColor = 'rgba(' + t.color + ',1)';
-      ctx.shadowBlur = lit ? 20 : 12;
       ctx.beginPath();
       if (u0 < 0) {
         ctx.moveTo(t.x1, t.y1);
@@ -349,14 +419,18 @@
         ctx.moveTo(t.x1 + dx * u0, t.y1 + dy * u0);
         ctx.lineTo(t.x1 + dx * u, t.y1 + dy * u);
       }
+      // Glow without shadowBlur: one wide translucent pass under the dash.
+      ctx.strokeStyle = 'rgba(' + t.color + ',0.24)';
+      ctx.lineWidth = lit ? 6.5 : 5;
+      ctx.stroke();
+      ctx.strokeStyle = 'rgba(' + t.color + ',1)';
+      ctx.lineWidth = lit ? 3 : 2.1;
       ctx.stroke();
       ctx.fillStyle = '#fff';
       ctx.beginPath();
       ctx.arc(t.x1 + dx * u, t.y1 + dy * u, lit ? 3.4 : 2.3, 0, Math.PI * 2);
       ctx.fill();
     }
-    ctx.shadowColor = 'rgba(' + t.color + ',0.9)';
-    ctx.shadowBlur = lit ? 14 : 7;
     ctx.fillStyle = 'rgba(' + t.color + ',' + (lit ? '1' : '0.85') + ')';
     ctx.beginPath();
     ctx.arc(t.x1, t.y1, lit ? 3.2 : 2.1, 0, Math.PI * 2);
@@ -367,12 +441,8 @@
   function step(now) {
     if (!running) return;
     ctx.clearRect(0, 0, w, h);
-    for (var i = 0; i < traces.length; i++) {
-      var t = traces[i];
-      var lit = !reduceMotion && distToSeg(pointerX, pointerY, t) < 140;
-      drawTrace(t, now || 0, lit);
-    }
-    if (!reduceMotion) raf = window.requestAnimationFrame(step);
+    for (var i = 0; i < traces.length; i++) drawTrace(traces[i], now || 0);
+    raf = window.requestAnimationFrame(step);
   }
 
   function startParticles() {
@@ -380,10 +450,13 @@
     running = true;
     sizeCanvas();
     spawn();
+    hitTest();
     if (reduceMotion) {
-      for (var i = 0; i < traces.length; i++) drawTrace(traces[i], 0, false);
+      for (var i = 0; i < traces.length; i++) drawTrace(traces[i], 0);
       return;
     }
+    if (!hitTimer) hitTimer = window.setInterval(hitTest, 50);
+    if (raf) window.cancelAnimationFrame(raf);
     raf = window.requestAnimationFrame(step);
   }
 
@@ -391,6 +464,10 @@
     running = false;
     if (raf) window.cancelAnimationFrame(raf);
     raf = 0;
+    if (hitTimer) {
+      window.clearInterval(hitTimer);
+      hitTimer = 0;
+    }
     ctx.clearRect(0, 0, w, h);
   }
 
@@ -406,14 +483,20 @@
     }
   }, { passive: true });
 
+  // A drag-resize must not rebuild the buffer on every event.
+  var resizeTimer = 0;
   window.addEventListener('resize', function () {
-    if (!running) return;
-    sizeCanvas();
-    spawn();
-    if (reduceMotion) {
-      ctx.clearRect(0, 0, w, h);
-      for (var i = 0; i < traces.length; i++) drawTrace(traces[i], 0, false);
-    }
+    window.clearTimeout(resizeTimer);
+    resizeTimer = window.setTimeout(function () {
+      if (!running) return;
+      sizeCanvas();
+      spawn();
+      hitTest();
+      if (reduceMotion) {
+        ctx.clearRect(0, 0, w, h);
+        for (var i = 0; i < traces.length; i++) drawTrace(traces[i], 0);
+      }
+    }, 150);
   });
 
   startParticles();
