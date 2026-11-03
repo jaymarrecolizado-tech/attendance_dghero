@@ -222,22 +222,26 @@ class RegisterController
             return;
         }
 
-        $contactEmail = $clean['email'] ?? $clean['office_email'] ?? '';
-        $to = $contactEmail ?: '';
-        if ($to !== '') {
-            $eventName = trim((string)($event['name'] ?? ''));
-            $subject = Mailer::qrNoticeSubject($eventName);
-            $body = Mailer::qrNoticeHtml((string)($clean['first_name'] ?? ''), $eventName, Mailer::qrNoticeCopy($eventName));
-            $sent = Mailer::send($to, $subject, $body, $qrPath);
-            \App\Services\Logger::log(null, $sent ? 'email_sent' : 'email_failed', ['to'=>$to]);
-        }
-
         if (!isset($_SESSION['qr_allowed'])) $_SESSION['qr_allowed'] = [];
         $_SESSION['qr_allowed'][$uuid] = true;
         if (function_exists('csrf_rotate')) {
             csrf_rotate();
         }
         header('Location: ?r=register_success&uuid=' . urlencode($uuid) . '&e=' . urlencode($slug));
+
+        $contactEmail = $clean['email'] ?? $clean['office_email'] ?? '';
+        $to = $contactEmail ?: '';
+        $eventName = trim((string)($event['name'] ?? ''));
+        $firstName = (string)($clean['first_name'] ?? '');
+        self::afterResponse(static function () use ($to, $eventName, $firstName, $qrPath): void {
+            if ($to === '') {
+                return;
+            }
+            $subject = Mailer::qrNoticeSubject($eventName);
+            $body = Mailer::qrNoticeHtml($firstName, $eventName, Mailer::qrNoticeCopy($eventName));
+            $sent = Mailer::send($to, $subject, $body, $qrPath);
+            \App\Services\Logger::log(null, $sent ? 'email_sent' : 'email_failed', ['to' => $to]);
+        });
         exit;
     }
 
@@ -333,5 +337,26 @@ class RegisterController
             return $value;
         }
         return $allowCustom ? $value : '';
+    }
+
+    /** Close the HTTP response so SMTP cannot stall the success page. */
+    private static function afterResponse(callable $then): void
+    {
+        session_write_close();
+        ignore_user_abort(true);
+        if (function_exists('fastcgi_finish_request')) {
+            fastcgi_finish_request();
+            $then();
+            return;
+        }
+        if (!headers_sent()) {
+            header('Connection: close');
+            header('Content-Length: 0');
+        }
+        while (ob_get_level() > 0) {
+            ob_end_flush();
+        }
+        flush();
+        $then();
     }
 }

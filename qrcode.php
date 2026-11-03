@@ -25,6 +25,22 @@ try {
         throw new Exception('Bootstrap file not found');
     }
 
+    if (file_exists(__DIR__ . DIRECTORY_SEPARATOR . 'vendor' . DIRECTORY_SEPARATOR . 'autoload.php')) {
+        require_once __DIR__ . DIRECTORY_SEPARATOR . 'vendor' . DIRECTORY_SEPARATOR . 'autoload.php';
+    }
+    spl_autoload_register(function ($class) {
+        $prefix = 'App\\';
+        $base = __DIR__ . DIRECTORY_SEPARATOR . 'src' . DIRECTORY_SEPARATOR;
+        if (strncmp($prefix, $class, strlen($prefix)) !== 0) {
+            return;
+        }
+        $rel = str_replace('\\', DIRECTORY_SEPARATOR, substr($class, strlen($prefix)));
+        $file = $base . $rel . '.php';
+        if (is_file($file)) {
+            require $file;
+        }
+    });
+
     $uuid = isset($_GET['uuid']) ? (string)$_GET['uuid'] : '';
     if ($uuid === '') {
         http_response_code(400);
@@ -42,21 +58,6 @@ try {
     } else {
         // Also allow if we can verify the UUID exists in database
         try {
-            // Load autoloader
-            if (file_exists(__DIR__ . DIRECTORY_SEPARATOR . 'vendor' . DIRECTORY_SEPARATOR . 'autoload.php')) {
-                require __DIR__ . DIRECTORY_SEPARATOR . 'vendor' . DIRECTORY_SEPARATOR . 'autoload.php';
-            }
-            
-            // Register autoloader
-            spl_autoload_register(function($class){
-                $prefix = 'App\\';
-                $base = __DIR__ . DIRECTORY_SEPARATOR . 'src' . DIRECTORY_SEPARATOR;
-                if (strncmp($prefix, $class, strlen($prefix)) !== 0) return;
-                $rel = str_replace('\\', DIRECTORY_SEPARATOR, substr($class, strlen($prefix)));
-                $file = $base . $rel . '.php';
-                if (is_file($file)) require $file;
-            });
-            
             $pdo = \App\Services\Database::pdo();
             $stmt = $pdo->prepare('SELECT uuid FROM participants WHERE uuid = ?');
             $stmt->execute([$uuid]);
@@ -82,7 +83,10 @@ try {
     // QrService saves to: project_root/storage/qrcodes/{first2chars}/{uuid}.png
     // On Hostinger, project root is public_html, so path is: __DIR__/storage/qrcodes/...
     $shard = substr($uuid, 0, 2);
-    $path = __DIR__ . DIRECTORY_SEPARATOR . 'storage' . DIRECTORY_SEPARATOR . 'qrcodes' . DIRECTORY_SEPARATOR . $shard . DIRECTORY_SEPARATOR . $uuid . '.png';
+    $path = \App\Services\QrService::pathFor($uuid);
+    if (\App\Services\QrService::needsRebuild($path)) {
+        $path = \App\Services\QrService::generate('PART|' . $uuid, $uuid);
+    }
 
     if (!is_file($path)) {
         // Debug mode: show diagnostic info

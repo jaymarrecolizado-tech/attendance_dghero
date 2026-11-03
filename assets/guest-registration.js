@@ -51,7 +51,7 @@
     const pct = (currentStep / totalSteps) * 100;
     if (stepperProgress) stepperProgress.style.width = pct + '%';
     if (stepperLabel) {
-      const names = ['Data privacy', 'Personal details', 'Work information', 'Contact & submit'];
+      const names = ['Personal details', 'Work information', 'Contact', 'Data privacy'];
       stepperLabel.textContent = 'Step ' + currentStep + ' of ' + totalSteps + ' - ' + (names[currentStep - 1] || '');
     }
     stepperTabs.forEach((tab) => {
@@ -107,7 +107,7 @@
       if (field.hasAttribute('required') && !field.checkValidity()) return false;
       if (field.type === 'email' && field.value.trim() && !field.checkValidity()) return false;
     }
-    if (step === 3 && !validatePickerField(agencyInput, agencyOther)) return false;
+    if (step === 2 && !validatePickerField(agencyInput, agencyOther)) return false;
     return true;
   }
 
@@ -149,7 +149,8 @@
       btn.disabled = !stepOk;
       btn.setAttribute('aria-disabled', stepOk ? 'false' : 'true');
     });
-    const canRegister = isFormComplete();
+    const agreed = !!form.querySelector('#privacy_agree:checked');
+    const canRegister = isFormComplete() && agreed;
     [btnRegister, btnRegisterSticky].forEach((btn) => {
       if (!btn) return;
       btn.disabled = !canRegister;
@@ -174,7 +175,7 @@
         firstInvalid.classList.add('shake');
         setTimeout(() => firstInvalid.classList.remove('shake'), 300);
         firstInvalid.focus();
-      } else if (step === 3 && agencyInput) {
+      } else if (step === 2 && agencyInput) {
         showStepError('Please select your agency. Choose Other if not listed.');
         document.getElementById('agencyPickerBtn')?.focus();
       }

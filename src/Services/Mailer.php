@@ -54,6 +54,7 @@ class Mailer
                     $mail->Username = $user;
                     $mail->Password = $pass;
                     $mail->SMTPSecure = $secure === 'ssl' ? 'ssl' : 'tls';
+                    $mail->Timeout = 8;
                     $mail->setFrom($from, $fromName ?? '');
                     $mail->addAddress($to);
                     $mail->isHTML(true);
@@ -95,12 +96,12 @@ class Mailer
                 return false;
             }
             $transport = $secure === 'ssl' ? 'ssl://' : 'tcp://';
-            $sock = @stream_socket_client($transport . $host . ':' . $port, $errno, $errstr, 15);
+            $sock = @stream_socket_client($transport . $host . ':' . $port, $errno, $errstr, 8);
             if (!$sock) {
                 self::$lastError = 'SMTP connect failed: ' . ($errstr !== '' ? $errstr : 'error ' . $errno);
                 return false;
             }
-            stream_set_timeout($sock, 15);
+            stream_set_timeout($sock, 8);
             $fail = function (string $reason) use ($sock) {
                 self::$lastError = $reason;
                 fclose($sock);

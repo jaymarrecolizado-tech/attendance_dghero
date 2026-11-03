@@ -29,18 +29,18 @@ require __DIR__ . DIRECTORY_SEPARATOR . 'partials' . DIRECTORY_SEPARATOR . 'gues
       <div class="guest-form-wrap">
         <div class="guest-form-card">
           <h2 class="guest-form-title">Participant Registration</h2>
-          <p class="guest-form-subtitle">Agree to the privacy notice, then complete the form to receive your check-in QR code.<?php if ($eventName !== ''): ?> Event: <strong><?= htmlspecialchars($eventName, ENT_QUOTES) ?></strong><?php endif; ?></p>
+          <p class="guest-form-subtitle">Complete your details, then read and agree to the privacy notice. Complete Registration turns on only after you agree.<?php if ($eventName !== ''): ?> Event: <strong><?= htmlspecialchars($eventName, ENT_QUOTES) ?></strong><?php endif; ?></p>
 
           <div class="guest-stepper" aria-label="Registration progress">
             <div class="guest-stepper-progress" aria-hidden="true">
               <div class="guest-stepper-progress-bar" id="stepperProgress" style="width:25%"></div>
             </div>
-            <p class="guest-stepper-label guest-stepper-label-mobile" id="stepperLabel">Step 1 of 4 - Data privacy</p>
+            <p class="guest-stepper-label guest-stepper-label-mobile" id="stepperLabel">Step 1 of 4 - Personal details</p>
             <div class="guest-stepper-tabs" role="tablist">
-              <button type="button" class="guest-stepper-tab is-active" data-step="1" role="tab" aria-current="step">Privacy</button>
-              <button type="button" class="guest-stepper-tab" data-step="2" role="tab">Personal</button>
-              <button type="button" class="guest-stepper-tab" data-step="3" role="tab">Work</button>
-              <button type="button" class="guest-stepper-tab" data-step="4" role="tab">Contact</button>
+              <button type="button" class="guest-stepper-tab is-active" data-step="1" role="tab" aria-current="step">Personal</button>
+              <button type="button" class="guest-stepper-tab" data-step="2" role="tab">Work</button>
+              <button type="button" class="guest-stepper-tab" data-step="3" role="tab">Contact</button>
+              <button type="button" class="guest-stepper-tab" data-step="4" role="tab">Privacy</button>
             </div>
           </div>
 
@@ -50,18 +50,8 @@ require __DIR__ . DIRECTORY_SEPARATOR . 'partials' . DIRECTORY_SEPARATOR . 'gues
             <input type="hidden" name="csrf" value="<?= htmlspecialchars($token, ENT_QUOTES) ?>">
             <input type="hidden" name="e" value="<?= htmlspecialchars($eventSlug, ENT_QUOTES) ?>">
 
+            <!-- Step 1: Personal -->
             <fieldset class="reg-step is-active" data-step="1">
-              <legend>Data privacy</legend>
-              <?php $privacyCompact = true; require __DIR__ . DIRECTORY_SEPARATOR . 'partials' . DIRECTORY_SEPARATOR . 'privacy_notice.php'; ?>
-              <p class="small mb-2"><a href="?r=privacy&amp;e=<?= urlencode($eventSlug) ?>" target="_blank" rel="noopener">Open the full notice</a></p>
-              <div class="form-check">
-                <input class="form-check-input" type="checkbox" value="1" name="privacy_agree" id="privacy_agree" required <?= !empty($posted['privacy_agree']) ? 'checked' : '' ?>>
-                <label class="form-check-label small" for="privacy_agree"><?= htmlspecialchars(\App\Services\PrivacyNotice::checkboxLabel(), ENT_QUOTES) ?></label>
-              </div>
-            </fieldset>
-
-            <!-- Step 2: Personal -->
-            <fieldset class="reg-step" data-step="2">
               <legend>Personal details</legend>
               <div class="row g-3 g-md-4">
                 <div class="col-12 col-md-6">
@@ -97,8 +87,8 @@ require __DIR__ . DIRECTORY_SEPARATOR . 'partials' . DIRECTORY_SEPARATOR . 'gues
               </div>
             </fieldset>
 
-            <!-- Step 3: Work -->
-            <fieldset class="reg-step" data-step="3">
+            <!-- Step 2: Work -->
+            <fieldset class="reg-step" data-step="2">
               <legend>Work information</legend>
               <div class="row g-3 g-md-4">
                 <div class="col-12 col-md-6">
@@ -152,20 +142,31 @@ require __DIR__ . DIRECTORY_SEPARATOR . 'partials' . DIRECTORY_SEPARATOR . 'gues
               </div>
             </fieldset>
 
-            <!-- Step 4: Contact -->
-            <fieldset class="reg-step" data-step="4">
-              <legend>Contact and submit</legend>
-              <div class="guest-review" aria-label="Registration summary">
-                <span class="guest-review-chip"><strong>Name:</strong> <span id="reviewName">-</span></span>
-                <span class="guest-review-chip"><strong>Agency:</strong> <span id="reviewAgency">-</span></span>
-                <span class="guest-review-chip"><strong>Email:</strong> <span id="reviewEmail">-</span></span>
-              </div>
+            <!-- Step 3: Contact -->
+            <fieldset class="reg-step" data-step="3">
+              <legend>Contact</legend>
               <div class="row g-3 g-md-4">
                 <div class="col-12 col-md-6">
                   <label class="form-label" for="contact_no">Contact No <span class="req" aria-hidden="true">*</span></label>
                   <input name="contact_no" id="contact_no" class="form-control" type="tel" inputmode="tel" autocomplete="tel" required pattern="[0-9+\-\s]{7,20}" title="7-20 digits (may include +, -, and spaces)" value="<?= htmlspecialchars($posted['contact_no'] ?? '', ENT_QUOTES) ?>">
                   <p class="field-hint">Mobile or office number, 7-20 digits, so we can reach you about this event.</p>
                 </div>
+              </div>
+            </fieldset>
+
+            <!-- Step 4: Privacy — Register stays off until they agree -->
+            <fieldset class="reg-step" data-step="4">
+              <legend>Data privacy</legend>
+              <div class="guest-review" aria-label="Registration summary">
+                <span class="guest-review-chip"><strong>Name:</strong> <span id="reviewName">-</span></span>
+                <span class="guest-review-chip"><strong>Agency:</strong> <span id="reviewAgency">-</span></span>
+                <span class="guest-review-chip"><strong>Email:</strong> <span id="reviewEmail">-</span></span>
+              </div>
+              <?php $privacyCompact = true; require __DIR__ . DIRECTORY_SEPARATOR . 'partials' . DIRECTORY_SEPARATOR . 'privacy_notice.php'; ?>
+              <p class="small mb-2"><a href="?r=privacy&amp;e=<?= urlencode($eventSlug) ?>" target="_blank" rel="noopener">Open the full notice</a></p>
+              <div class="form-check">
+                <input class="form-check-input" type="checkbox" value="1" name="privacy_agree" id="privacy_agree" required <?= !empty($posted['privacy_agree']) ? 'checked' : '' ?>>
+                <label class="form-check-label small" for="privacy_agree"><?= htmlspecialchars(\App\Services\PrivacyNotice::checkboxLabel(), ENT_QUOTES) ?></label>
               </div>
             </fieldset>
 
