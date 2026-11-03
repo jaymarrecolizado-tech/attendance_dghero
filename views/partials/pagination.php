@@ -35,7 +35,7 @@ $pagerHref = static function (array $query, string $key, int $pageNum) use ($pag
     return $pagerHash !== '' ? $url . '#' . rawurlencode($pagerHash) : $url;
 };
 ?>
-<div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mt-2">
+<div class="pager-bar">
   <div class="d-flex flex-wrap align-items-center gap-2">
     <small class="text-muted">Showing <?= (int)$pager['from'] ?>–<?= (int)$pager['to'] ?> of <?= (int)$pager['total'] ?></small>
     <label class="small text-muted mb-0" for="per-<?= htmlspecialchars($pagerKey, ENT_QUOTES) ?>">Show</label>
@@ -60,11 +60,12 @@ $pagerHref = static function (array $query, string $key, int $pageNum) use ($pag
         <a class="page-link" href="<?= htmlspecialchars($pagerHref($pagerQuery, $pagerKey, $page - 1), ENT_QUOTES) ?>">Previous</a>
         <?php endif; ?>
       </li>
+      <li class="page-item disabled pager-pages-compact"><span class="page-link">Page <?= $page ?> of <?= $pages ?></span></li>
       <?php foreach ($window as $item): ?>
         <?php if ($item === null): ?>
-        <li class="page-item disabled"><span class="page-link">&hellip;</span></li>
+        <li class="page-item disabled pager-pages-full"><span class="page-link">&hellip;</span></li>
         <?php else: ?>
-        <li class="page-item<?= $item === $page ? ' active' : '' ?>">
+        <li class="page-item pager-pages-full<?= $item === $page ? ' active' : '' ?>">
           <a class="page-link" href="<?= htmlspecialchars($pagerHref($pagerQuery, $pagerKey, $item), ENT_QUOTES) ?>"><?= $item ?></a>
         </li>
         <?php endif; ?>

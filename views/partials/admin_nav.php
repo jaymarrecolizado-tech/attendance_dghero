@@ -53,6 +53,16 @@ $adminNavLinks = array_values(array_filter(
     $adminNavLinks,
     static fn(array $link): bool => in_array($effectiveRole, $link['roles'], true)
 ));
+$opsRoutes = ['admin_registrants', 'admin_attendance', 'scan', 'admin_attendance_gallery', 'admin_signature_sheet', 'register'];
+$navOps = [];
+$navAdmin = [];
+foreach ($adminNavLinks as $link) {
+    if (in_array($link['route'], $opsRoutes, true)) {
+        $navOps[] = $link;
+    } else {
+        $navAdmin[] = $link;
+    }
+}
 
 $current = $activeNav ?? '';
 $homeRoute = AuthService::loginHomeRoute($role);
@@ -61,14 +71,14 @@ $displayName = AuthService::displayName() ?? 'Staff';
 $csrfNav = function_exists('csrf_token') ? csrf_token() : '';
 $adminBrand = $navCurrent && !empty($navCurrent['name']) ? (string)$navCurrent['name'] : 'GovNet-Launching';
 ?>
-<nav class="navbar navbar-expand-lg navbar-dark py-2">
+<nav class="navbar navbar-expand-lg navbar-dark py-2 sticky-top">
   <div class="container">
     <a class="navbar-brand" href="?r=<?= htmlspecialchars($homeRoute, ENT_QUOTES) ?>"><?= htmlspecialchars($adminBrand, ENT_QUOTES) ?></a>
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#adminNavbar" aria-controls="adminNavbar" aria-expanded="false" aria-label="Toggle navigation">
       <span class="navbar-toggler-icon"></span>
     </button>
     <div class="collapse navbar-collapse justify-content-end" id="adminNavbar">
-      <div class="d-flex flex-wrap flex-lg-nowrap align-items-center gap-2 py-2 py-lg-0">
+      <div class="admin-nav-drawer d-flex flex-wrap flex-lg-nowrap align-items-center gap-2 py-2 py-lg-0">
         <?php if (count($navEvents) > 0): ?>
         <form method="post" action="?r=admin_events_switch" class="d-flex align-items-center gap-1">
           <input type="hidden" name="csrf" value="<?= htmlspecialchars($csrfNav, ENT_QUOTES) ?>">
@@ -83,16 +93,30 @@ $adminBrand = $navCurrent && !empty($navCurrent['name']) ? (string)$navCurrent['
         </form>
         <?php endif; ?>
         <span class="badge text-bg-light text-dark"><?= htmlspecialchars($roleLabel, ENT_QUOTES) ?></span>
-        <span class="text-white-50 small d-none d-md-inline"><?= htmlspecialchars($displayName, ENT_QUOTES) ?></span>
-        <ul class="navbar-nav flex-row flex-wrap gap-1 mb-0">
-          <?php foreach ($adminNavLinks as $link): ?>
+        <span class="text-white-50 small d-none d-lg-inline"><?= htmlspecialchars($displayName, ENT_QUOTES) ?></span>
+        <ul class="navbar-nav admin-nav-list mb-0">
+          <?php if ($navOps !== []): ?>
+          <li class="admin-nav-group-label" aria-hidden="true">Day of</li>
+          <?php foreach ($navOps as $link): ?>
             <li class="nav-item">
               <a class="nav-link<?= $current === $link['route'] ? ' active' : '' ?>" <?= $current === $link['route'] ? 'aria-current="page"' : '' ?> href="?r=<?= htmlspecialchars($withEvent($link['route']), ENT_QUOTES) ?>"><?= htmlspecialchars($link['label'], ENT_QUOTES) ?></a>
             </li>
           <?php endforeach; ?>
+          <?php endif; ?>
+          <?php if ($navAdmin !== []): ?>
+          <li class="admin-nav-group-label" aria-hidden="true">Admin</li>
+          <?php foreach ($navAdmin as $link): ?>
+            <li class="nav-item">
+              <a class="nav-link<?= $current === $link['route'] ? ' active' : '' ?>" <?= $current === $link['route'] ? 'aria-current="page"' : '' ?> href="?r=<?= htmlspecialchars($withEvent($link['route']), ENT_QUOTES) ?>"><?= htmlspecialchars($link['label'], ENT_QUOTES) ?></a>
+            </li>
+          <?php endforeach; ?>
+          <?php endif; ?>
           <li class="nav-item"><a class="nav-link" href="?r=admin_logout">Logout</a></li>
         </ul>
       </div>
     </div>
   </div>
 </nav>
+<?php if (!defined('ADMIN_BOOTSTRAP_JS')): define('ADMIN_BOOTSTRAP_JS', true); ?>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+<?php endif; ?>

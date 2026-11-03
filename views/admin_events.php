@@ -9,15 +9,15 @@ $token = function_exists('csrf_token') ? csrf_token() : '';
 <html lang="en">
 <head>
   <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <title>Events</title>
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
-  <link href="assets/app.css" rel="stylesheet">
+  <link href="assets/app.css?v=20261103m" rel="stylesheet">
 </head>
 <body>
 <?php $activeNav = 'admin_events'; require __DIR__ . '/partials/admin_nav.php'; ?>
 <div class="container py-4">
-  <div class="d-flex justify-content-between align-items-center mb-3">
+  <div class="toolbar-stack flex-md-row justify-content-between align-items-md-center mb-3">
     <h1 class="h5">Events</h1>
     <div class="btn-group">
       <a class="btn btn-outline-secondary btn-sm" href="?r=admin_registrants">Registrants</a>
@@ -39,7 +39,7 @@ $token = function_exists('csrf_token') ? csrf_token() : '';
     <div class="col-6 col-md-1"><div class="form-check mt-2"><input class="form-check-input" type="checkbox" name="enforce" id="enf" checked><label class="form-check-label" for="enf">Single</label></div></div>
     <div class="col-12 col-md-1"><button class="btn btn-primary w-100" aria-label="Add event">Add</button></div>
   </form>
-  <div class="table-responsive table-modern">
+  <div class="table-responsive table-modern table-sticky-first">
     <table class="table table-sm align-middle">
       <thead><tr><th>#</th><th>Name</th><th>Slug</th><th>Status</th><th>Schedule</th><th>Links</th><th>Appearance</th><th>Staff</th><th>Actions</th></tr></thead>
       <tbody>
@@ -132,7 +132,7 @@ $token = function_exists('csrf_token') ? csrf_token() : '';
                 <p class="small text-muted mb-0">Leave the second date empty for one day. A range prints as September 22-24, 2026.</p>
                 <label class="form-label small text-muted mb-0 mt-1">Issued date</label>
                 <input name="coa_issue_date" type="date" class="form-control form-control-sm" aria-label="Certificate issued date" value="<?= htmlspecialchars(substr((string)($r['coa_issue_date'] ?? ''), 0, 10), ENT_QUOTES) ?>">
-                <p class="small text-muted mb-0">Printed on the Issued thisâ€¦ line. Empty uses the last day of the range.</p>
+                <p class="small text-muted mb-0">Printed on the Issued this… line. Empty uses the last day of the range.</p>
                 <label class="form-label small text-muted mb-0 mt-1">Signatory</label>
                 <select name="coa_signatory_id" class="form-select form-select-sm" aria-label="CoA signatory">
                   <option value="">Select a signatory</option>

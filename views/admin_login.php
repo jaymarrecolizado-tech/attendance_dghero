@@ -7,16 +7,16 @@ $token = function_exists('csrf_token') ? csrf_token() : '';
 <html lang="en">
 <head>
   <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <title>Admin Login</title>
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
-  <link href="assets/app.css" rel="stylesheet">
+  <link href="assets/app.css?v=20261103m" rel="stylesheet">
 </head>
 <body>
 <nav class="navbar navbar-expand-lg navbar-dark py-3">
   <div class="container"><a class="navbar-brand" href="?r=register">Event Attendance - Admin</a></div>
 </nav>
-<div class="container py-5">
+<div class="container py-4 py-md-5">
   <div class="row justify-content-center">
     <div class="col-12 col-lg-5">
       <div class="card p-4 p-md-5">

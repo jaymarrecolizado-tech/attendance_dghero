@@ -89,7 +89,7 @@ $sortTh = static function (string $key, string $label) use ($jobSort, $jobDir, $
   </div>
   <form id="privacyJobsForm">
     <input type="hidden" name="csrf" value="<?= htmlspecialchars($token, ENT_QUOTES) ?>">
-    <div class="table-responsive table-modern">
+    <div class="table-responsive table-modern table-sticky-first">
       <?php if ($privacyTab === 'jobs'): ?>
       <table class="table table-sm mb-0 align-middle">
         <thead>

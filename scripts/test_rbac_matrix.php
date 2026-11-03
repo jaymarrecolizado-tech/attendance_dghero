@@ -160,6 +160,7 @@ probeRoute($router, 'admin_settings', 'GET', [AuthService::ROLE_ADMIN], 'setting
 probeRoute($router, 'admin_registrants', 'GET', [AuthService::ROLE_ADMIN, AuthService::ROLE_CHECKER], 'registrants');
 probeRoute($router, 'admin_attendance', 'GET', [AuthService::ROLE_ADMIN, AuthService::ROLE_CHECKER], 'attendance');
 probeRoute($router, 'admin_signature_sheet', 'GET', [AuthService::ROLE_ADMIN, AuthService::ROLE_CHECKER], 'signature sheet');
+probeRoute($router, 'admin_signature_sheet_replicate_all', 'POST', [AuthService::ROLE_ADMIN, AuthService::ROLE_CHECKER], 'signature replicate all');
 probeRoute($router, 'admin_attendance_manual', 'POST', [AuthService::ROLE_ADMIN, AuthService::ROLE_CHECKER], 'attendance write');
 probeRoute($router, 'admin_seo_dashboard', 'GET', [AuthService::ROLE_ADMIN, AuthService::ROLE_SEO], 'seo dashboard');
 probeRoute($router, 'admin_users', 'GET', [AuthService::ROLE_ADMIN], 'users');

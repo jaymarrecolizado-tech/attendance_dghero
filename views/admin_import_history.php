@@ -5,10 +5,10 @@ declare(strict_types=1);
 <html lang="en">
 <head>
   <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <title>Import History</title>
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
-  <link href="assets/app.css" rel="stylesheet">
+  <link href="assets/app.css?v=20261103m" rel="stylesheet">
 </head>
 <body>
 <?php $activeNav = 'admin_import'; require __DIR__ . '/partials/admin_nav.php'; ?>
@@ -29,7 +29,7 @@ declare(strict_types=1);
       <li class="breadcrumb-item active" aria-current="page">History</li>
     </ol>
   </nav>
-  <div class="table-responsive table-modern">
+  <div class="table-responsive table-modern table-sticky-first">
     <table class="table table-sm align-middle">
       <thead>
         <tr><th>#</th><th>File</th><th>Action</th><th>Strategy</th><th>Counts</th><th>Stored CSV</th><th>Admin</th><th>Timestamp</th></tr>

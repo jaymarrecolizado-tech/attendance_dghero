@@ -231,6 +231,10 @@ return [
         'POST' => [AdminSignatureSheetController::class, 'replicate'],
         '_guards' => [$eventOps],
     ],
+    'admin_signature_sheet_replicate_all' => [
+        'POST' => [AdminSignatureSheetController::class, 'replicateAll'],
+        '_guards' => [$eventOps],
+    ],
     'admin_seo_dashboard' => [
         'GET' => [AdminSeoController::class, 'dashboard'],
         '_guards' => [$eventSeo],

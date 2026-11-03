@@ -5,10 +5,10 @@ declare(strict_types=1);
 <html lang="en">
 <head>
   <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <title>Export</title>
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
-  <link href="assets/app.css" rel="stylesheet">
+  <link href="assets/app.css?v=20261103m" rel="stylesheet">
 </head>
 <body>
 <?php $activeNav = 'admin_export'; require __DIR__ . '/partials/admin_nav.php'; ?>

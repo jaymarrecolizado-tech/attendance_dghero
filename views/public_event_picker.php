@@ -4,6 +4,7 @@ declare(strict_types=1);
 $mode = $mode ?? 'register';
 $isScan = $mode === 'scan';
 $guestTitle = $isScan ? 'Select Event for Check-in' : 'Select Your Event';
+$guestShowActions = $isScan;
 require __DIR__ . DIRECTORY_SEPARATOR . 'partials' . DIRECTORY_SEPARATOR . 'guest_head.php';
 $target = $isScan ? 'scan' : 'register';
 ?>

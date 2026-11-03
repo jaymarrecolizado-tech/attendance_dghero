@@ -7,10 +7,10 @@ use App\Services\EventContext;
 <html lang="en">
 <head>
   <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <title>Event Links</title>
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
-  <link href="assets/app.css" rel="stylesheet">
+  <link href="assets/app.css?v=20261103m" rel="stylesheet">
 </head>
 <body>
 <?php $activeNav = 'admin_event_links'; require __DIR__ . '/partials/admin_nav.php'; ?>
@@ -20,7 +20,7 @@ use App\Services\EventContext;
   <?php if (empty($events)): ?>
     <div class="alert alert-info">No events assigned to you yet. Ask the All Father for access.</div>
   <?php else: ?>
-  <div class="table-responsive table-modern">
+  <div class="table-responsive table-modern table-sticky-first">
     <table class="table table-sm align-middle">
       <thead><tr><th>Event</th><th>Status</th><th>Register link</th><th>Scan link</th></tr></thead>
       <tbody>

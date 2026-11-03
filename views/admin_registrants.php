@@ -3,21 +3,22 @@ declare(strict_types=1);
 $token = function_exists('csrf_token') ? csrf_token() : '';
 $flash = $_SESSION['flash'] ?? null;
 unset($_SESSION['flash']);
-$defaultMessage = 'Thank you for joining and registering for the event. Please keep this QR code for fast onsite check-in.';
+$eventName = trim((string)($event['name'] ?? ''));
+$defaultMessage = \App\Services\Mailer::qrNoticeCopy($eventName);
 ?>
 <!doctype html>
 <html lang="en">
 <head>
   <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <title>Registrants</title>
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
-  <link href="assets/app.css" rel="stylesheet">
+  <link href="assets/app.css?v=20261103m" rel="stylesheet">
 </head>
 <body>
 <?php $activeNav = 'admin_registrants'; require __DIR__ . '/partials/admin_nav.php'; ?>
 <div class="container py-4">
-  <div class="d-flex flex-column flex-md-row justify-content-between align-items-start align-items-md-center mb-4 gap-3">
+  <div class="toolbar-stack flex-md-row justify-content-between align-items-md-center mb-4">
     <div>
       <p class="text-uppercase text-muted mb-1" style="letter-spacing:.2em;font-size:.75rem;">Operations</p>
       <h1 class="page-heading h4 mb-0">Registrants</h1>
@@ -29,7 +30,6 @@ $defaultMessage = 'Thank you for joining and registering for the event. Please k
         <input type="number" name="batch" min="1" max="200" value="50" class="form-control form-control-sm" style="width:90px" title="Batch size">
         <button class="btn btn-outline-primary btn-sm px-3" type="submit">Generate Missing QRs</button>
       </form>
-      <a class="btn btn-outline-secondary btn-sm px-3" href="?r=admin_logout">Logout</a>
     </div>
   </div>
   <?php if ($flash): ?>
@@ -105,7 +105,7 @@ $defaultMessage = 'Thank you for joining and registering for the event. Please k
     </select>
   </div>
   <div class="mt-3">
-    <div class="table-responsive table-modern">
+    <div class="table-responsive table-modern table-sticky-first">
       <table class="table table-sm align-middle">
         <thead>
           <tr><th>#</th><th>Name</th><th>Agency</th><th>Sector</th><th>Email</th><th>VIP</th><th>UUID</th><th>Actions</th></tr>

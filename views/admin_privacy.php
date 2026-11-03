@@ -9,10 +9,10 @@ $token = function_exists('csrf_token') ? csrf_token() : '';
 <html lang="en">
 <head>
   <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <title>Privacy</title>
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
-  <link href="assets/app.css" rel="stylesheet">
+  <link href="assets/app.css?v=20261103m" rel="stylesheet">
 </head>
 <body>
 <?php require __DIR__ . DIRECTORY_SEPARATOR . 'partials' . DIRECTORY_SEPARATOR . 'admin_nav.php'; ?>
@@ -22,7 +22,7 @@ $token = function_exists('csrf_token') ? csrf_token() : '';
   <div class="alert alert-<?= htmlspecialchars((string)$flash['type'], ENT_QUOTES) ?> py-2"><?= htmlspecialchars((string)$flash['message'], ENT_QUOTES) ?></div>
   <?php endif; ?>
   <p class="text-muted small">Live participant data is removed 15 days after the event ends (Asia/Manila). An encrypted zip stays on the VPS. Download it here and copy it to the office Drive folder if you want an extra copy. Type the event name to purge or restore.</p>
-  <div class="table-responsive table-modern mb-4">
+  <div class="table-responsive table-modern table-sticky-first mb-4">
     <table class="table table-sm align-middle mb-0">
       <thead><tr><th>Event</th><th>Ends</th><th>People</th><th>Purge</th><th>Drive</th><th></th></tr></thead>
       <tbody>

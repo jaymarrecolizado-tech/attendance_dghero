@@ -12,10 +12,11 @@ $scanTheme = isset($event) ? EventContext::themeFor($event) : [];
 <html lang="en">
 <head>
   <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <title>Scan & Sign</title>
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
-  <link href="assets/app.css" rel="stylesheet">
+  <link href="assets/app.css?v=20261103m" rel="stylesheet">
+  <link href="assets/guest-registration.css?v=20261103m" rel="stylesheet">
   <script src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/signature_pad@4.0.0/dist/signature_pad.umd.min.js"></script>
   <meta name="csrf" content="<?= htmlspecialchars($token, ENT_QUOTES) ?>">
@@ -31,24 +32,22 @@ $scanTheme = isset($event) ? EventContext::themeFor($event) : [];
   <?php endif; ?>
   <style>
     #reader { width: 100%; max-width: 520px; margin: 0 auto; border-radius: 14px; overflow: hidden; }
-    #sigCanvas { border: 1px dashed rgba(26,68,128,0.35); border-radius: 10px; width: 100%; height: 260px; touch-action: none; background: #fbfcfe; }
+    #sigCanvas { border: 1px dashed rgba(26,68,128,0.35); border-radius: 10px; width: 100%; height: min(40vh, 260px); min-height: 180px; touch-action: none; background: #fbfcfe; }
   </style>
   </head>
 <body>
-<?php $scanBrand = $eventName !== '' ? $eventName : 'GovNet-Launching'; $scanHome = $eventSlug !== '' ? '?r=register&e=' . urlencode($eventSlug) : '?r=register'; ?>
-<nav class="navbar navbar-expand-lg navbar-dark py-3">
-  <div class="container"><a class="navbar-brand" href="<?= htmlspecialchars($scanHome, ENT_QUOTES) ?>"><?= htmlspecialchars($scanBrand, ENT_QUOTES) ?></a>
-    <div class="ms-auto d-flex gap-2">
-      <a class="btn btn-outline-light btn-sm px-3" href="?r=scan">Scan</a>
-      <?php if (!empty($_SESSION['admin_id'])): ?>
-      <a class="btn btn-outline-light btn-sm px-3" href="?r=admin_registrants">Dashboard</a>
-      <a class="btn btn-outline-light btn-sm px-3" href="?r=admin_logout">Logout</a>
-      <?php else: ?>
-      <a class="btn btn-outline-light btn-sm px-3" href="?r=admin_login">Admin</a>
-      <?php endif; ?>
-    </div>
-  </div>
-</nav>
+<?php
+$scanBrand = $eventName !== '' ? $eventName : 'GovNet-Launching';
+$scanHome = $eventSlug !== '' ? '?r=register&e=' . urlencode($eventSlug) : '?r=register';
+if (!empty($_SESSION['admin_id'])) {
+    $activeNav = 'scan';
+    require __DIR__ . '/partials/admin_nav.php';
+} else {
+    $guestShowActions = true;
+    $eventName = $scanBrand;
+    require __DIR__ . '/partials/guest_nav.php';
+}
+?>
 <div class="container py-4">
   <div class="row g-4">
     <div class="col-12 col-lg-6">
@@ -68,7 +67,7 @@ $scanTheme = isset($event) ? EventContext::themeFor($event) : [];
             <span id="cameraLabel">Switch Camera</span>
           </button>
         </div>
-        <p class="subtext mb-0">Use a tablet or desktop camera for best results. Once scanned, collect the participant's signature to complete attendance.</p>
+        <p class="subtext mb-0">Use the phone’s rear camera, or a tablet/desktop camera. Once scanned, collect the participant’s signature to complete attendance.</p>
       </div>
     </div>
     <div class="col-12 col-lg-6">
@@ -109,10 +108,23 @@ $scanTheme = isset($event) ? EventContext::themeFor($event) : [];
     </div>
   </div>
 </div>
+<?php if (!defined('ADMIN_BOOTSTRAP_JS')): ?>
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+<?php endif; ?>
 <script>
-const csrf = document.querySelector('meta[name="csrf"]').getAttribute('content');
+let csrf = document.querySelector('meta[name="csrf"]').getAttribute('content');
 const eventSlug = document.querySelector('meta[name="event-slug"]').getAttribute('content') || '';
+function rememberCsrf(token) {
+  if (typeof token === 'string' && token !== '') {
+    csrf = token;
+    const meta = document.querySelector('meta[name="csrf"]');
+    if (meta) meta.setAttribute('content', token);
+  }
+}
+function saveErrorMessage(code) {
+  if (code === 'csrf') return 'Session expired. Refresh the page and try again.';
+  return code || 'Error saving attendance';
+}
 let currentUuid = null;
 let sigPad;
 let calibrated = false;
@@ -402,12 +414,14 @@ document.getElementById('saveBtn').addEventListener('click', () => {
   btn.textContent = 'Saving...';
   fetch('?r=attendance_submit&e=' + encodeURIComponent(eventSlug), {
     method: 'POST',
+    credentials: 'same-origin',
     headers: { 'Content-Type': 'application/json', 'X-CSRF-Token': csrf },
-    body: JSON.stringify({ uuid: currentUuid, signature: data, e: eventSlug })
+    body: JSON.stringify({ uuid: currentUuid, signature: data, e: eventSlug, csrf: csrf })
   }).then(r => r.json()).then(j => {
+    rememberCsrf(j.csrf);
     const el = document.getElementById('saveToast');
     el.className = 'toast align-items-center ' + (j.ok ? 'text-bg-success' : 'text-bg-danger') + ' border-0';
-    el.querySelector('.toast-body').innerText = j.ok ? 'Attendance saved successfully' : (j.error || 'Error saving attendance');
+    el.querySelector('.toast-body').innerText = j.ok ? 'Attendance saved successfully' : saveErrorMessage(j.error);
     const t = new bootstrap.Toast(el);
     t.show();
     if (j.ok) {

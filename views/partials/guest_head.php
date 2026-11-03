@@ -9,6 +9,9 @@ $eventTheme = $eventTheme ?? [];
 // Door-gate layout: only on the register form page. Success and error paths
 // set $eventGate = false so a guest is never trapped behind the door.
 $eventGateEnabled = ($eventTheme['layout'] ?? '') === 'gate' && ($eventGate ?? true);
+if (!empty($eventTheme)) {
+    $guestBodyClass .= ' has-event-theme';
+}
 ?>
 <!doctype html>
 <html lang="en" class="no-js">
@@ -18,9 +21,9 @@ $eventGateEnabled = ($eventTheme['layout'] ?? '') === 'gate' && ($eventGate ?? t
   <meta name="theme-color" content="<?= !empty($eventTheme['dark']) ? htmlspecialchars($eventTheme['dark'], ENT_QUOTES) : '#162e51' ?>">
   <title><?= htmlspecialchars($guestTitle, ENT_QUOTES) ?></title>
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
-  <link href="assets/app.css" rel="stylesheet">
+  <link href="assets/app.css?v=20261103m" rel="stylesheet">
   <?php if ($guestIncludeRegistrationAssets): ?>
-  <link href="assets/guest-registration.css?v=20260922reg2" rel="stylesheet">
+  <link href="assets/guest-registration.css?v=20261103m" rel="stylesheet">
   <?php endif; ?>
   <?php if (!empty($eventTheme)): ?>
   <style>
@@ -28,7 +31,8 @@ $eventGateEnabled = ($eventTheme['layout'] ?? '') === 'gate' && ($eventGate ?? t
       <?php if (!empty($eventTheme['primary'])): ?>
       --brand-primary: <?= htmlspecialchars($eventTheme['primary'], ENT_QUOTES) ?>;
       --brand-primary-dark: <?= htmlspecialchars($eventTheme['dark'], ENT_QUOTES) ?>;
-      --guest-hero-gradient: linear-gradient(150deg, <?= htmlspecialchars($eventTheme['primary'], ENT_QUOTES) ?> 0%, <?= htmlspecialchars($eventTheme['dark'], ENT_QUOTES) ?> 100%);
+      --brand-dark: <?= htmlspecialchars($eventTheme['dark'], ENT_QUOTES) ?>;
+      --guest-hero-gradient: linear-gradient(155deg, <?= htmlspecialchars($eventTheme['primary'], ENT_QUOTES) ?> 0%, <?= htmlspecialchars($eventTheme['dark'], ENT_QUOTES) ?> 72%, #1a0f2e 100%);
       <?php endif; ?>
       <?php if (!empty($eventTheme['accent'])): ?>
       --brand-accent: <?= htmlspecialchars($eventTheme['accent'], ENT_QUOTES) ?>;

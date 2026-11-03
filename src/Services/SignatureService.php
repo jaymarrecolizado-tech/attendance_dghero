@@ -21,4 +21,24 @@ class SignatureService
         file_put_contents($path, $bin);
         return $path;
     }
+
+    public static function copyFile(string $uuid, string $srcPath): string
+    {
+        if (!is_file($srcPath)) {
+            throw new \RuntimeException('Signature file missing');
+        }
+        $bin = (string)file_get_contents($srcPath);
+        if ($bin === '' || strlen($bin) > 5_000_000) {
+            throw new \RuntimeException('Invalid signature');
+        }
+        $year = date('Y');
+        $dir = dirname(__DIR__, 2) . DIRECTORY_SEPARATOR . 'storage' . DIRECTORY_SEPARATOR . 'signatures' . DIRECTORY_SEPARATOR . $year;
+        if (!is_dir($dir)) {
+            mkdir($dir, 0775, true);
+        }
+        $name = $uuid . '_' . str_replace('.', '', sprintf('%.6F', microtime(true))) . '.png';
+        $path = $dir . DIRECTORY_SEPARATOR . $name;
+        file_put_contents($path, $bin);
+        return $path;
+    }
 }

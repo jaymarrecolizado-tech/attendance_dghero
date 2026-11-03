@@ -9,15 +9,15 @@ $errors = $errors ?? [];
 <html lang="en">
 <head>
   <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <title>Import CSV</title>
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
-  <link href="assets/app.css" rel="stylesheet">
+  <link href="assets/app.css?v=20261103m" rel="stylesheet">
 </head>
 <body>
 <?php $activeNav = 'admin_import'; require __DIR__ . '/partials/admin_nav.php'; ?>
 <div class="container py-4">
-  <div class="d-flex justify-content-between align-items-center mb-3">
+  <div class="toolbar-stack flex-md-row justify-content-between align-items-md-center mb-3">
     <h1 class="h5">Import CSV</h1>
     <div class="btn-group">
       <a class="btn btn-outline-secondary btn-sm" href="?r=admin_registrants">Registrants</a>
@@ -57,13 +57,19 @@ $errors = $errors ?? [];
             <option value="override_all">Override all matches</option>
           </select>
         </div>
+        <div class="col-12 col-md-5">
+          <div class="form-check">
+            <input class="form-check-input" type="checkbox" name="privacy_consent" value="1" id="privacy_consent" required>
+            <label class="form-check-label small" for="privacy_consent">I attest that these people were informed and consented under the Data Privacy Act of 2012 (15-day live retention after the event, then deletion from the live system).</label>
+          </div>
+        </div>
         <div class="col-12 col-md-3">
           <button class="btn btn-success w-100">Confirm & Execute</button>
         </div>
       </div>
     </form>
   </div>
-  <div class="table-responsive table-modern">
+  <div class="table-responsive table-modern table-sticky-first">
     <table class="table table-sm align-middle">
       <thead>
         <tr><th>Row</th><th>Name</th><th>Email</th><th>Agency</th><th>Sector</th><th>Status</th></tr>
