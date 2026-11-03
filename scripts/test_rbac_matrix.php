@@ -159,10 +159,13 @@ function probeRoute(Router $router, string $route, string $method, array $expect
 probeRoute($router, 'admin_settings', 'GET', [AuthService::ROLE_ADMIN], 'settings');
 probeRoute($router, 'admin_registrants', 'GET', [AuthService::ROLE_ADMIN, AuthService::ROLE_CHECKER], 'registrants');
 probeRoute($router, 'admin_attendance', 'GET', [AuthService::ROLE_ADMIN, AuthService::ROLE_CHECKER], 'attendance');
+probeRoute($router, 'admin_signature_sheet', 'GET', [AuthService::ROLE_ADMIN, AuthService::ROLE_CHECKER], 'signature sheet');
 probeRoute($router, 'admin_attendance_manual', 'POST', [AuthService::ROLE_ADMIN, AuthService::ROLE_CHECKER], 'attendance write');
 probeRoute($router, 'admin_seo_dashboard', 'GET', [AuthService::ROLE_ADMIN, AuthService::ROLE_SEO], 'seo dashboard');
 probeRoute($router, 'admin_users', 'GET', [AuthService::ROLE_ADMIN], 'users');
 probeRoute($router, 'admin_logs', 'GET', [AuthService::ROLE_ADMIN], 'logs');
+probeRoute($router, 'admin_privacy', 'GET', [AuthService::ROLE_ADMIN], 'privacy');
+probeRoute($router, 'admin_privacy_download', 'GET', [AuthService::ROLE_ADMIN], 'privacy download');
 probeRoute($router, 'admin_attendance_kpi', 'GET', [AuthService::ROLE_ADMIN, AuthService::ROLE_CHECKER, AuthService::ROLE_SEO], 'kpi read');
 
 // Staff isolation: seo staff assigned to B only.

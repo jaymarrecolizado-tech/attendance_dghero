@@ -30,6 +30,7 @@ Ready-to-use files and steps for Hostinger (KVM / cloud) deployment of **GovNet-
 | `DO_NOT_UPLOAD.txt` | Files to exclude |
 | `post_deploy.sh` | Permissions + migrations helper |
 | `SERVER_INFO.md` | Connection summary |
+| `CRON.md` | Production crontab for `digitalhero` (CoA + privacy) |
 | `README.md` | This guide |
 
 > `TODODEPLOYMENT/uploads/` is **not in the repo**. Pack from **project root** and exclude `DO_NOT_UPLOAD.txt`.

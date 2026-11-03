@@ -5,10 +5,13 @@ $token = function_exists('csrf_token') ? csrf_token() : '';
 $eventSlug = isset($event) && isset($event['slug']) ? (string)$event['slug'] : trim((string)($_GET['e'] ?? ''));
 $eventName = isset($event) ? (string)($event['name'] ?? '') : '';
 $eventDate = isset($event) && isset($event['starts_at']) ? (string)$event['starts_at'] : '';
+$eventEndsAt = isset($event) ? (string)($event['ends_at'] ?? '') : '';
+$eventVenue = isset($event) ? (string)($event['coa_venue'] ?? '') : '';
 $posted = $posted ?? [];
 $guestTitle = 'Event Registration - ' . ($eventName ?: 'GovNet');
 $guestIncludeRegistrationAssets = true;
 $guestIncludeRegistrationJs = true;
+$guestShowActions = false;
 require __DIR__ . DIRECTORY_SEPARATOR . 'partials' . DIRECTORY_SEPARATOR . 'guest_head.php';
 ?>
 
@@ -18,23 +21,26 @@ require __DIR__ . DIRECTORY_SEPARATOR . 'partials' . DIRECTORY_SEPARATOR . 'gues
       <?php
 $eventTitle = $eventName ?: 'GovNet-Launching';
 $eventDate = $eventDate ?? '';
+$eventEndsAt = $eventEndsAt ?? '';
+$eventVenue = $eventVenue ?? '';
 require __DIR__ . DIRECTORY_SEPARATOR . 'partials' . DIRECTORY_SEPARATOR . 'guest_hero.php';
 ?>
 
       <div class="guest-form-wrap">
         <div class="guest-form-card">
           <h2 class="guest-form-title">Participant Registration</h2>
-          <p class="guest-form-subtitle">Complete all steps to receive your check-in QR code.<?php if ($eventName !== ''): ?> Event: <strong><?= htmlspecialchars($eventName, ENT_QUOTES) ?></strong><?php endif; ?></p>
+          <p class="guest-form-subtitle">Agree to the privacy notice, then complete the form to receive your check-in QR code.<?php if ($eventName !== ''): ?> Event: <strong><?= htmlspecialchars($eventName, ENT_QUOTES) ?></strong><?php endif; ?></p>
 
           <div class="guest-stepper" aria-label="Registration progress">
             <div class="guest-stepper-progress" aria-hidden="true">
-              <div class="guest-stepper-progress-bar" id="stepperProgress" style="width:33%"></div>
+              <div class="guest-stepper-progress-bar" id="stepperProgress" style="width:25%"></div>
             </div>
-            <p class="guest-stepper-label guest-stepper-label-mobile" id="stepperLabel">Step 1 of 3 - Personal details</p>
+            <p class="guest-stepper-label guest-stepper-label-mobile" id="stepperLabel">Step 1 of 4 - Data privacy</p>
             <div class="guest-stepper-tabs" role="tablist">
-              <button type="button" class="guest-stepper-tab is-active" data-step="1" role="tab" aria-current="step">Personal</button>
-              <button type="button" class="guest-stepper-tab" data-step="2" role="tab">Work</button>
-              <button type="button" class="guest-stepper-tab" data-step="3" role="tab">Contact</button>
+              <button type="button" class="guest-stepper-tab is-active" data-step="1" role="tab" aria-current="step">Privacy</button>
+              <button type="button" class="guest-stepper-tab" data-step="2" role="tab">Personal</button>
+              <button type="button" class="guest-stepper-tab" data-step="3" role="tab">Work</button>
+              <button type="button" class="guest-stepper-tab" data-step="4" role="tab">Contact</button>
             </div>
           </div>
 
@@ -44,8 +50,18 @@ require __DIR__ . DIRECTORY_SEPARATOR . 'partials' . DIRECTORY_SEPARATOR . 'gues
             <input type="hidden" name="csrf" value="<?= htmlspecialchars($token, ENT_QUOTES) ?>">
             <input type="hidden" name="e" value="<?= htmlspecialchars($eventSlug, ENT_QUOTES) ?>">
 
-            <!-- Step 1: Personal -->
             <fieldset class="reg-step is-active" data-step="1">
+              <legend>Data privacy</legend>
+              <?php $privacyCompact = true; require __DIR__ . DIRECTORY_SEPARATOR . 'partials' . DIRECTORY_SEPARATOR . 'privacy_notice.php'; ?>
+              <p class="small mb-2"><a href="?r=privacy&amp;e=<?= urlencode($eventSlug) ?>" target="_blank" rel="noopener">Open the full notice</a></p>
+              <div class="form-check">
+                <input class="form-check-input" type="checkbox" value="1" name="privacy_agree" id="privacy_agree" required <?= !empty($posted['privacy_agree']) ? 'checked' : '' ?>>
+                <label class="form-check-label small" for="privacy_agree"><?= htmlspecialchars(\App\Services\PrivacyNotice::checkboxLabel(), ENT_QUOTES) ?></label>
+              </div>
+            </fieldset>
+
+            <!-- Step 2: Personal -->
+            <fieldset class="reg-step" data-step="2">
               <legend>Personal details</legend>
               <div class="row g-3 g-md-4">
                 <div class="col-12 col-md-6">
@@ -81,8 +97,8 @@ require __DIR__ . DIRECTORY_SEPARATOR . 'partials' . DIRECTORY_SEPARATOR . 'gues
               </div>
             </fieldset>
 
-            <!-- Step 2: Work -->
-            <fieldset class="reg-step" data-step="2">
+            <!-- Step 3: Work -->
+            <fieldset class="reg-step" data-step="3">
               <legend>Work information</legend>
               <div class="row g-3 g-md-4">
                 <div class="col-12 col-md-6">
@@ -108,9 +124,10 @@ require __DIR__ . DIRECTORY_SEPARATOR . 'partials' . DIRECTORY_SEPARATOR . 'gues
                         <option value="<?= htmlspecialchars($a['agency'], ENT_QUOTES) ?>"></option>
                       <?php endforeach; ?>
                     </datalist>
+                    <script type="application/json" id="lguAgencyData"><?= json_encode(array_values($lguAgencies ?? []), JSON_UNESCAPED_UNICODE | JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT) ?></script>
                     <input name="agency_other" id="agencyOther" class="form-control mt-2" placeholder="Enter agency name" style="display:none" autocomplete="organization" value="<?= htmlspecialchars($posted['agency_other'] ?? '', ENT_QUOTES) ?>">
                   </div>
-                  <p class="field-hint">Search your organization or choose Other if not listed.</p>
+                  <p class="field-hint" id="agencyHint">Search your organization or choose Other if not listed. Choosing <strong>Local Government Unit</strong> loads the Region 2 LGU list.</p>
                 </div>
                 <div class="col-12 col-md-6">
                   <label class="form-label" for="designationPickerBtn">Designation</label>
@@ -135,8 +152,8 @@ require __DIR__ . DIRECTORY_SEPARATOR . 'partials' . DIRECTORY_SEPARATOR . 'gues
               </div>
             </fieldset>
 
-            <!-- Step 3: Contact -->
-            <fieldset class="reg-step" data-step="3">
+            <!-- Step 4: Contact -->
+            <fieldset class="reg-step" data-step="4">
               <legend>Contact and submit</legend>
               <div class="guest-review" aria-label="Registration summary">
                 <span class="guest-review-chip"><strong>Name:</strong> <span id="reviewName">-</span></span>

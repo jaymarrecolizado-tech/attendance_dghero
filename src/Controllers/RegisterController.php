@@ -26,6 +26,7 @@ class RegisterController
     public function show(): void
     {
         $pdo = \App\Services\Database::pdo();
+        Database::ensurePrivacyFacility($pdo);
         $slug = trim((string)($_GET['e'] ?? ''));
         $flash = $_SESSION['register_flash'] ?? null;
         unset($_SESSION['register_flash']);
@@ -45,7 +46,34 @@ class RegisterController
         $designations = $pdo->query("SELECT DISTINCT designation FROM participants WHERE event_id = {$eventId} AND designation IS NOT NULL AND designation <> '' ORDER BY designation ASC LIMIT 500")->fetchAll();
         $sexes = self::SEXES;
         $sectors = self::SECTORS;
+        $lguAgencies = self::region2LguAgencies();
         require dirname(__DIR__, 2) . DIRECTORY_SEPARATOR . 'views' . DIRECTORY_SEPARATOR . 'register.php';
+    }
+
+    public function privacy(): void
+    {
+        require dirname(__DIR__, 2) . DIRECTORY_SEPARATOR . 'views' . DIRECTORY_SEPARATOR . 'privacy.php';
+    }
+
+    /** @return list<string> */
+    private static function region2LguAgencies(): array
+    {
+        $path = dirname(__DIR__, 2) . DIRECTORY_SEPARATOR . 'config' . DIRECTORY_SEPARATOR . 'region2_lgus.php';
+        if (!is_file($path)) {
+            return [];
+        }
+        $list = require $path;
+        if (!is_array($list)) {
+            return [];
+        }
+        $out = [];
+        foreach ($list as $name) {
+            $name = trim((string)$name);
+            if ($name !== '') {
+                $out[] = $name;
+            }
+        }
+        return $out;
     }
 
     public function success(): void
@@ -84,6 +112,7 @@ class RegisterController
         }
 
         $pdo = Database::pdo();
+        Database::ensurePrivacyFacility($pdo);
         $event = $slug !== '' ? EventContext::findBySlug($pdo, $slug) : null;
         if (!$event) {
             $this->flashRegisterError(400, $slug, 'This registration link does not point to a valid event.');
@@ -94,6 +123,11 @@ class RegisterController
             return;
         }
         $eventId = (int)$event['id'];
+
+        if (trim((string)($_POST['privacy_agree'] ?? '')) !== '1') {
+            $this->flashRegisterError(422, $slug, 'Please read and agree to the Data Privacy Notice to register.');
+            return;
+        }
 
         $ip = $_SERVER['REMOTE_ADDR'] ?? 'unknown';
         if (!RateLimiter::allow('register:' . $ip, 10, 300)) {
@@ -146,7 +180,7 @@ class RegisterController
             while ($attempts < $max) {
                 $uuid = Uuid::v4();
                 try {
-                    $stmt = $pdo->prepare('INSERT INTO participants (event_id, uuid,email,first_name,middle_name,last_name,nickname,sex,sector,agency,designation,office_email,contact_no,qr_path) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?)');
+                    $stmt = $pdo->prepare('INSERT INTO participants (event_id, uuid,email,first_name,middle_name,last_name,nickname,sex,sector,agency,designation,office_email,contact_no,qr_path,privacy_consent_at,privacy_notice_version) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)');
                     $stmt->execute([
                         $eventId,
                         $uuid,
@@ -162,6 +196,8 @@ class RegisterController
                         $clean['office_email'],
                         $clean['contact_no'],
                         null,
+                        date('Y-m-d H:i:s'),
+                        \App\Services\PrivacyNotice::VERSION,
                     ]);
                     break;
                 } catch (\PDOException $e) {
@@ -189,8 +225,9 @@ class RegisterController
         $contactEmail = $clean['email'] ?? $clean['office_email'] ?? '';
         $to = $contactEmail ?: '';
         if ($to !== '') {
-            $subject = 'Your registration QR code';
-            $body = '<p>Thank you for registering.</p><p>Please find your QR attached or available on the confirmation page.</p>';
+            $eventName = trim((string)($event['name'] ?? ''));
+            $subject = Mailer::qrNoticeSubject($eventName);
+            $body = Mailer::qrNoticeHtml((string)($clean['first_name'] ?? ''), $eventName, Mailer::qrNoticeCopy($eventName));
             $sent = Mailer::send($to, $subject, $body, $qrPath);
             \App\Services\Logger::log(null, $sent ? 'email_sent' : 'email_failed', ['to'=>$to]);
         }
@@ -271,6 +308,7 @@ class RegisterController
             'contact_no' => $_POST['contact_no'] ?? '',
             'sex' => $this->allowList($_POST['sex'] ?? '', self::SEXES),
             'sector' => $this->allowList($_POST['sector'] ?? '', self::SECTORS, allowCustom: true),
+            'privacy_agree' => ($_POST['privacy_agree'] ?? '') === '1' ? '1' : '',
         ], 'errors' => $errors, 'error' => $error];
         require dirname(__DIR__, 2) . DIRECTORY_SEPARATOR . 'views' . DIRECTORY_SEPARATOR . 'register_error.php';
     }

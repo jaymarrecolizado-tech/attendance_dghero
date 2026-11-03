@@ -153,6 +153,7 @@ class Database
         // 015_coa_facility. Not gated on coa_templates: Events queries
         // coa_signatories even when the template tables were never created.
         self::ensureCoaFacility($pdo);
+        self::ensurePrivacyFacility($pdo);
     }
 
     /**
@@ -200,6 +201,26 @@ class Database
             }
         } catch (\Throwable $e) {
             // Leave the caller to fall back to an empty list.
+        }
+    }
+
+    /** Plan#18 consent columns, purge markers, jobs and notices. */
+    public static function ensurePrivacyFacility(PDO $pdo): void
+    {
+        try {
+            $base = dirname(__DIR__, 2) . DIRECTORY_SEPARATOR . 'migrations' . DIRECTORY_SEPARATOR;
+            if (!self::tableExists($pdo, 'privacy_jobs') || !self::tableExists($pdo, 'privacy_notices')) {
+                self::executeSqlFileTolerant($pdo, $base . '016_privacy_purge.sql');
+            }
+            self::addColumnIfMissing($pdo, 'participants', 'privacy_consent_at', 'DATETIME NULL');
+            self::addColumnIfMissing($pdo, 'participants', 'privacy_notice_version', 'VARCHAR(32) NULL');
+            self::addColumnIfMissing($pdo, 'events', 'privacy_purged_at', 'DATETIME NULL');
+            self::addColumnIfMissing($pdo, 'events', 'privacy_backup_drive_id', 'VARCHAR(128) NULL');
+            self::addColumnIfMissing($pdo, 'events', 'privacy_backup_url', 'VARCHAR(512) NULL');
+            self::addColumnIfMissing($pdo, 'events', 'privacy_backup_path', 'VARCHAR(255) NULL');
+            self::addColumnIfMissing($pdo, 'events', 'privacy_restore_hold_until', 'DATETIME NULL');
+        } catch (\Throwable $e) {
+            // Leave callers to operate without purge until migrate is retried.
         }
     }
 

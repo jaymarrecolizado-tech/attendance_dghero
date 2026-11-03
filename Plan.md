@@ -2,7 +2,7 @@
 
 Turn the app into a multi-event platform: All Father creates events, assigns people and roles per event, each event has unique register/scan links, current attendance capabilities stay.
 
-**Status:** Multi-event is shipped. VPS is live. **Plan#4** through **Plan#14** are on production. **Plan#15** is done locally (prod overlay still pending). **Plan#16** (attendance report PDF like the AI Roadshow guest list) is implemented and browser-verified on the local copy (2026-09-23); the operator still needs to overlay the touched files on digitalhero. Current branch is `9232026_ultra`.
+**Status:** Multi-event is shipped. VPS is live. **Plan#4** through **Plan#14** and **Plan#16** are on production. **Plan#15** is done locally (prod overlay still pending). **Plan#17** is live on production (2026-10-30). Current branch is `9232026_ultra`.
 
 **Audit:** 2026-09-14 closed multi-event leftovers. 2026-09-20 landed Settings merge, script gating, AuthService, flash plumbing, `env.example`. 2026-09-21 morning pass fixed door-scan CSRF, import-preview rotate, retry `e=` link, event-aware nav, main deploy docs. Same-day afternoon pass closed the five re-check nits (below).
 
@@ -10,7 +10,7 @@ Turn the app into a multi-event platform: All Father creates events, assigns peo
 
 ## Current state
 
-Multi-event is shipped. Plan#4 through Plan#14 are on digitalhero. Plan#15 is done locally. **Plan#16 is done locally (2026-09-23):** the Report Builder paints the sample-style PDF through a new [`ReportPdf`](src/Services/ReportPdf.php) renderer (repeated header + logos, navy column band, zebra rows, ink signatures, real footer) with builder defaults from the current event. Do not rebuild EventContext. Do not commit `.env` or `.env.vps`.
+Multi-event is shipped. Plan#4 through Plan#14 and Plan#16 are on digitalhero. Plan#15 is done locally. **Plan#16 is on production (2026-09-23):** the Report Builder paints the sample-style PDF through a new [`ReportPdf`](src/Services/ReportPdf.php) renderer (repeated header + logos, navy column band, zebra rows, ink signatures, real footer) with builder defaults from the current event. **Plan#17 is on production (2026-10-30):** Sign sheet (`?r=admin_signature_sheet`) — one Name column, one signature cell per event day; checkers fill empty cells to mark attendance. Do not rebuild EventContext. Do not commit `.env` or `.env.vps`.
 
 **Plan numbers**
 
@@ -31,7 +31,9 @@ Multi-event is shipped. Plan#4 through Plan#14 are on digitalhero. Plan#15 is do
 | Plan#13 | Per-event CoA outbox (queued / sent / failed) + scheduled template fix | On prod 2026-09-23; logged-in click-through still open |
 | Plan#14 | Registration page open performance (one light circuit loop) | On prod 2026-09-23 (`?v=20260923`) |
 | Plan#15 | Required sex, email, and contact number; Register active only when complete | Done (local, browser-verified 2026-09-23; prod overlay pending) |
-| Plan#16 | Attendance report PDF like the AI Roadshow guest list | Done (local, browser-verified 2026-09-23; prod overlay pending) |
+| Plan#16 | Attendance report PDF like the AI Roadshow guest list | Live on digitalhero.dictr2.cloud (2026-09-23) |
+| Plan#17 | Multi-day signature sheet (checker fill) | Live on digitalhero.dictr2.cloud (2026-10-30) |
+| Plan#18 | DPA consent, 15-day backup/purge, Drive archive, All Father restore | Local implementation |
 
 **Working notes**
 
@@ -47,6 +49,66 @@ php scripts/test_csrf_lifecycle.php
 ---
 
 ## Left to do
+
+### Plan#17 — Multi-day signature sheet (checker fill)
+
+A separate facility (not Gallery, not the Attendance ops list) where staff see every attendee’s **name** and **signature per event day**, and checkers can draw into an empty cell. Saving a signature **means that person attended that day**.
+
+**Locked choices (2026-10-30)**
+
+- Layout: **one Name column**, then **Signature Day 1 / Day 2 / Day 3** (not repeating Name+Signature under each day).
+- Purpose: checkers fill empty signatures; that fill is attendance for that date.
+- Who: `admin`, `event_admin`, and **`checker`** (same as Attendance).
+- Rows: full roster of the current event, VIP first, then last name.
+- Days: from the current event `starts_at` / `ends_at` (NCSC Training = Oct 27–29, 2026). Longer events scroll or wrap.
+- Click empty (or Replace on existing): reuse the Attendance canvas pad and [`admin_signature_new`](src/Controllers/AdminSignatureController.php) / [`admin_signature_replace`](src/Controllers/AdminSignatureController.php). Saving creates/updates that day’s attendance as **present** (keep existing `time_in` if already present).
+- Do **not** auto-mark absent from this page.
+- Print/PDF is **out of this plan**.
+
+```mermaid
+flowchart LR
+  sheet[Signature_sheet]
+  roster[Event_roster]
+  days[Event_days]
+  pad[Draw_pad]
+  att[attendance_row]
+  sheet --> roster
+  sheet --> days
+  pad --> att
+  att --> sheet
+```
+
+**What stays**
+
+- [`views/admin_attendance.php`](views/admin_attendance.php) day ops and KPIs.
+- [`views/admin_attendance_gallery.php`](views/admin_attendance_gallery.php) photo grid.
+- Existing signature endpoints; do not duplicate replace/new logic.
+
+**1. Route and nav**
+
+- [ ] `admin_signature_sheet` in [`config/routes.php`](config/routes.php) (`event:event_admin|checker`).
+- [ ] Nav item **Sign sheet** after Gallery in [`views/partials/admin_nav.php`](views/partials/admin_nav.php); roles `admin`, `event_admin`, `checker`.
+
+**2. Sheet UI**
+
+- [ ] Controller: participants for current `event_id`; attendance for dates in the event window; pivot in PHP.
+- [ ] View: event name + date span header; Day N labels with real dates; ink image when `status = present` and `signature_path` exists; empty clickable cell otherwise.
+- [ ] Pad modal copied from Attendance; POST to existing signature routes.
+
+**3. Checks**
+
+- [ ] Checker can open the sheet only for an assigned event.
+- [ ] Saving a signature on Day 2 writes attendance for that date only and marks present.
+- [ ] Local first, then prod overlay. Do not overwrite `.env`.
+
+Leave alone: Gallery, Report PDF, CoA, EventContext, Plan#16. Do not commit `.env`.
+
+### Plan#18 — DPA consent, 15-day purge, Drive archive, restore
+
+Register shows a RA 10173 notice first (must agree). Fifteen days after `ends_at`, cron writes an encrypted zip, deletes live participant data, and emails each person. Zip stays on the VPS; All Father downloads it from Privacy and may copy it to Drive by hand. Set `GOOGLE_DRIVE_ENABLED=true` only when a Shared drive (or OAuth) works. All Father can restore from the zip; cron will not immediately re-wipe. See `PrivacyPurgeService`, `?r=admin_privacy`, `?r=privacy`.
+
+- [x] Local tests `php scripts/test_privacy_purge.php`
+- [ ] Prod overlay + daily cron + Drive `.env` keys (do not overwrite `.env` blindly)
 
 ### Plan#16 — Attendance report PDF like the AI Roadshow guest list
 
@@ -116,7 +178,7 @@ In [`views/admin_report.php`](views/admin_report.php):
 - [x] Local: generate PDF for a date that has signatures. Compare page 1 and a middle page to the sample (header repeat, count, signature column, footer). Seeded 26 guests (20 with ink signatures, every 4th empty) for Hack for Gov 5 → 3 pages, 11-12 rows/page; header stack + logos + double rule on every page, guest list + “26 records” page 1 only, navy band + zebra rows, signatures centered in the last column, “Generated …” + “Page X of 3” on every page. Screenshot + vision review found the page faithful: no clipping, no overlap, logos undistorted.
 - [x] HTML generate still works for a quick look. (Official marks embedded, derived day line “Day 4 - September 23, 2026”, count line, signatures as data-URI images.)
 - [x] Saved templates still load. (Saved “Plan16 Template Check” with a custom title/date/field set → Load restores title, date, field checkboxes, subtitle; test row removed afterward.)
-- [ ] Prod only after local sign-off: upload the touched PHP/views. Do not overwrite `.env`. (Pending operator: `src/Services/ReportPdf.php` (new), `src/Controllers/ReportController.php`, `views/admin_report.php`. No migration, no `.env` change, no `?v=` bump needed — admin pages are not long-cached.)
+- [x] Prod only after local sign-off: upload the touched PHP/views. Do not overwrite `.env`. (Overlay 2026-09-23: `src/Services/ReportPdf.php` (new), `src/Controllers/ReportController.php`, `views/admin_report.php`. No migration, no `.env` change, no `?v=` bump. Server `.env` and `storage/` left in place.)
 
 **Checks**
 

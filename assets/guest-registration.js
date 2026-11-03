@@ -51,7 +51,7 @@
     const pct = (currentStep / totalSteps) * 100;
     if (stepperProgress) stepperProgress.style.width = pct + '%';
     if (stepperLabel) {
-      const names = ['Personal details', 'Work information', 'Contact & submit'];
+      const names = ['Data privacy', 'Personal details', 'Work information', 'Contact & submit'];
       stepperLabel.textContent = 'Step ' + currentStep + ' of ' + totalSteps + ' - ' + (names[currentStep - 1] || '');
     }
     stepperTabs.forEach((tab) => {
@@ -107,7 +107,7 @@
       if (field.hasAttribute('required') && !field.checkValidity()) return false;
       if (field.type === 'email' && field.value.trim() && !field.checkValidity()) return false;
     }
-    if (step === 2 && !validatePickerField(agencyInput, agencyOther)) return false;
+    if (step === 3 && !validatePickerField(agencyInput, agencyOther)) return false;
     return true;
   }
 
@@ -174,7 +174,7 @@
         firstInvalid.classList.add('shake');
         setTimeout(() => firstInvalid.classList.remove('shake'), 300);
         firstInvalid.focus();
-      } else if (step === 2 && agencyInput) {
+      } else if (step === 3 && agencyInput) {
         showStepError('Please select your agency. Choose Other if not listed.');
         document.getElementById('agencyPickerBtn')?.focus();
       }
@@ -318,7 +318,6 @@
       otherInputId,
       datalistId,
       sheetId,
-      title,
     } = config;
 
     const trigger = document.getElementById(triggerId);
@@ -326,16 +325,26 @@
     const otherInput = document.getElementById(otherInputId);
     const datalist = document.getElementById(datalistId);
     const sheet = document.getElementById(sheetId);
-    if (!trigger || !hiddenInput || !sheet) return;
+    if (!trigger || !hiddenInput || !sheet) return null;
 
     const backdrop = sheet.closest('.picker-sheet-wrap')?.querySelector('.picker-sheet-backdrop');
     const searchInput = sheet.querySelector('.picker-sheet-search');
     const listEl = sheet.querySelector('.picker-sheet-list');
     const closeBtn = sheet.querySelector('.picker-sheet-close');
 
-    const options = datalist
+    let options = datalist
       ? Array.from(datalist.querySelectorAll('option')).map((o) => o.value).filter(Boolean)
       : [];
+
+    function syncDatalist() {
+      if (!datalist) return;
+      datalist.innerHTML = '';
+      options.forEach((value) => {
+        const opt = document.createElement('option');
+        opt.value = value;
+        datalist.appendChild(opt);
+      });
+    }
 
     function updateTriggerLabel(value) {
       const text = trigger.querySelector('.picker-trigger-text');
@@ -363,6 +372,15 @@
       closeSheet();
       hiddenInput.dispatchEvent(new Event('change', { bubbles: true }));
       setActionsEnabled();
+    }
+
+    function clearSelection() {
+      hiddenInput.value = '';
+      if (otherInput) {
+        otherInput.value = '';
+        otherInput.style.display = 'none';
+      }
+      updateTriggerLabel('');
     }
 
     function renderList(filter) {
@@ -409,6 +427,19 @@
       document.body.style.overflow = '';
     }
 
+    function setOptions(next, opts) {
+      const keepSelection = !!(opts && opts.keepSelection);
+      options = Array.isArray(next) ? next.map((v) => String(v).trim()).filter(Boolean) : [];
+      syncDatalist();
+      const current = (hiddenInput.value || '').trim();
+      if (!keepSelection && current && current !== 'other' && !options.includes(current)) {
+        clearSelection();
+      } else if (current) {
+        updateTriggerLabel(current);
+        toggleOther(current);
+      }
+    }
+
     trigger.addEventListener('click', openSheet);
     closeBtn?.addEventListener('click', closeSheet);
     backdrop?.addEventListener('click', closeSheet);
@@ -420,9 +451,16 @@
     });
 
     if (hiddenInput.value) updateTriggerLabel(hiddenInput.value);
+
+    return {
+      setOptions,
+      getOptions: () => options.slice(),
+      updateTriggerLabel,
+      clearSelection,
+    };
   }
 
-  buildPicker({
+  const agencyPicker = buildPicker({
     triggerId: 'agencyPickerBtn',
     hiddenInputId: 'agencyInput',
     otherInputId: 'agencyOther',
@@ -439,6 +477,45 @@
     sheetId: 'designationPickerSheet',
     title: 'Select Designation',
   });
+
+  const LGU_SECTOR = 'Local Government Unit';
+  const defaultAgencyOptions = agencyPicker ? agencyPicker.getOptions() : [];
+  let lguAgencyOptions = [];
+  try {
+    const raw = document.getElementById('lguAgencyData')?.textContent || '[]';
+    const parsed = JSON.parse(raw);
+    if (Array.isArray(parsed)) {
+      lguAgencyOptions = parsed.map((v) => String(v).trim()).filter(Boolean);
+    }
+  } catch (e) {
+    lguAgencyOptions = [];
+  }
+
+  const sectorSelect = document.getElementById('sector');
+  const agencyHint = document.getElementById('agencyHint');
+
+  function syncAgencyOptionsForSector(keepSelection) {
+    if (!agencyPicker) return;
+    const sector = (sectorSelect?.value || '').trim();
+    if (sector === LGU_SECTOR && lguAgencyOptions.length > 0) {
+      agencyPicker.setOptions(lguAgencyOptions, { keepSelection: !!keepSelection });
+      if (agencyHint) {
+        agencyHint.innerHTML = 'Pick your LGU from the Region 2 list, or choose <strong>Other</strong> if not listed.';
+      }
+      return;
+    }
+    agencyPicker.setOptions(defaultAgencyOptions, { keepSelection: !!keepSelection });
+    if (agencyHint) {
+      agencyHint.innerHTML = 'Search your organization or choose Other if not listed. Choosing <strong>Local Government Unit</strong> loads the Region 2 LGU list.';
+    }
+  }
+
+  sectorSelect?.addEventListener('change', () => {
+    syncAgencyOptionsForSector(false);
+    setActionsEnabled();
+  });
+  // Keep a reloaded/posted LGU agency when the page opens already on that sector.
+  syncAgencyOptionsForSector(true);
 
   const fallback = document.querySelector('.guest-submit-fallback');
   if (fallback) fallback.hidden = true;

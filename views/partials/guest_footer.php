@@ -12,7 +12,7 @@ $supportEmail = function_exists('env') ? env('SUPPORT_EMAIL', 'support@example.c
   </div>
 </footer>
 <?php if ($guestIncludeRegistrationJs): ?>
-<script src="assets/guest-registration.js?v=20260923reg3" defer></script>
+<script src="assets/guest-registration.js?v=20261031privacy" defer></script>
 <?php endif; ?>
 </body>
 </html>

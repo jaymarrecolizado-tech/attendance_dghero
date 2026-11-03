@@ -8,7 +8,8 @@ class Mailer
     /** Human-readable reason for the most recent send failure (Plan#13). */
     public static string $lastError = '';
 
-    public static function send(string $to, string $subject, string $body, ?string $attachmentPath = null, ?string $fromName = null): bool
+    /** @param array<string,string> $inlineImages cid => filesystem path */
+    public static function send(string $to, string $subject, string $body, ?string $attachmentPath = null, ?string $fromName = null, array $inlineImages = []): bool
     {
         self::$lastError = '';
         $mode = getenv('MAIL_MODE') ?: 'log';
@@ -21,6 +22,11 @@ class Mailer
             if ($attachmentPath && is_file($attachmentPath)) {
                 $content .= "\nAttachment: {$attachmentPath}\n";
             }
+            foreach ($inlineImages as $cid => $path) {
+                if (is_file($path)) {
+                    $content .= "\nInline-{$cid}: {$path}\n";
+                }
+            }
             $ok = (bool)file_put_contents($name, $content);
             if (!$ok) {
                 self::$lastError = 'Could not write to the log outbox';
@@ -32,7 +38,7 @@ class Mailer
                 $host = getenv('SMTP_HOST') ?: '';
                 $port = (int)(getenv('SMTP_PORT') ?: '587');
                 $user = getenv('SMTP_USER') ?: '';
-                $pass = getenv('SMTP_PASS') ?: '';
+                $pass = str_replace(' ', '', (string)(getenv('SMTP_PASS') ?: ''));
                 $secure = getenv('SMTP_SECURE') ?: 'tls';
                 $from = getenv('SMTP_FROM') ?: $user;
                 if ($host === '' || $user === '' || $pass === '') {
@@ -53,6 +59,22 @@ class Mailer
                     $mail->isHTML(true);
                     $mail->Subject = $subject;
                     $mail->Body = $body;
+                    if ($inlineImages === []) {
+                        $mail->AltBody = trim(html_entity_decode(strip_tags($body), ENT_QUOTES | ENT_HTML5, 'UTF-8'));
+                    }
+                    foreach ($inlineImages as $cid => $path) {
+                        if (!is_string($cid) || $cid === '' || !is_file($path)) {
+                            continue;
+                        }
+                        $ext = strtolower(pathinfo($path, PATHINFO_EXTENSION));
+                        $mime = match ($ext) {
+                            'jpg', 'jpeg' => 'image/jpeg',
+                            'gif' => 'image/gif',
+                            'webp' => 'image/webp',
+                            default => 'image/png',
+                        };
+                        $mail->addEmbeddedImage($path, $cid, basename($path), 'base64', $mime);
+                    }
                     if ($attachmentPath && is_file($attachmentPath)) {
                         $mail->addAttachment($attachmentPath, basename($attachmentPath));
                     }
@@ -65,7 +87,7 @@ class Mailer
             $host = getenv('SMTP_HOST') ?: '';
             $port = (int)(getenv('SMTP_PORT') ?: '587');
             $user = getenv('SMTP_USER') ?: '';
-            $pass = getenv('SMTP_PASS') ?: '';
+                $pass = str_replace(' ', '', (string)(getenv('SMTP_PASS') ?: ''));
             $secure = getenv('SMTP_SECURE') ?: 'tls';
             $from = getenv('SMTP_FROM') ?: $user;
             if ($host === '' || $user === '' || $pass === '') {
@@ -151,5 +173,59 @@ class Mailer
             self::$lastError = 'PHP mail() returned false';
         }
         return $ok;
+    }
+
+    public static function qrNoticeSubject(string $eventName): string
+    {
+        $eventName = trim($eventName);
+        return $eventName !== ''
+            ? 'Your QR code for ' . $eventName
+            : 'Your registration QR code';
+    }
+
+    public static function qrNoticeCopy(string $eventName): string
+    {
+        $eventName = trim($eventName);
+        $eventBit = $eventName !== '' ? $eventName : 'this event';
+        return 'Thank you for registering for ' . $eventBit . '. '
+            . 'Please present this QR code at the check-in desk for faster and more convenient registration or attendance.';
+    }
+
+    public static function qrNoticeHtml(string $firstName, string $eventName, string $message): string
+    {
+        $firstName = trim($firstName);
+        $eventName = trim($eventName);
+        $greeting = $firstName !== ''
+            ? 'Hi ' . htmlspecialchars($firstName, ENT_QUOTES) . ','
+            : 'Hello,';
+        $eventLine = $eventName !== ''
+            ? '<p>You are registered for <strong>' . htmlspecialchars($eventName, ENT_QUOTES) . '</strong>.</p>'
+            : '';
+        $message = trim($message);
+        if ($message === '') {
+            $message = self::qrNoticeCopy($eventName);
+        }
+        $present = 'Please present this QR code at the check-in desk for faster and more convenient registration or attendance. Your QR code is attached.';
+        $html = '<p>' . $greeting . '</p>' . $eventLine
+            . '<p>' . nl2br(htmlspecialchars($message, ENT_QUOTES), false) . '</p>';
+        if (stripos($message, 'present this QR') === false) {
+            $html .= '<p>' . htmlspecialchars($present, ENT_QUOTES) . '</p>';
+        } else {
+            $html .= '<p>Your QR code is attached.</p>';
+        }
+        return $html;
+    }
+
+    public static function privacyDeletedSubject(string $eventName): string
+    {
+        $eventName = trim($eventName);
+        return $eventName !== ''
+            ? 'Thank you for participating in ' . $eventName
+            : 'Thank you for participating';
+    }
+
+    public static function privacyDeletedHtml(string $firstName, string $eventName, ?string $photoSrc = null): string
+    {
+        return PrivacyNotice::deletionEmailHtml($firstName, $eventName, $photoSrc);
     }
 }

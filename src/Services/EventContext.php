@@ -105,6 +105,9 @@ final class EventContext
         if ((string)($event['status'] ?? '') !== 'open') {
             return false;
         }
+        if (!empty($event['privacy_purged_at'])) {
+            return false;
+        }
         // Schedule window uses server local time, same as attendance date()/time().
         $now = time();
         if (!empty($event['starts_at']) && $now < (int)strtotime((string)$event['starts_at'])) {

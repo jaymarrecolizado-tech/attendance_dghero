@@ -3,6 +3,7 @@ declare(strict_types=1);
 
 use App\Controllers\AdminAttendanceController;
 use App\Controllers\AdminAttendanceGalleryController;
+use App\Controllers\AdminSignatureSheetController;
 use App\Controllers\AdminEventsController;
 use App\Controllers\AdminImportController;
 use App\Controllers\AdminLogsController;
@@ -12,6 +13,7 @@ use App\Controllers\AdminSeoController;
 use App\Controllers\AdminUsersController;
 use App\Controllers\AdvancedExportController;
 use App\Controllers\AdminCoaMonitorController;
+use App\Controllers\AdminPrivacyController;
 use App\Controllers\AttendanceController;
 use App\Controllers\AuthController;
 use App\Controllers\EventBrandingController;
@@ -51,6 +53,9 @@ return [
     ],
     'register_email_check' => [
         'GET' => [RegisterController::class, 'emailCheck'],
+    ],
+    'privacy' => [
+        'GET' => [RegisterController::class, 'privacy'],
     ],
     'scan' => [
         'GET' => [ScanController::class, 'show'],
@@ -206,9 +211,25 @@ return [
         'POST' => [AdminAttendanceController::class, 'clearAbsent'],
         '_guards' => [$eventOps],
     ],
+    'admin_attendance_profile' => [
+        'GET' => [AdminAttendanceController::class, 'profile'],
+        '_guards' => [$eventOps],
+    ],
+    'admin_attendance_profile_save' => [
+        'POST' => [AdminAttendanceController::class, 'saveProfile'],
+        '_guards' => [$eventOps],
+    ],
     'admin_attendance_gallery' => [
         'GET' => [AdminAttendanceGalleryController::class, 'list'],
         '_guards' => [$eventManage],
+    ],
+    'admin_signature_sheet' => [
+        'GET' => [AdminSignatureSheetController::class, 'list'],
+        '_guards' => [$eventOps],
+    ],
+    'admin_signature_sheet_replicate' => [
+        'POST' => [AdminSignatureSheetController::class, 'replicate'],
+        '_guards' => [$eventOps],
     ],
     'admin_seo_dashboard' => [
         'GET' => [AdminSeoController::class, 'dashboard'],
@@ -285,6 +306,22 @@ return [
     'admin_signature_new' => [
         'POST' => [AdminSignatureController::class, 'addNew'],
         '_guards' => [$eventOps],
+    ],
+    'admin_privacy' => [
+        'GET' => [AdminPrivacyController::class, 'list'],
+        '_guards' => [$rolesAdmin],
+    ],
+    'admin_privacy_purge' => [
+        'POST' => [AdminPrivacyController::class, 'purgeNow'],
+        '_guards' => [$rolesAdmin],
+    ],
+    'admin_privacy_restore' => [
+        'POST' => [AdminPrivacyController::class, 'restore'],
+        '_guards' => [$rolesAdmin],
+    ],
+    'admin_privacy_download' => [
+        'GET' => [AdminPrivacyController::class, 'download'],
+        '_guards' => [$rolesAdmin],
     ],
     'admin_logs' => [
         'GET' => [AdminLogsController::class, 'list'],
